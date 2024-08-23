@@ -1,5 +1,8 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { fMsg } from "./libby.js";
+
+import User from "../models/user.model.js";
 
 dotenv.config();
 
@@ -34,4 +37,17 @@ export let validateToken = () => {
       return res.status(401).json({ con: false, msg: "Invalid token" });
     }
   };
+
 };
+
+
+export const isAdmin = () => {
+  return async (req, res, next) => {
+    const user = await User.findById(req.user._id);
+    if (!user.roles.includes("admin")) {
+      return fMsg(res, "Unauthorized", "You are not an admin");
+    }
+    next();
+  };
+};
+
