@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { fMsg } from "./libby.js";
 
 import User from "../models/user.model.js";
+import Post from "../models/post.model.js";
 
 dotenv.config();
 
@@ -48,3 +49,26 @@ export const isAdmin = () => {
         next();
     };
 };
+
+export const isNotParents = () => {
+    return async (req, res, next) => {
+        const user = await User.findById(req.user._id);
+        if (user.roles.includes("guardian")) {
+            return fMsg(res, "Unauthorized", "You are a guardian");
+        }
+        next();
+    }
+}
+
+export const isEditorStranger = () => {
+    return async (req, res, next) => {
+        const user = req.user._id;
+        const post = req.params.post_id;
+        const postUser = await Post.findById(post);
+        if (user != postUser.posted_by._id) {
+            return fMsg(res, "Unauthorized", "You are not the author of this post");
+        } 
+        next();
+    }
+}
+        
