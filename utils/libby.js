@@ -14,12 +14,15 @@ export const encode = (payload) => {
   return bcrypt.hashSync(payload, 10);
 };
 
+
 //you can decode the password
 export const decode = (payload, hash) => {
   return bcrypt.compareSync(payload, hash);
 };
 
-//you can generate the token
+
+
+//you can generate JWT the token
 export const genToken = (payload) =>
   jwt.sign(
     {
@@ -28,3 +31,6 @@ export const genToken = (payload) =>
     },
     process.env.SECRET_KEY
   );
+
+
+
