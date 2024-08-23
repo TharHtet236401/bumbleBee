@@ -1,6 +1,7 @@
+import express from "express";
 import { createSchool, editSchool } from "../controllers/school.controller.js";
 import { validateToken, isAdmin } from "../utils/validator.js"
-import express from "express";
+
 const router = express.Router();
 
 
