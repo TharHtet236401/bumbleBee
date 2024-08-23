@@ -7,7 +7,6 @@ dotenv.config();
 import testingRoute from "./routes/testing.route.js";
 import authRoute from "./routes/auth.route.js";
 import schoolRoute from "./routes/school.route.js";
-import userRoute from "./routes/user.route.js";
 
 const app = express();
 app.use(express.json());
@@ -17,9 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/testing", testingRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/school", schoolRoute);
-app.use("/api/user", userRoute);
 
 app.listen(process.env.PORT, () => {
-    connectToMongoDB();
-    console.log(`Server is running on port ${process.env.PORT}`);
+  connectToMongoDB();
+  console.log(`Server is running on port ${process.env.PORT}`);
 });
