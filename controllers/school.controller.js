@@ -11,7 +11,7 @@ export const createSchool = async (req, res) => {
         if (!user.schools.includes(schoolName)) {
             user.schools.push(schoolName);
         } else {
-            return fMsg(res, "School already exists");
+            return fMsg(res, "School already exists", null, 409);
         }
 
         // this block is push the admin role to the user when he creates a school
@@ -23,9 +23,9 @@ export const createSchool = async (req, res) => {
         await user.save();
         const school = new School(req.body);
         await school.save();
-        fMsg(res, "School created successfully", school);
+        fMsg(res, "School created successfully", school, 201);
     } catch (error) {
-        fMsg(res, "error in creating school", error);
+        fMsg(res, "error in creating school", error, 500);
     }
 };
 
@@ -43,8 +43,8 @@ export const editSchool = async (req, res) => {
             },
             { new: true }
         );
-        fMsg(res, "School updated successfully", school);
+        fMsg(res, "School updated successfully", school, 200);
     } catch (error) {
-        fMsg(res, "error in updating school", error);
+        fMsg(res, "error in updating school", error, 500);
     }
 };

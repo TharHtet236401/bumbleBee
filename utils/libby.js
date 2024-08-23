@@ -5,8 +5,8 @@ import jwt from "jsonwebtoken";
 dotenv.config();
 
 // you can format the response
-export const fMsg = (res, msg, result = {}) => {
-    res.status(200).json({ con: true, msg, result });
+export const fMsg = (res, msg, result = {}, statusCode = 200) => {
+    res.status(statusCode).json({ con: true, msg, result });
 };
 
 //you can encode the password

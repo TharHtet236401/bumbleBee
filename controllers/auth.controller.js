@@ -15,7 +15,7 @@ export const register = async (req, res) => {
         } = req.body;
 
         if (password !== confirmPassword) {
-            return fMsg(res, "Registration failed", "Passwords do not match");
+            return fMsg(res, "Registration failed", "Passwords do not match", 400);
         }
 
         //you can use bcrypt to hash the password that encode function can be found in utils/libby.js
@@ -43,9 +43,9 @@ export const register = async (req, res) => {
         const token = genToken(toEncrypt);
         
         //this is to send the response and token to the client-frontend and save in local storage
-        fMsg(res, "Registered Successfully", { user, token });
+        fMsg(res, "Registered Successfully", { user, token }, 201);
     } catch (error) {
-        fMsg(res, "Registration failed", error.message);
+        fMsg(res, "Registration failed", error.message, 500);
     }
 };
 
@@ -56,19 +56,20 @@ export const login = async (req, res) => {
 
         // if the email or password is not provided, return an error message
         if (!email || !password) {
-            return fMsg(res, "Login failed", "Email and password are required");
+            return fMsg(res, "Login failed", "Email and password are required", 400);
         }
 
         //search the user in the database by email
         const user = await User.findOne({ email });
         if (!user) {
-            return fMsg(res, "Login failed", "User not found");
+            return fMsg(res, "Login failed", "Invalid username or password", 404);
         }
 
         //check if the password is correct and decode the password
         const isMatch = decode(password, user.password);
+
         if (!isMatch) {
-            return fMsg(res, "Login failed", "Invalid password");
+            return fMsg(res, "Login failed", "Invalid username or password", 400);
         }
 
         // this is to encrypt the user id and create a token
@@ -80,9 +81,9 @@ export const login = async (req, res) => {
         const token = genToken(toEncrypt);
 
         //this is to send the response and token to the client-frontend and save in local storage
-        fMsg(res, "Login Successfully", { user, token });
+        fMsg(res, "Login Successfully", { user, token }, 200);
     } catch (error) {
-        fMsg(res, "Login failed", error.message);
+        fMsg(res, "Login failed", error.message, 500);
     }
 };
 

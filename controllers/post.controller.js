@@ -10,10 +10,10 @@ export const createPost = async (req, res) => {
         })
         await post.save();
         await post.populate('posted_by', 'userName email phone roles');
-        fMsg(res, "Post created successfully", post);
+        fMsg(res, "Post created successfully", post, 201);
     } catch (error) {
         console.log(error)
-        fMsg(res, "error in creating post", error);
+        fMsg(res, "error in creating post", error, 500);
     }
 };
 
@@ -22,9 +22,9 @@ export const editPost = async (req, res) => {
         const post = await Post.findByIdAndUpdate(req.params.post_id, {
             ...req.body
         }, { new: true });
-        fMsg(res, "Post updated successfully", post);
+        fMsg(res, "Post updated successfully", post, 200);
     } catch (error) {
-        fMsg(res, "error in updating post", error);
+        fMsg(res, "error in updating post", error, 500);
     }
 };
 
@@ -35,13 +35,13 @@ export const deletePost = async (req, res) => {
         
         // Check if the post was found and deleted
         if (!post) {
-            return fMsg(res, "Post not found");
+            return fMsg(res, "Post not found", null, 404);
         }
 
         // Respond with a success message
-        fMsg(res, "Post deleted successfully", post);
+        fMsg(res, "Post deleted successfully", post, 200);
     } catch (error) {
-        console.log(error);
-        fMsg(res, "Error in deleting post", error);
+
+        fMsg(res, "Error in deleting post", error, 500);
     }
 };

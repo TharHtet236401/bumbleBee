@@ -7,4 +7,5 @@ const router = express.Router();
 
 router.put("/update", validateToken(), updateUserInfo);
 router.put("/delete", validateToken(), updateUserInfo);
+
 export default router;
