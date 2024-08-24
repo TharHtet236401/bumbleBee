@@ -27,6 +27,13 @@ app.use("/api/user", userRoute);
 // auth posts
 app.use("/api/posts", postRoute);
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  err.status = err.status || 505;
+  res.status(err.status).json({ con: false, "message": err.message });
+});
+
+
 app.listen(process.env.PORT, () => {
   connectToMongoDB();
   console.log(`Server is running on port ${process.env.PORT}`);
