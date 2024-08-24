@@ -6,6 +6,14 @@ const postSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    school: {
+        type: String,
+        required: true
+    },
+    class: {
+        type: String,
+        required: true
+    },
     heading: {
         type: String,
         required: true
