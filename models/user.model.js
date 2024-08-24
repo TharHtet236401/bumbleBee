@@ -23,7 +23,8 @@ const userSchema = new mongoose.Schema({
         unique: true
     },
     schools: {
-        type: [String], // we can use the just the name of the school or objectId of the school
+        type: [mongoose.Schema.Types.ObjectId], // we can use the just the name of the school or objectId of the school
+        ref: "School",
     },
     classes:{
         type: [mongoose.Schema.Types.ObjectId], // we can use the just the classCode of the class or objectId of the class
