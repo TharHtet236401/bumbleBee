@@ -4,7 +4,6 @@ import connectToMongoDB from "./db/connectMongoDb.js";
 
 dotenv.config();
 
-import testingRoute from "./routes/testing.route.js";
 import authRoute from "./routes/auth.route.js";
 import schoolRoute from "./routes/school.route.js";
 import userRoute from "./routes/user.route.js";
@@ -15,9 +14,6 @@ const app = express();
 // middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// testing api
-app.use("/api/testing", testingRoute);
 
 // auth api
 app.use("/api/auth", authRoute);
