@@ -1,14 +1,13 @@
 import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema({
-    posted_by: {
+    poster: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
     school: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "School",
+        type: String,
         required: true
     },
     class: {
