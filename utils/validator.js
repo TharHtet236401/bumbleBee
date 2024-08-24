@@ -29,7 +29,8 @@ export let validateToken = () => {
         let token = req.headers.authorization.split(" ")[1];
 
         try {
-            let tokenUser = jwt.verify(token, process.env.SECRET_KEY);
+            const tokenUser = jwt.verify(token, process.env.SECRET_KEY);
+            // console.log(tokenUser)
             req.user = tokenUser.data;
 
             next();
@@ -41,9 +42,9 @@ export let validateToken = () => {
 };
 
 export const isAdmin = () => {
-    return async (req, res, next) => {
-        const user = await User.findById(req.user._id);
-        if (!user.roles.includes("admin")) {
+    return (req, res, next) => {
+        const roles = req.user.roles;
+        if (!roles.includes("admin")) {
             return fMsg(res, "Unauthorized", "You are not an admin");
         }
         next();
@@ -51,9 +52,9 @@ export const isAdmin = () => {
 };
 
 export const isNotParents = () => {
-    return async (req, res, next) => {
-        const user = await User.findById(req.user._id);
-        if (user.roles.includes("guardian")) {
+    return (req, res, next) => {
+        const roles = req.user.roles;
+        if (roles.includes("guardian")) {
             return fMsg(res, "Unauthorized", "You are a guardian");
         }
         next();
@@ -62,6 +63,7 @@ export const isNotParents = () => {
 
 export const isEditorStranger = () => {
     return async (req, res, next) => {
+
         const user = req.user._id;
         const post = req.params.post_id;
         const postUser = await Post.findById(post);

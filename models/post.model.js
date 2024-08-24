@@ -10,7 +10,11 @@ const postSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    class: {
+    grade: {
+        type: String,
+        required: true
+    },
+    classname: {
         type: String,
         required: true
     },

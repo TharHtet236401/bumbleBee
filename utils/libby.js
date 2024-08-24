@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 
+import fs from 'fs';
+
 dotenv.config();
 
 // you can format the response
@@ -28,3 +30,14 @@ export const genToken = (payload) =>
         },
         process.env.SECRET_KEY
     );
+
+
+export const deleteFile = (filePath) => {
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            console.error(`Error deleting file: ${filePath}`, err);
+        } else {
+            console.log(`File deleted: ${filePath}`);
+        }
+    });
+};

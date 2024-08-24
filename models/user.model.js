@@ -23,10 +23,10 @@ const userSchema = new mongoose.Schema({
         unique: true
     },
     schools: {
-        type: [String], // we can use the just the name of the school or objectId of the school
+        type: [String], // we can use the name of the school or objectId of the school
     },
     classes:{
-        type: [mongoose.Schema.Types.ObjectId], // we can use the just the classCode of the class or objectId of the class
+        type: [mongoose.Schema.Types.ObjectId], // we can use  the classCode of the class or objectId of the class
         ref: 'Class'
     },
     childern:{
