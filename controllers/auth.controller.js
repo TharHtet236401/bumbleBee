@@ -21,7 +21,7 @@ export const register = async (req, res) => {
     //you can use bcrypt to hash the password that encode function can be found in utils/libby.js
     const hashedPassword = encode(password);
 
-    //construct the new user object
+
     const newUser = {
       userName,
       email,
