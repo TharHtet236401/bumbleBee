@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 
+import fs from 'fs';
+
 dotenv.config();
 
 // you can format the response
@@ -24,13 +26,13 @@ export const decode = (payload, hash) => {
 
 //you can generate JWT the token
 export const genToken = (payload) =>
-  jwt.sign(
-    {
-      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-      data: payload,
-    },
-    process.env.SECRET_KEY
-  );
+    jwt.sign(
+        {
+            exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+            data: payload,
+        },
+        process.env.SECRET_KEY
+    );
 
   // utils/pagination.js
 export const paginate = async (model, filter, page = 1, limit = 10) => {
@@ -60,4 +62,25 @@ export const paginate = async (model, filter, page = 1, limit = 10) => {
 };
 
 
+export const deleteFile = (filePath) => {
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            console.error(`Error deleting file: ${filePath}`, err);
+        } else {
+            console.log(`File deleted: ${filePath}`);
+        }
+    });
+};
+// generate random class code with 4 digits
+export const generateClassCode = (length) => {
 
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    const charactersLength = characters.length;
+    let counter = 0;
+    let result = "";
+    while (counter < length) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      counter += 1;
+    }
+    return result;
+}

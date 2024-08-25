@@ -6,6 +6,8 @@ import { updateUserInfo , getAllUsers} from "../controllers/user.controller.js";
 const router = express.Router();
 
 router.put("/update", validateToken(), updateUserInfo);
+
+// ** need to refactor delete **
 router.put("/delete", validateToken(), updateUserInfo);
 
 router.get("/all", validateToken(), isAdmin(), getAllUsers);
