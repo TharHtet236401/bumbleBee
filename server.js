@@ -12,6 +12,7 @@ import schoolRoute from "./routes/school.route.js";
 import classRoute from "./routes/class.route.js";
 import userRoute from "./routes/user.route.js";
 import postRoute from "./routes/post.route.js";
+import studentRoute from "./routes/student.route.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +37,8 @@ app.use("/api/user", userRoute);
 // auth posts
 app.use("/api/posts", postRoute);
 
+//student
+app.use("/api/student", studentRoute);
 // Error handling middleware
 app.use((err, req, res, next) => {
   err.status = err.status || 505;

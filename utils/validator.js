@@ -51,6 +51,16 @@ export const isAdmin = () => {
     };
 };
 
+export const isTeacher = () => {
+    return (req, res, next) => {
+        const roles = req.user.roles;
+        if (!roles.includes("teacher")) {
+            return fMsg(res, "Unauthorized", "You are not a teacher");
+        }
+        next();
+    };
+};
+
 export const isNotParents = () => {
     return (req, res, next) => {
         const roles = req.user.roles;
