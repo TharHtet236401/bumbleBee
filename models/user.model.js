@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema({
         ref: "School",
     },
     classes:{
-        type: [mongoose.Schema.Types.ObjectId], // we can use the just the classCode of the class or objectId of the class
+        type: [mongoose.Schema.Types.ObjectId], // we can use  the classCode of the class or objectId of the class
         ref: 'Class'
     },
     childern:{

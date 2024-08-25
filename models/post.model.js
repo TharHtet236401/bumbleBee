@@ -1,45 +1,51 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema({
     posted_by: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        ref: "User",
+        required: true,
     },
     school: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "School",
-        required: true
+        required: true,
     },
-    class: {
+    grade: {
         type: String,
-        required: true
+        required: true,
+    },
+    className: {
+        type: String,
+        required: true,
     },
     heading: {
         type: String,
-        required: true
+        required: true,
     },
     body: {
         type: String,
     },
-    contentPicture: {  
+    contentPicture: {
         type: String,
     },
-    contentType:{
+    contentType: {
         type: String,
-        enum: ['announcement','feed'], //annoucment for whole school, feed for class
-        required: true
+        enum: ["announcement", "feed"], //annoucment for whole school, feed for class
+        required: true,
+        index: true,
     },
     reactions: {
-        type :Number,
-        default: 0
+        type: Number,
+        default: 0,
     },
     createdAt: {
         type: Date,
-        default: Date.now
-    }
+        default: Date.now,
+    },
 });
 
-const Post = mongoose.model('Post', postSchema);
+postSchema.index({ contentType: 1 });
+const Post = mongoose.model("Post", postSchema);
 
 export default Post;
