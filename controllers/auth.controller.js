@@ -2,37 +2,37 @@ import User from "../models/user.model.js";
 import { encode, genToken, fMsg, decode } from "../utils/libby.js";
 
 export const register = async (req, res) => {
-    // Handles user registration by creating a new user in the database
-    try {
-        const {
-            userName,
-            email,
-            password,
-            phone,
-            confirmPassword,
-            roles,
-            relationship,
-        } = req.body;
+  // Handles user registration by creating a new user in the database
+  try {
+    const {
+      userName,
+      email,
+      password,
+      phone,
+      confirmPassword,
+      roles,
+      relationship,
+    } = req.body;
 
-        if (password !== confirmPassword) {
-            return fMsg(res, "Registration failed", "Passwords do not match", 400);
-        }
+    if (password !== confirmPassword) {
+      return fMsg(res, "Registration failed", "Passwords do not match", 400);
+    }
 
-        //you can use bcrypt to hash the password that encode function can be found in utils/libby.js
-        const hashedPassword = encode(password);
+    //you can use bcrypt to hash the password that encode function can be found in utils/libby.js
+    const hashedPassword = encode(password);
 
-        //construct the new user object
-        const newUser = {
-            userName,
-            email,
-            password: hashedPassword,
-            phone,
-            roles,
-            relationship,
-        };
 
-        //save the new user to the database
-        const user = await User.create(newUser);
+    const newUser = {
+      userName,
+      email,
+      password: hashedPassword,
+      phone,
+      roles,
+      relationship,
+    };
+
+    //save the new user to the database
+    const user = await User.create(newUser);
 
         //this is to encrypt the user id and create a token
         const toEncrypt = {
@@ -44,38 +44,38 @@ export const register = async (req, res) => {
             username: user.userName
         };
 
-        //this is to create a token
-        const token = genToken(toEncrypt);
-        
-        //this is to send the response and token to the client-frontend and save in local storage
-        fMsg(res, "Registered Successfully", { user, token }, 201);
-    } catch (error) {
-        fMsg(res, "Registration failed", error.message, 500);
-    }
+    //this is to create a token
+    const token = genToken(toEncrypt);
+
+    //this is to send the response and token to the client-frontend and save in local storage
+    fMsg(res, "Registered Successfully", { user, token }, 201);
+  } catch (error) {
+    fMsg(res, "Registration failed", error.message, 500);
+  }
 };
 
 export const login = async (req, res) => {
-    // Handles user login by verifying email and password
-    try {
-        const { email, password } = req.body;
+  // Handles user login by verifying email and password
+  try {
+    const { email, password } = req.body;
 
-        // if the email or password is not provided, return an error message
-        if (!email || !password) {
-            return fMsg(res, "Login failed", "Email and password are required", 400);
-        }
+    // if the email or password is not provided, return an error message
+    if (!email || !password) {
+      return fMsg(res, "Login failed", "Email and password are required", 400);
+    }
 
-        //search the user in the database by email
-        const user = await User.findOne({ email });
-        if (!user) {
-            return fMsg(res, "Login failed", "Invalid username or password", 404);
-        }
+    //search the user in the database by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return fMsg(res, "Login failed", "Invalid username or password", 404);
+    }
 
-        //check if the password is correct and decode the password
-        const isMatch = decode(password, user.password);
+    //check if the password is correct and decode the password
+    const isMatch = decode(password, user.password);
 
-        if (!isMatch) {
-            return fMsg(res, "Login failed", "Invalid username or password", 400);
-        }
+    if (!isMatch) {
+      return fMsg(res, "Login failed", "Invalid username or password", 400);
+    }
 
         // this is to encrypt the user id and create a token
         const toEncrypt = {

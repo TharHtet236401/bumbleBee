@@ -13,13 +13,16 @@ export const fMsg = (res, msg, result = {}, statusCode = 200) => {
 
 //you can encode the password
 export const encode = (payload) => {
-    return bcrypt.hashSync(payload, 10);
+  return bcrypt.hashSync(payload, 10);
 };
+
 
 //you can decode the password
 export const decode = (payload, hash) => {
-    return bcrypt.compareSync(payload, hash);
+  return bcrypt.compareSync(payload, hash);
 };
+
+
 
 //you can generate JWT the token
 export const genToken = (payload) =>

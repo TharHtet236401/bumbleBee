@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "name": "bumblebee",
     "version": "1.0.0",
     "description": "School Management System",
@@ -18,4 +19,25 @@
         "multer": "^1.4.5-lts.1",
         "nodemon": "^3.1.4"
     }
+=======
+  "name": "bumblebee",
+  "version": "1.0.0",
+  "description": "School Management System",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon server"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.3",
+    "nodemon": "^3.1.4"
+  }
+>>>>>>> 2aeecab6bd8654f13213c02396602061df1caa9d
 }

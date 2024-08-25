@@ -7,7 +7,6 @@ import connectToMongoDB from "./db/connectMongoDb.js";
 
 dotenv.config();
 
-import testingRoute from "./routes/testing.route.js";
 import authRoute from "./routes/auth.route.js";
 import schoolRoute from "./routes/school.route.js";
 import userRoute from "./routes/user.route.js";
@@ -25,9 +24,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/uploads/post_images', express.static(path.join(__dirname, 'uploads/post_images')));
 
-// testing api
-app.use("/api/testing", testingRoute);
-
 // auth api
 app.use("/api/auth", authRoute);
 
@@ -40,7 +36,14 @@ app.use("/api/user", userRoute);
 // auth posts
 app.use("/api/posts", postRoute);
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  err.status = err.status || 505;
+  res.status(err.status).json({ con: false, "message": err.message });
+});
+
+
 app.listen(process.env.PORT, () => {
-    connectToMongoDB();
-    console.log(`Server is running on port ${process.env.PORT}`);
+  connectToMongoDB();
+  console.log(`Server is running on port ${process.env.PORT}`);
 });
