@@ -7,7 +7,7 @@ export const UserSchema={
         password:Joi.string().min(8).max(30).required(),
         phone:Joi.string().min(7).max(11).required(),
         confirmPassword:Joi.string().valid(Joi.ref("password")).required(),
-        roles:Joi.string().valid('admin', 'guardian', 'parent').required(),
+        roles:Joi.string().valid('admin', 'guardian', 'teacher').required(),
         relationship:Joi.string().when(Joi.ref('roles'), {
             is: 'guardian',
             then: Joi.required(),

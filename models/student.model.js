@@ -9,10 +9,6 @@ const studentSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
-    gender: {
-        type: String,
-        required: true
-    },
     schools: {
         type: [mongoose.Schema.Types.ObjectId], 
         ref: "School",
