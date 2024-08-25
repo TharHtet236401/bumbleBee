@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
-import { fMsg } from "../utils/libby.js";
+import School from "../models/school.model.js";
+import { fMsg,paginate} from "../utils/libby.js";
 
 export const updateUserInfo = async (req, res) => {
     try {
@@ -16,4 +17,27 @@ export const updateUserInfo = async (req, res) => {
         fMsg(res, "error in updating user", error, 500);
     }
 }
+
+export const getAllUsers = async (req, res) => {  //admin function
+    try {
+        const currentUser = req.user;
+        const admin = await User.findById(currentUser._id);
+
+        if (!admin) {
+            return fMsg(res, "Admin not found", [], 404);
+        }
+
+        const usersSchoolId = admin.schools[0]; // Fetching usersSchoolId here
+
+        const page = parseInt(req.query.page) || 1;
+
+
+        const paginatedData = await paginate(User, { schools: usersSchoolId }, page, 10);
+
+        // Return paginated response
+        fMsg(res, "Users fetched successfully", paginatedData, 200);
+    } catch (error) {
+        fMsg(res, "Error in fetching users", error, 500);
+    }
+};
 
