@@ -32,5 +32,32 @@ export const genToken = (payload) =>
     process.env.SECRET_KEY
   );
 
+  // utils/pagination.js
+export const paginate = async (model, filter, page = 1, limit = 10) => {
+  //have to discus with frontend team to know how much data they want to fetch each time
+  try {
+      // Calculate the number of documents to skip
+      const skip = (page - 1) * limit;
+
+      // Get total user count for pagination info
+      const totalItems = await model.countDocuments(filter);
+
+      // Calculate total pages based on total items
+      const totalPages = Math.ceil(totalItems / limit);
+
+      // Fetch paginated items from the database
+      const items = await model.find(filter).skip(skip).limit(limit);
+
+      return {
+          items,
+          totalItems,
+          totalPages,
+          currentPage: page,
+      };
+  } catch (error) {
+      throw new Error('Error in pagination: ' + error.message);
+  }
+};
+
 
 
