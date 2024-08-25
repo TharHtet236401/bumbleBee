@@ -4,11 +4,12 @@ const classSchema = new mongoose.Schema({
   grade: {
     type: String,
     required: true,
+    index: true,
   },
   className: {
     type: String,
     required: true,
-    unique: true,
+    index: true,
   },
   classCode: {
     type: String,
