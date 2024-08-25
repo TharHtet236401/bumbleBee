@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 
+import fs from 'fs';
+
 dotenv.config();
 
 // you can format the response
@@ -24,13 +26,21 @@ export const decode = (payload, hash) => {
 
 //you can generate JWT the token
 export const genToken = (payload) =>
-  jwt.sign(
-    {
-      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-      data: payload,
-    },
-    process.env.SECRET_KEY
-  );
+    jwt.sign(
+        {
+            exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+            data: payload,
+        },
+        process.env.SECRET_KEY
+    );
 
 
-
+export const deleteFile = (filePath) => {
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            console.error(`Error deleting file: ${filePath}`, err);
+        } else {
+            console.log(`File deleted: ${filePath}`);
+        }
+    });
+};
