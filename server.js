@@ -9,6 +9,7 @@ dotenv.config();
 
 import authRoute from "./routes/auth.route.js";
 import schoolRoute from "./routes/school.route.js";
+import classRoute from "./routes/class.route.js";
 import userRoute from "./routes/user.route.js";
 import postRoute from "./routes/post.route.js";
 
@@ -27,6 +28,7 @@ app.use("/api/auth", authRoute);
 
 // auth school
 app.use("/api/school", schoolRoute);
+app.use("/api/class", classRoute);
 
 // auth user
 app.use("/api/user", userRoute);
