@@ -11,9 +11,9 @@ export const updateUserInfo = async (req, res) => {
             },
             { new: true }
         );
-        fMsg(res, "User updated successfully", user);
+        fMsg(res, "User updated successfully", user, 200);
     } catch (error) {
-        fMsg(res, "error in updating user", error);
+        fMsg(res, "error in updating user", error, 500);
     }
 }
 
