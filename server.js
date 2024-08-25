@@ -17,8 +17,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-
-
 // middlewares
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
