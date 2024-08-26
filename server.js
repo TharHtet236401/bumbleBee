@@ -27,6 +27,10 @@ app.use(
     "/uploads/post_images",
     express.static(path.join(__dirname, "uploads/post_images"))
 );
+app.use(
+    "/uploads/profile_pictures",
+    express.static(path.join(__dirname, "uploads/profile_pictures"))
+);
 
 // auth api
 app.use("/api/auth", authRoute);

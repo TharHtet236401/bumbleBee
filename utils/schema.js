@@ -2,8 +2,8 @@ import Joi from "joi";
 
 export const UserSchema={
     register:Joi.object({
-        userName:Joi.string().min(3).max(10).required(),
-        email:Joi.string().pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).required(),
+        userName:Joi.string().min(3).max(100).required(),
+        email:Joi.string().trim().pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).required(),
         password:Joi.string().min(8).max(30).required(),
         phone:Joi.string().min(7).max(11).required(),
         confirmPassword:Joi.string().valid(Joi.ref("password")).required(),
