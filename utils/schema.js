@@ -46,10 +46,16 @@ export const PostSchema = {
 
 export const ClassSchema = {
     create:Joi.object({
-        grade:Joi.string().required(),
+        grade:Joi.string().min(2).max(20).required(),
+        className: Joi.string().max(40).required()
+    }),
+    edit:Joi.object({
+        classId:Joi.required(),
+        grade:Joi.string().min(2).max(20).required(),
         className: Joi.string().max(40).required()
     }),
     delete:Joi.object({
+        body: Joi.string().min(3).max(100),
         classId:Joi.required()
     })
 }
