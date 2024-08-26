@@ -29,3 +29,13 @@ export const SchoolSchema={
         address:Joi.string().required(),
     })
 }
+
+export const ClassSchema = {
+    create:Joi.object({
+        grade:Joi.string().required(),
+        className: Joi.string().max(40).required()
+    }),
+    delete:Joi.object({
+        classId:Joi.required()
+    })
+}
