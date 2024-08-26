@@ -18,6 +18,10 @@ import {
     isEditorStranger
 } from "../utils/validator.js";
 
+import { PostSchema } from "../utils/schema.js";
+
+import { validateBody } from "../utils/validator.js";
+
 const router = express.Router();
 
 const storage = multer.diskStorage({
@@ -32,12 +36,13 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-router.post("/create", validateToken(), isNotParents(), upload.single('contentPicture'), createPost);
+//** important: don't change the middleware order */
+router.post("/create", validateToken(), upload.single('contentPicture'), validateBody(PostSchema.create), isNotParents(), createPost);
 
 router.get("/getFeeds", validateToken(),  getFeeds);
 router.get('/getAnnouncements', validateToken(),  getAnnouncements);
 
-router.put("/edit/:post_id", validateToken(), isEditorStranger(), isNotParents(), upload.single('contentPicture'), editPost);
+router.put("/edit/:post_id", validateToken(), validateBody(PostSchema.edit), isEditorStranger(), isNotParents(), upload.single('contentPicture'), editPost);
 router.delete("/delete/:post_id", validateToken(), isEditorStranger(), isNotParents(), deletePost)
 
 router.get("/filterFeeds", validateToken(), isAdmin(), filterFeeds);

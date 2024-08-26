@@ -39,7 +39,7 @@ export const createPost = async (req, res) => {
         })
 
         await post.save();
-        await post.populate('posted_by', 'userName email phone roles');
+        await post.populate('posted_by', 'userName profilePicture roles');
 
         fMsg(res, "Post created successfully", post, 201);
     } catch (error) {
@@ -60,7 +60,7 @@ export const getFeeds = async (req, res) => {
 
         const posts = await Post.find(query)
                                 .sort({ createdAt: -1 })
-                                .populate('posted_by', 'userName email phone roles')
+                                .populate('posted_by', 'userName profilePicture roles')
 
         fMsg(res, "Posts fetched successfully", posts, 200);
     } catch (error) {
@@ -73,18 +73,14 @@ export const getAnnouncements = async (req, res) => {
     try {
         const { schools, classes } = req.user;
 
-        const gradeDocs = await Class.find({ _id: { $in: classes } }).select('grade');
-        const grades = gradeDocs.map(doc => doc.grade);
-
         const query = {
             school: { $in: schools },
-            grade: { $in: grades },
             classId: { $in: classes }
         }
 
         const posts = await Post.find(query)
                                 .sort({ createdAt: -1 })
-                                .populate('posted_by', 'userName email phone roles')
+                                .populate('posted_by', 'userName profilePicture roles')
 
         fMsg(res, "Posts fetched successfully", posts, 200);
     } catch (error) {
@@ -95,22 +91,20 @@ export const getAnnouncements = async (req, res) => {
 
 export const filterFeeds = async (req, res) => {
     try {
-        const school = req.user.schools
 
-        const classname = req.user.classes
 
-        const { grade, contentType } = req.query;
+        const { grade, contentType, classname, school } = req.query;
         
         // Construct query object
         let query = {};
-        if (school.length > 0) query.school = { $in: school };
+        if (school) query.school = school;
         if (grade) query.grade = grade;
-        if (classname.length > 0) query.classname = { $in: classname };
+        if (classname) query.classname = classname;
         if (contentType) query.contentType = contentType;
 
         const posts = await Post.find(query)
                                 .sort({ createdAt: -1 })
-                                .populate('posted_by', 'userName email phone roles');
+                                .populate('posted_by', 'userName profilePicture roles');
 
         fMsg(res, "Posts fetched successfully", posts, 200);
     } catch (error) {
@@ -162,3 +156,4 @@ export const deletePost = async (req, res) => {
         fMsg(res, "Error in deleting post", error, 500);
     }
 };
+
