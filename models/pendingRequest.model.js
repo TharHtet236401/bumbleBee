@@ -10,6 +10,10 @@ const pendingRequestSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Class",
         required: true
+    },
+    classCode: {
+        type: String,
+        required: true
     }
 })
 
