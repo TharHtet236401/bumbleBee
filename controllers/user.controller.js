@@ -1,5 +1,4 @@
 import User from "../models/user.model.js";
-import School from "../models/school.model.js";
 import { fMsg,paginate} from "../utils/libby.js";
 
 export const updateUserInfo = async (req, res) => {
@@ -15,6 +14,19 @@ export const updateUserInfo = async (req, res) => {
         fMsg(res, "User updated successfully", user, 200);
     } catch (error) {
         fMsg(res, "error in updating user", error, 500);
+    }
+}
+
+export const deleteUser = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const user = await User
+            .findByIdAndDelete(userId);
+        fMsg(res, "User deleted successfully", user, 200);
+    }
+    catch (error) {
+        console.log(error)
+        fMsg(res, "error in deleting user", error, 500);
     }
 }
 
