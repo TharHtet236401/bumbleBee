@@ -10,6 +10,7 @@ dotenv.config();
 //validate the body with schema
 export const validateBody = (schema) => {
     return (req, res, next) => {
+        console.log(req.body);
         let result = schema.validate(req.body);
         if (result.error) {
             next(new Error(result.error.details[0].message));

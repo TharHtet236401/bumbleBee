@@ -1,18 +1,35 @@
 import User from "../models/user.model.js";
-import { encode, genToken, fMsg, decode } from "../utils/libby.js";
+
+import {
+    encode,
+    genToken,
+    fMsg,
+    decode
+} from "../utils/libby.js";
 
 export const register = async (req, res) => {
     // Handles user registration by creating a new user in the database
     try {
-        const {
+        let {
             userName,
             email,
             password,
             phone,
             confirmPassword,
+            profilePicture,
             roles,
-            relationship,
+            ...otherInfos
         } = req.body;
+
+        const encodedUsername = encodeURIComponent(userName);
+        profilePicture = req.file
+                        ?
+                        `/uploads/profile_pictures/${req.file.filename}`
+                        :
+                        `https://api.dicebear.com/9.x/initials/svg?seed=${encodedUsername}`;
+
+        console.log(profilePicture)
+
 
         if (password !== confirmPassword) {
             return fMsg(
@@ -30,9 +47,10 @@ export const register = async (req, res) => {
             userName,
             email,
             password: hashedPassword,
+            profilePicture,
             phone,
             roles,
-            relationship,
+            ...otherInfos
         };
 
         //save the new user to the database
