@@ -23,7 +23,8 @@ export const createRequest = async (req, res) => {  // When the guardian and the
         const request = new PendingRequest({
             sender: userId,
             desireClass: desireClass._id,
-            classCode: classCode
+            classCode: classCode,
+            roles: req.user.roles
         });
         
         await request.save();
