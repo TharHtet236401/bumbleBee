@@ -1,4 +1,5 @@
 import Post from '../models/post.model.js';
+import Class from '../models/class.model.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { fMsg } from "../utils/libby.js";
@@ -9,18 +10,19 @@ const __dirname = path.dirname(__filename);
 
 export const createPost = async (req, res) => {
     try {
+
         let {
             heading,
             body,
             contentPicture,
             contentType,
             reactions,
-            classname,
+            classId,
             grade
         } = req.body
 
         const posted_by = req.user._id;
-        const school = req.user.schools[0] || "Some School";
+        const school = req.user.schools;
 
         contentPicture = req.file ? `/uploads/post_images/${req.file.filename}` : null;
 
@@ -32,11 +34,13 @@ export const createPost = async (req, res) => {
             contentPicture,
             contentType,
             reactions,
-            classname,
+            classId,
             grade
         })
+
         await post.save();
-        await post.populate('posted_by', 'userName email phone roles');
+        await post.populate('posted_by', 'userName profilePicture roles');
+
         fMsg(res, "Post created successfully", post, 201);
     } catch (error) {
         console.log(error)
@@ -44,24 +48,63 @@ export const createPost = async (req, res) => {
     }
 };
 
-export const getPosts = async (req, res) => {
+export const getFeeds = async (req, res) => {
     try {
-        const school = req.user.schools
-            // || ["66cab8838b334f640e053052", "66caeb3a03651d7601f7ffb9"];
-        const classname = req.user.classes
-            // || ["apple", "banana"];
-        const { grade, contentType } = req.query;
+        const { schools } = req.user;
+        const contentType = req.query.contentType;
+
+        const query = {
+            school: { $in: schools },
+            contentType
+        }
+
+        const posts = await Post.find(query)
+                                .sort({ createdAt: -1 })
+                                .populate('posted_by', 'userName profilePicture roles')
+
+        fMsg(res, "Posts fetched successfully", posts, 200);
+    } catch (error) {
+        console.log(error)
+        fMsg(res, "Error in fetching posts", error, 500);
+    }
+};
+
+export const getAnnouncements = async (req, res) => {
+    try {
+        const { schools, classes } = req.user;
+
+        const query = {
+            school: { $in: schools },
+            classId: { $in: classes }
+        }
+
+        const posts = await Post.find(query)
+                                .sort({ createdAt: -1 })
+                                .populate('posted_by', 'userName profilePicture roles')
+
+        fMsg(res, "Posts fetched successfully", posts, 200);
+    } catch (error) {
+        console.log(error)
+        fMsg(res, "Error in fetching posts", error, 500);
+    }
+};
+
+export const filterFeeds = async (req, res) => {
+    try {
+
+
+        const { grade, contentType, classname, school } = req.query;
         
         // Construct query object
         let query = {};
-        if (school.length > 0) query.school = { $in: school };
+        if (school) query.school = school;
         if (grade) query.grade = grade;
-        if (classname.length > 0) query.classname = { $in: classname };
+        if (classname) query.classname = classname;
         if (contentType) query.contentType = contentType;
 
         const posts = await Post.find(query)
                                 .sort({ createdAt: -1 })
-                                .populate('posted_by', 'userName email phone roles');
+                                .populate('posted_by', 'userName profilePicture roles');
 
         fMsg(res, "Posts fetched successfully", posts, 200);
     } catch (error) {
@@ -113,3 +156,4 @@ export const deletePost = async (req, res) => {
         fMsg(res, "Error in deleting post", error, 500);
     }
 };
+

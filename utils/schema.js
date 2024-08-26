@@ -29,3 +29,17 @@ export const SchoolSchema={
         address:Joi.string().required(),
     })
 }
+
+export const PostSchema = {
+    create: Joi.object({
+        heading: Joi.string().min(3).max(50).required(),
+        body: Joi.string().min(3).max(500),
+        contentType: Joi.string().valid("announcement", "feed").required(),
+        classId: Joi.string().required(),
+        grade: Joi.string().required()
+    }).unknown(true),
+    edit: Joi.object({
+        heading: Joi.string().min(3).max(50),
+        body: Joi.string().min(3).max(500)
+    }).unknown(true)
+}
