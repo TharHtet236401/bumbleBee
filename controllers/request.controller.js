@@ -22,12 +22,13 @@ export const createRequest = async (req, res) => {  // When the guardian and the
         // Create a new pending request
         const request = new PendingRequest({
             sender: userId,
-            desireClass: desireClass._id
+            desireClass: desireClass._id,
+            classCode: classCode
         });
         
         await request.save();
 
-        fMsg(res, "Request created successfully", { requestId: request._id }, 200);
+        fMsg(res, "Request created successfully", request, 200);
     } catch (error) {
         fMsg(res, "Error in creating request", error.message, 500);
     }
