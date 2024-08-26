@@ -15,8 +15,9 @@ const postSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    className: {
-        type: String,
+    classId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Class",
         required: true,
     },
     heading: {

@@ -1,9 +1,9 @@
-import express from "express"
-import {addStudent} from "../controllers/student.controller.js"
-import {isTeacher,validateToken} from "../utils/validator.js"
+import express from "express";
+import { addStudentToClass } from "../controllers/student.controller.js";
+import { isTeacher, validateToken } from "../utils/validator.js";
 
-const router=express.Router()
+const router = express.Router();
 
-router.post("/add/:class_id",validateToken(),isTeacher(),addStudent)
+router.post("/add/:class_id", validateToken(), isTeacher(), addStudentToClass);
 
-export default router
+export default router;
