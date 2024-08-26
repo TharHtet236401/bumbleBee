@@ -59,3 +59,27 @@ export const createClass = async(req, res) => {
         fMsg(res, "error in creating class", error)
     }
 }
+
+export const deleteClass = async(req, res) => {
+    try{
+        
+        const { classId } = req.body;
+        const classObj = await Class.findById(classId);
+        if(!classObj){
+            return fMsg(res, "No Such Class",null, 200)
+        }
+
+        const schoolId = classObj.school;
+        const school = await School.findById(schoolId);
+        console.log(classId);
+    
+        school.classes.pop(classObj._id);
+        await Class.deleteOne(classObj);
+        
+        fMsg(res, "Class Deleted Successfully", null, 200)
+
+    }catch(err){
+        console.log(err)
+        fMsg(res, "error in deleting class", error)
+    }
+}
