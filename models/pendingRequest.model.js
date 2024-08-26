@@ -14,6 +14,10 @@ const pendingRequestSchema = new mongoose.Schema({
     classCode: {
         type: String,
         required: true
+    },
+    roles: {
+        type: [String],
+        required: true
     }
 })
 
