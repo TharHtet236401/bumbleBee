@@ -18,6 +18,10 @@ const pendingRequestSchema = new mongoose.Schema({
     roles: {
         type: [String],
         required: true
+    },
+    student_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student",
     }
 })
 
