@@ -1,14 +1,21 @@
 import express from "express";
 
-import { validateToken, isAdmin } from "../utils/validator.js"
-import { updateUserInfo , getAllUsers} from "../controllers/user.controller.js";
+import {
+    validateToken,
+    isAdmin
+} from "../utils/validator.js"
+
+import {
+    updateUserInfo,
+    deleteUser,
+    getAllUsers
+} from "../controllers/user.controller.js";
 
 const router = express.Router();
 
 router.put("/update", validateToken(), updateUserInfo);
 
-// ** need to refactor delete **
-router.put("/delete", validateToken(), updateUserInfo);
+router.post("/delete", validateToken(), deleteUser);
 
 router.get("/all", validateToken(), isAdmin(), getAllUsers);
 
