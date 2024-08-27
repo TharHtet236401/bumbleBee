@@ -18,7 +18,7 @@ export const createClass = async(req, res) => {
         //find the classes of that school
         school.classes.forEach((element) => classLists.push(element))
         
-        console.log(classLists)
+
         let generatedClassCode = "";
     
 
@@ -27,15 +27,15 @@ export const createClass = async(req, res) => {
         while(codeGenerate == false){
             //generate the class code with 4 digits.
             generatedClassCode = generateClassCode(4);
-            console.log("Code generated: " + generatedClassCode)
+            
 
             if(classLists.length > 0){
                 for(const classId of classLists){
                     const c = await Class.findById(classId);
-                    console.log("Class code already in db " + c.classCode)
+                    
                     
                     //During the code generation, the duplicate name will also be checked
-                    if(c.className == className){
+                    if(c.className == className && c.grade == grade){
                         duplicateError = true;
                     }
 
