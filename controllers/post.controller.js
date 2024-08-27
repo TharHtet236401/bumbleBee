@@ -22,7 +22,6 @@ export const createPost = async (req, res) => {
         } = req.body
 
         const posted_by = req.user._id;
-
         contentPicture = req.file ? `/uploads/post_images/${req.file.filename}` : null;
 
         const post = new Post({

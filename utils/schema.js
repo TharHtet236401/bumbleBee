@@ -35,13 +35,18 @@ export const PostSchema = {
         heading: Joi.string().min(3).max(50).required(),
         body: Joi.string().min(3).max(500),
         contentType: Joi.string().valid("announcement", "feed").required(),
-        classId: Joi.string().required(),
+        classId: Joi.string().required().when(Joi.ref('contentType'), {
+            is: 'announcement',
+            then: Joi.required(),
+            otherwise: Joi.optional()
+        }),
         schoolId: Joi.string().required(),
         grade: Joi.string().required()
     }).unknown(true),
     edit: Joi.object({
         heading: Joi.string().min(3).max(50),
-        body: Joi.string().min(3).max(500)
+        body: Joi.string().min(3).max(500),
+        contentType: Joi.string().valid("announcement", "feed").required()
     }).unknown(true)
 }
 

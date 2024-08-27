@@ -72,6 +72,16 @@ export const isTeacher = () => {
     };
 };
 
+export const postRBAC = () => {
+    return (req, res, next) => {
+        const roles = req.user.roles;
+        if (roles.includes("teacher") && req.body.contentType === "feed") {
+            return fMsg(res, "Unauthorized", "Teacher cannot post feeds");
+        }
+        next();
+    };
+}
+
 export const isNotParents = () => {
     return (req, res, next) => {
         const roles = req.user.roles;

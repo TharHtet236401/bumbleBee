@@ -15,6 +15,7 @@ import {
     validateToken,
     isAdmin,
     isNotParents,
+    postRBAC,
     isEditorStranger
 } from "../utils/validator.js";
 
@@ -37,12 +38,12 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 //** important: don't change the middleware order */
-router.post("/create", validateToken(), upload.single('contentPicture'), validateBody(PostSchema.create), isNotParents(), createPost);
+router.post("/create", validateToken(), upload.single('contentPicture'), validateBody(PostSchema.create), postRBAC(), createPost);
 
 router.get("/getFeeds", validateToken(),  getFeeds);
 router.get('/getAnnouncements', validateToken(),  getAnnouncements);
 
-router.put("/edit/:post_id", validateToken(), validateBody(PostSchema.edit), isEditorStranger(), isNotParents(), upload.single('contentPicture'), editPost);
+router.put("/edit/:post_id", validateToken(), upload.single('contentPicture'), validateBody(PostSchema.edit), postRBAC(), isEditorStranger(), isNotParents(), editPost);
 router.delete("/delete/:post_id", validateToken(), isEditorStranger(), isNotParents(), deletePost)
 
 router.get("/filterFeeds", validateToken(), isAdmin(), filterFeeds);
