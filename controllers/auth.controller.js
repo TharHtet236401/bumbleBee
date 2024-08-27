@@ -69,10 +69,7 @@ export const register = async (req, res) => {
         const toEncrypt = {
             _id: user._id,
             roles: user.roles,
-            email: user.email,
-            schools: user.schools,
-            classes: user.classes,
-            username: user.userName,
+            email: user.email
         };
 
         //this is to create a token
@@ -132,10 +129,7 @@ export const login = async (req, res) => {
         const toEncrypt = {
             _id: user._id,
             roles: user.roles,
-            email: user.email,
-            schools: user.schools,
-            classes: user.classes,
-            username: user.userName,
+            email: user.email
         };
 
         //this is to create a token
