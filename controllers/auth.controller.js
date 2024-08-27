@@ -1,4 +1,9 @@
+import path from "path";
+import { fileURLToPath } from 'url';
+
 import User from "../models/user.model.js";
+
+import {deleteFile} from "../utils/libby.js";
 
 import {
     encode,
@@ -6,6 +11,10 @@ import {
     fMsg,
     decode
 } from "../utils/libby.js";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const register = async (req, res) => {
     // Handles user registration by creating a new user in the database
@@ -22,13 +31,13 @@ export const register = async (req, res) => {
         } = req.body;
 
         const encodedUsername = encodeURIComponent(userName);
+
         profilePicture = req.file
                         ?
                         `/uploads/profile_pictures/${req.file.filename}`
                         :
                         `https://api.dicebear.com/9.x/initials/svg?seed=${encodedUsername}`;
 
-        console.log(profilePicture)
 
 
         if (password !== confirmPassword) {
@@ -72,6 +81,11 @@ export const register = async (req, res) => {
         //this is to send the response and token to the client-frontend and save in local storage
         fMsg(res, "Registered Successfully", { user, token }, 201);
     } catch (error) {
+        console.log(error)
+        if (req.file) {
+            const oldFilePath = path.join(__dirname, '..', req.file.path);
+            deleteFile(oldFilePath);
+        }
         fMsg(res, "Registration failed", error.message, 500);
     }
 };
@@ -167,9 +181,9 @@ export const passwordReset = async (req, res) => {
 
 export const changePassword = async (req, res) => {
     try {
-        // console.log(req.user)
+
         const { email } = req.user;
-        console.log(email);
+
         const { oldPassword, newPassword, confirmedNewPassword } = req.body;
 
         if (
@@ -187,14 +201,12 @@ export const changePassword = async (req, res) => {
         }
 
         const user = await User.findOne({ email });
-        console.log(user);
         if (!user) {
             return fMsg(res, "Password change failed", "User not found", 404);
         }
-        // console.log(user.password)
+
         const isMatch = decode(oldPassword, user.password);
-        console.log(oldPassword);
-        console.log(isMatch);
+
         if (!isMatch) {
             return fMsg(
                 res,

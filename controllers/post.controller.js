@@ -17,23 +17,23 @@ export const createPost = async (req, res) => {
             contentType,
             reactions,
             classId,
+            schoolId,
             grade
         } = req.body
 
         const posted_by = req.user._id;
-        const school = req.user.schools;
 
         contentPicture = req.file ? `/uploads/post_images/${req.file.filename}` : null;
 
         const post = new Post({
             posted_by,
-            school,
             heading,
             body,
             contentPicture,
             contentType,
             reactions,
             classId,
+            schoolId,
             grade
         })
 
@@ -43,6 +43,10 @@ export const createPost = async (req, res) => {
         fMsg(res, "Post created successfully", post, 201);
     } catch (error) {
         console.log(error)
+        if (req.file) {
+            const oldFilePath = path.join(__dirname, '..', req.file.path);
+            deleteFile(oldFilePath);
+        }
         fMsg(res, "error in creating post", error, 500);
     }
 };
@@ -91,7 +95,6 @@ export const getAnnouncements = async (req, res) => {
 export const filterFeeds = async (req, res) => {
     try {
 
-
         const { grade, contentType, classname, school } = req.query;
         
         // Construct query object
@@ -120,10 +123,10 @@ export const editPost = async (req, res) => {
         if (req.file) {
             const post = await Post.findById(req.params.post_id);
             if (post.contentPicture) {
-                console.log(post.contentPicture)
-                console.log( path.basename(post.contentPicture))
+
                 const oldFilePath = path.join(__dirname, '..', 'uploads', 'post_images' , path.basename(post.contentPicture));
                 deleteFile(oldFilePath);
+
             }
             req.body.contentPicture = `/uploads/post_images/${req.file.filename}`;
         }
