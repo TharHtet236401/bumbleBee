@@ -62,3 +62,93 @@ export const createRequest = async (req, res) => {
     fMsg(res, "Error in creating request", error.message, 500);
   }
 };
+
+export const readRequest = async (req, res)=> {
+  try{
+    const { classCode }  = req.body;
+
+    const desireClass = await Class.findOne({ classCode });
+    if (!desireClass) {
+      return fMsg(
+        res,
+        "Class not found",
+        "The class with the given code does not exist",
+        404
+      );
+    }
+
+    const readerId = req.user._id; 
+    const reader = await User.findById(readerId);
+
+    //currently, since there is only one role, "0" index array will be used. Considerations need to be done in the future. 
+    const readerEmail = reader.email;
+    const readerRole = reader.roles[0];
+
+    let requestsType;
+    let requests;
+    let classCodes = [];
+    
+    if(readerRole == "admin"){
+      requestsType = "Teacher";
+      requests = await PendingRequest.find({roles: ['teacher'], classCode: classCode});
+    } 
+    //only the teacher, who is responsible for the class should be viewing the class
+    else{
+      const teacher= await User.findOne({email: readerEmail, roles: ['teacher']});
+      let codeVerify = false;
+
+      for(const eachClass of teacher.classes){
+        const classObj = await Class.findById(eachClass)
+        classCodes.push(classObj.classCode);
+      }
+
+      console.log(classCodes);
+      classCodes.forEach((code) => {
+        if(code == classCode){
+          codeVerify = true;
+        }
+      })
+
+      if(codeVerify == false){
+        //if the class is not assigned to teacher. 
+        return fMsg(res, "You have no permission to view the requests", null, 200);
+      }
+
+      requestsType = "Guardian"
+      requests = await PendingRequest.find({roles: ['guardian'], classCode: classCode})
+    }
+
+    if(requests == null){
+      return fMsg(res, "There are no requests at the moment", null, 200);
+    }
+
+    fMsg(res, `${requestsType} requests`, requests, 200);
+
+  }catch(error){
+    console.log(error);
+    fMsg(res, "Error in reading pending requests", error.message, 500);
+  }
+}
+
+export const respondRequest = async(req, res) => {
+  try{
+    const { classId, response } = req.body;
+    
+    const classObj = await Class.findById(classId);
+    if(classObj == null){
+      return fMsg(res, "This is wrong class", classObj, 500);
+    }
+    console.log(classObj)
+
+    if(response){
+      console.log("This is true")
+    }else if(!response){
+      console.log("This is false")
+    }else{
+      console.log("Invalid choice")
+    }
+  }catch(error){
+    console.log(error);
+    fMsg(res, "Error in responding to the request", error, 500)
+  }
+}
