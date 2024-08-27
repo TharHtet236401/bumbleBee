@@ -13,9 +13,10 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/profile_pictures');
     },
     filename: (req, file, cb) => {
+
         const { ext } = parse(file.originalname);
-        console.log(ext)
-        cb(null, `${req.body.userName}-${Date.now()}${ext}`); // Ensure unique file names
+
+        cb(null, `${req.body.email}${ext}`); // Ensure unique file names
     }
 });
 

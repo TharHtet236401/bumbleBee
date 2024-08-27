@@ -36,6 +36,7 @@ export const PostSchema = {
         body: Joi.string().min(3).max(500),
         contentType: Joi.string().valid("announcement", "feed").required(),
         classId: Joi.string().required(),
+        schoolId: Joi.string().required(),
         grade: Joi.string().required()
     }).unknown(true),
     edit: Joi.object({

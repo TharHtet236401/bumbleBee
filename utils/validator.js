@@ -1,18 +1,29 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { fMsg } from "./libby.js";
+import path from "path";
+import { fileURLToPath } from 'url';
 
-import User from "../models/user.model.js";
+import { fMsg } from "./libby.js";
+import { deleteFile } from "./libby.js";
+
 import Post from "../models/post.model.js";
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 //validate the body with schema
 export const validateBody = (schema) => {
     return (req, res, next) => {
-        console.log(req.body);
+
         let result = schema.validate(req.body);
         if (result.error) {
+
+            if (req.file) {
+                const oldFilePath = path.join(__dirname, '..', req.file.path);
+                deleteFile(oldFilePath);
+            }
             next(new Error(result.error.details[0].message));
         } else {
             next();
@@ -31,7 +42,6 @@ export let validateToken = () => {
 
         try {
             const tokenUser = jwt.verify(token, process.env.SECRET_KEY);
-            // console.log(tokenUser)
             req.user = tokenUser.data;
 
             next();
