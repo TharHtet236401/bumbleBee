@@ -18,7 +18,7 @@ export const createClass = async(req, res) => {
         //find the classes of that school
         school.classes.forEach((element) => classLists.push(element))
         
-        console.log(classLists)
+
         let generatedClassCode = "";
     
 
@@ -27,15 +27,15 @@ export const createClass = async(req, res) => {
         while(codeGenerate == false){
             //generate the class code with 4 digits.
             generatedClassCode = generateClassCode(4);
-            console.log("Code generated: " + generatedClassCode)
+            
 
             if(classLists.length > 0){
                 for(const classId of classLists){
                     const c = await Class.findById(classId);
-                    console.log("Class code already in db " + c.classCode)
+                    
                     
                     //During the code generation, the duplicate name will also be checked
-                    if(c.className == className){
+                    if(c.className == className && c.grade == grade){
                         duplicateError = true;
                     }
 
@@ -139,3 +139,39 @@ export const deleteClass = async(req, res) => {
         fMsg(res, "error in deleting class", null, error)
     }
 }
+
+export const readClassByAdmin = async (req, res) => { // differenet admins can read different schools classes
+    try {
+        // Find the user and populate the school data if it's required
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return fMsg(res, "User not found", null, 404);
+        }
+
+        // Assuming user.schools is an array and we need to handle multiple schools in the future
+        const schoolId = user.schools[0];
+        if (!schoolId) {
+            return fMsg(res, "No school associated with this user", null, 400);
+        }
+
+        
+        const [school, classes] = await Promise.all([
+            School.findById(schoolId),
+            Class.find({ school: schoolId })
+        ]);
+
+        if (!school) {
+            return fMsg(res, "School not found", null, 404);
+        }
+
+        if (!classes || classes.length === 0) {
+            return fMsg(res, "No classes found for this school", [], 200);
+        }
+
+        fMsg(res, "Classes found", classes, 200);
+
+    } catch (err) {
+        console.error("Error in reading the class:", err);
+        fMsg(res, "Error in reading the class", null, err);
+    }
+};
