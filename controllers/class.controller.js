@@ -137,3 +137,12 @@ export const deleteClass = async(req, res) => {
         fMsg(res, "error in deleting class", null, error)
     }
 }
+
+export const readClass = async(req, res) => {
+    try{
+        ConstantSourceNode.l
+    }catch(err){
+        console.log(err)
+        fMsg(res, "error in reading the class", null,err)
+    }
+}
