@@ -62,7 +62,12 @@ export const getStudentsByClassCode = async (req, res) => {
         if (!classObj) {
             return fMsg(res, "Class not found", null, 404);
         }
-        fMsg(res, "Students fetched successfully", classObj.students, 200);
+        const students = classObj.students.map(student => ({
+            _id: student._id,
+            name: student.name,
+            dateofBirth: student.dateofBirth
+        }));
+        fMsg(res, "Students fetched successfully", students, 200);
     } catch (error) {
         fMsg(res, "Error in fetching students", error, 500);
     }
