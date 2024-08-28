@@ -65,17 +65,15 @@ export const createRequest = async (req, res) => {
 
 export const readRequest = async (req, res)=> {
   try{
-    const { classCode }  = req.body;
+    const { classId }  = req.body;
 
-    const desireClass = await Class.findOne({ classCode });
-    if (!desireClass) {
-      return fMsg(
-        res,
-        "Class not found",
-        "The class with the given code does not exist",
-        404
-      );
+    const classObj = await Class.findById(classId)
+
+    if(!classObj){
+      return fMsg(res, "Class not found", "The class does not exist", 404)
     }
+
+    const classCode = classObj.classCode;
 
     const readerId = req.user._id; 
     const reader = await User.findById(readerId);
@@ -90,7 +88,7 @@ export const readRequest = async (req, res)=> {
     
     if(readerRole == "admin"){
       requestsType = "Teacher";
-      requests = await PendingRequest.find({roles: ['teacher'], classCode: classCode});
+      requests = await PendingRequest.find({roles: ['teacher'], desiredClass: classObj});
     } 
     //only the teacher, who is responsible for the class should be viewing the class
     else{
@@ -118,7 +116,7 @@ export const readRequest = async (req, res)=> {
       requests = await PendingRequest.find({roles: ['guardian'], classCode: classCode})
     }
 
-    if(requests == null){
+    if(requests.length === 0){
       return fMsg(res, "There are no requests at the moment", null, 200);
     }
 
