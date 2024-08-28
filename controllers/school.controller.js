@@ -92,3 +92,18 @@ export const editSchool = async (req, res) => {
     fMsg(res, "error in updating school", error, 500);
   }
 };
+
+export const getSchool = async (req, res) => { //get the school info based on the user's school id
+  try {
+    const currentUser_id = req.user._id;
+    const userObj = await User.findById(currentUser_id);
+    const schoolId = userObj.schools[0];
+    const school = await School.findById(schoolId);
+    if (!school) {
+      return fMsg(res, "School not found", null, 404);
+    }
+    fMsg(res, "School fetched successfully", school, 200);
+  } catch (error) {
+    fMsg(res, "error in fetching school", error, 500);
+  }
+};
