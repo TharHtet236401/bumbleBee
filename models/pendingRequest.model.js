@@ -19,9 +19,9 @@ const pendingRequestSchema = new mongoose.Schema({
         type: [String],
         required: true
     },
-    student_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Student",
+    studentName: {
+        type: String,
+        required: true
     }
 })
 
