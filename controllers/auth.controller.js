@@ -24,7 +24,7 @@ export const register = async (req, res) => {
             email,
             password,
             phone,
-            confirmPassword,
+            confirmedPassword,
             profilePicture,
             roles,
             ...otherInfos
@@ -40,7 +40,7 @@ export const register = async (req, res) => {
 
 
 
-        if (password !== confirmPassword) {
+        if (password !== confirmedPassword) {
             return fMsg(
                 res,
                 "Registration failed",
