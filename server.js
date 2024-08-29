@@ -51,6 +51,10 @@ app.use("/api/student", studentRoute);
 // request
 app.use("/api/request", requestRoute);
 
+app.use("*", (req, res) => {
+    res.status(404).json({ con: false, message: "Invalid route" });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     err.status = err.status || 505;

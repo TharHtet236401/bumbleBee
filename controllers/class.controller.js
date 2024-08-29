@@ -67,7 +67,7 @@ export const createClass = async(req, res) => {
         
     }catch(err){
         console.log(err)
-        fMsg(res, "error in creating class", null, error)
+        fMsg(res, "error in creating class", err.message, 500)
     }
 }
 
@@ -77,7 +77,7 @@ export const editClass = async(req, res) => {
         const classObj = await Class.findById(classId);
 
         if(!classObj){
-            return fMsg(res, "There is no such class ", null, 200)
+            return fMsg(res, "There is no such class ", err.message, 200)
         }
 
         const editedClass = await Class.findByIdAndUpdate(
@@ -93,7 +93,7 @@ export const editClass = async(req, res) => {
         
     }catch(err){
         console.log(err);
-        fMsg(res, "error in updating the class", null, error)
+        fMsg(res, "error in updating the class", err.message, 500)
     }
 }
 
@@ -102,14 +102,14 @@ export const readAllClasses = async(req, res) => {
 
         const allClasses = await Class.find({});
         if(allClasses == null){
-            return fMsg(res, "There are no classes at the moment", null, 200)
+            return fMsg(res, "There are no classes at the moment", err.message, 200)
         }
 
         fMsg(res, "All Classes are found", allClasses, 200)
     }
     catch(err){
         console.log(err)
-        fMsg(res, "error in reading the classes", null, error)
+        fMsg(res, "error in reading the classes", err.message, 500)
     }
 }
 
@@ -119,7 +119,7 @@ export const deleteClass = async(req, res) => {
         const { classId } = req.body;
         const classObj = await Class.findById(classId);
         if(!classObj){
-            return fMsg(res, "There is no such class",null, 200)
+            return fMsg(res, "There is no such class",err.message, 200)
         }
 
         const schoolId = classObj.school;
@@ -134,7 +134,7 @@ export const deleteClass = async(req, res) => {
 
     }catch(err){
         console.log(err)
-        fMsg(res, "error in deleting class", null, error)
+        fMsg(res, "error in deleting class", err.message, 500)
     }
 }
 
@@ -170,7 +170,7 @@ export const readClassByAdmin = async (req, res) => { // differenet admins can r
 
     } catch (err) {
         console.error("Error in reading the class:", err);
-        fMsg(res, "Error in reading the class", null, err);
+        fMsg(res, "Error in reading the class", err.message, 500);
     }
 };
 
@@ -181,6 +181,6 @@ export const readClassByTeacherandGuardian = async (req, res) => {
         
     }catch(err){
         console.log(err)
-        fMsg(res, "error in reading the classes", null, error)
+        fMsg(res, "error in reading the classes", err.message, 500)
     }
 }
