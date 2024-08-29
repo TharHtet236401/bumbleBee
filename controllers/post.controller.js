@@ -53,7 +53,10 @@ export const createPost = async (req, res) => {
 
 export const getFeeds = async (req, res) => {
     try {
+
+        // ** req.user no longer include schools
         const { schools } = req.user;
+        // **
         const contentType = req.query.contentType;
 
         const query = {
@@ -74,8 +77,11 @@ export const getFeeds = async (req, res) => {
 
 export const getAnnouncements = async (req, res) => {
     try {
-        const { schools, classes } = req.user;
 
+        // ** req.user no longer include schools and classes
+        const { schools, classes } = req.user;
+        // **
+        
         const query = {
             school: { $in: schools },
             classId: { $in: classes }
