@@ -93,17 +93,41 @@ export const editSchool = async (req, res) => {
   }
 };
 
-export const getSchool = async (req, res) => { //get the school info based on the user's school id
+// export const getSchool = async (req, res) => { //get the school info based on the user's school id
+//   try {
+//     const currentUser_id = req.user._id;
+//     const userObj = await User.findById(currentUser_id);
+//     const schoolId = userObj.schools[0];
+//     const school = await School.findById(schoolId);
+//     if (!school) {
+//       return fMsg(res, "School not found", null, 404);
+//     }
+//     fMsg(res, "School fetched successfully", school, 200);
+//   } catch (error) {
+//     fMsg(res, "error in fetching school", error, 500);
+//   }
+// };
+
+
+export const getSchool = async (req, res) => { 
   try {
     const currentUser_id = req.user._id;
     const userObj = await User.findById(currentUser_id);
-    const schoolId = userObj.schools[0];
-    const school = await School.findById(schoolId);
-    if (!school) {
-      return fMsg(res, "School not found", null, 404);
+    
+    // Check if the user has associated schools
+    if (!userObj.schools || userObj.schools.length === 0) {
+      return fMsg(res, "No associated schools found", null, 404);
     }
-    fMsg(res, "School fetched successfully", school, 200);
+
+    // Fetch all schools associated with the user
+    const schools = await School.find({ _id: { $in: userObj.schools } });
+
+    if (schools.length === 0) {
+      return fMsg(res, "No schools found", null, 404);
+    }
+
+    fMsg(res, "Schools fetched successfully", schools, 200);
   } catch (error) {
-    fMsg(res, "error in fetching school", error, 500);
+    fMsg(res, "Error in fetching schools", error, 500);
   }
 };
