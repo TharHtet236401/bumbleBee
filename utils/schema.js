@@ -6,7 +6,7 @@ export const UserSchema={
         email:Joi.string().trim().pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).required(),
         password:Joi.string().min(8).max(30).required(),
         phone:Joi.string().min(7).max(11).required(),
-        confirmPassword:Joi.string().valid(Joi.ref("password")).required(),
+        confirmedPassword:Joi.string().valid(Joi.ref("password")).required(),
         roles:Joi.string().valid('admin', 'guardian', 'teacher').required(),
         relationship:Joi.string().when(Joi.ref('roles'), {
             is: 'guardian',
