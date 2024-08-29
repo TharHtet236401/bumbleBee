@@ -88,7 +88,8 @@ export const readRequest = async (req, res)=> {
     
     if(readerRole == "admin"){
       requestsType = "Teacher";
-      requests = await PendingRequest.find({roles: ['teacher'], desiredClass: classObj});
+      requests = await PendingRequest.find({roles: ['teacher'], classCode: classCode});
+      console.log(requests)
     } 
     //only the teacher, who is responsible for the class should be viewing the class
     else{
@@ -130,21 +131,71 @@ export const readRequest = async (req, res)=> {
 
 export const respondRequest = async(req, res) => {
   try{
-    const { classId, response } = req.body;
+    const { classId, requestId, response } = req.body;
     
     const classObj = await Class.findById(classId);
-    if(classObj == null){
-      return fMsg(res, "This is wrong class", classObj, 500);
-    }
-    console.log(classObj)
 
-    if(response){
-      console.log("This is true")
-    }else if(!response){
-      console.log("This is false")
-    }else{
-      console.log("Invalid choice")
+    const readerId = req.user._id; 
+    const reader = await User.findById(readerId);
+    //currently, since there is only one role, "0" index array will be used. Considerations need to be done in the future. 
+    const readerEmail = reader.email;
+    const readerRole = reader.roles[0];
+    
+    if(classObj == null){
+      return fMsg(res, "Invalid choice", classObj, 404);
     }
+
+    const request= await PendingRequest.findById({_id: requestId});
+    if(request == null){
+      return fMsg(res, "Invalid request", request, 404)
+    }
+
+    const requester = await User.findById(request.sender);
+    let content;
+    let decision;
+
+
+    if(readerRole == "admin"){
+      switch(response){
+        case true:
+          //add the sender into class
+          const newTeacher = classObj.teachers.push(request.sender);
+          await classObj.save();
+
+          //add the class into user profile
+          const newClass = requester.classes.push(classId);
+          await requester.save();
+
+          // remove the request
+          const removedRequest = await PendingRequest.findOneAndDelete(requestId);
+
+          content = "teacher";
+          decision = "accepted";
+
+          fMsg(res, `${content} got ${decision}`, removedRequest, 200)
+
+          break;
+        case false:
+          break;
+        default:
+          break;
+      }
+    }else if(readerRole == "teacher"){
+      switch(response){
+        case true:
+          break;
+        case false:
+          break;
+        default:
+          break;
+      }
+    }else{
+      return fMsg(res, "You don't have any permission", "Error", 403)
+    }
+
+    
+
+    
   }catch(error){
     console.log(error);
     fMsg(res, "Error in responding to the request", error, 500)
