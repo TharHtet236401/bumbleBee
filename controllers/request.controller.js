@@ -7,7 +7,7 @@ import { fMsg } from "../utils/libby.js";
 export const createRequest = async (req, res) => {
   // When the guardian and the teacher want to join the class
   try {
-    const { classCode, student_id } = req.body;
+    const { classCode, childName } = req.body;
     const userId = req.user._id;
 
     // Find the desired class using the provided class code
@@ -35,7 +35,7 @@ export const createRequest = async (req, res) => {
     const existingRequest = await PendingRequest.findOne({
       sender: userId,
       desireClass: desireClass._id,
-      student_id: student_id,
+      name: childName,
     });
     if (existingRequest) {
       return fMsg(
@@ -52,7 +52,7 @@ export const createRequest = async (req, res) => {
       desireClass: desireClass._id,
       classCode: classCode,
       roles: req.user.roles,
-      student_id: student_id,
+      studentName: childName,
     });
 
     await request.save();
