@@ -219,6 +219,15 @@ export const changePassword = async (req, res) => {
             );
         }
 
+        if(newPassword === oldPassword){
+            return fMsg(
+                res,
+                "Password change failed",
+                "New password and old password are the same",
+                400
+            );
+        }
+
         const hashedPassword = encode(newPassword);
 
         await User.updateOne({ email }, { password: hashedPassword });
