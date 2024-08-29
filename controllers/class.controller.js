@@ -173,3 +173,14 @@ export const readClassByAdmin = async (req, res) => { // differenet admins can r
         fMsg(res, "Error in reading the class", null, err);
     }
 };
+
+
+export const readClassByTeacherandGuardian = async (req, res) => {
+    try{
+        //After swam htet to complete the class data, we will add it here
+        
+    }catch(err){
+        console.log(err)
+        fMsg(res, "error in reading the classes", null, error)
+    }
+}
