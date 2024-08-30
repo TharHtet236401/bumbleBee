@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { fMsg } from "../utils/libby.js";
 import {deleteFile} from "../utils/libby.js";
+import User from '../models/user.model.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,8 +18,7 @@ export const createPost = async (req, res) => {
             contentType,
             reactions,
             classId,
-            schoolId,
-            grade
+            schoolId
         } = req.body
 
         const posted_by = req.user._id;
@@ -33,8 +33,7 @@ export const createPost = async (req, res) => {
             contentType,
             reactions,
             classId,
-            schoolId,
-            grade
+            schoolId
         })
 
         await post.save();
@@ -53,12 +52,16 @@ export const createPost = async (req, res) => {
 
 export const getFeeds = async (req, res) => {
     try {
-        const { schools } = req.user;
-        const contentType = req.query.contentType;
+    
+        const userId = req.user._id
+        const userInfo = await User.findById(userId, 'schools').lean();
+
+        const schoolIds = userInfo.schools
+        const type = 'feed';
 
         const query = {
-            school: { $in: schools },
-            contentType
+            schoolId: { $in: schoolIds },
+            contentType: type
         }
 
         const posts = await Post.find(query)
@@ -74,12 +77,22 @@ export const getFeeds = async (req, res) => {
 
 export const getAnnouncements = async (req, res) => {
     try {
-        const { schools, classes } = req.user;
+
+        const userId = req.user._id
+        const userInfo = await User.findById(userId, 'schools classes' ).lean();
+
+        
+        const schools = userInfo.schools
+        const classes = userInfo.classes
+        const type = 'announcement';
 
         const query = {
-            school: { $in: schools },
-            classId: { $in: classes }
+            schoolId: { $in: schools },
+            classId: { $in: classes },
+            contentType: type
         }
+
+       
 
         const posts = await Post.find(query)
                                 .sort({ createdAt: -1 })
@@ -95,13 +108,13 @@ export const getAnnouncements = async (req, res) => {
 export const filterFeeds = async (req, res) => {
     try {
 
-        const { grade, contentType, classname, school } = req.query;
+        const { grade, contentType, classId, schoolId } = req.query;
         
         // Construct query object
         let query = {};
-        if (school) query.school = school;
+        if (schoolId) query.schoolId = schoolId;
         if (grade) query.grade = grade;
-        if (classname) query.classname = classname;
+        if (classId) query.classId = classId;
         if (contentType) query.contentType = contentType;
 
         const posts = await Post.find(query)
