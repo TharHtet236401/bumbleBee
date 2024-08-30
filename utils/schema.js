@@ -53,7 +53,7 @@ export const PostSchema = {
             then: Joi.required(),
             otherwise: Joi.forbidden()
         }),
-        grade: Joi.string().required()
+
     }).unknown(true),
     edit: Joi.object({
         heading: Joi.string().min(3).max(50),
