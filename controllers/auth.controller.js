@@ -166,7 +166,7 @@ export const passwordReset = async (req, res) => {
 
         await User.updateOne({ email }, { password: hashedPassword });
 
-        fMsg(res, "Password reset successful", null, 204);
+        fMsg(res, "Password reset successful", "Password has been reset", 200);
     } catch (error) {
         fMsg(res, "Password reset failed", error.message, 500);
     }
@@ -230,7 +230,7 @@ export const changePassword = async (req, res) => {
 
         await User.updateOne({ email }, { password: hashedPassword });
 
-        fMsg(res, "Password change successful", null, 204);
+        fMsg(res, "Password change successful", "Password has been changed", 200);
     } catch (error) {
         fMsg(res, "Password change failed", error.message, 500);
     }
