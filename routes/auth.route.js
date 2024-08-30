@@ -24,7 +24,7 @@ const upload = multer({ storage });
 
 router.post("/register", upload.single('profilePicture'), validateBody(UserSchema.register), register);
 router.post("/login", validateBody(UserSchema.login), login);
-router.post("/passwordReset", passwordReset);
-router.post("/changePassword", validateToken(), changePassword);
+router.post("/passwordReset", validateBody(UserSchema.resetPassword), passwordReset);
+router.post("/changePassword", validateToken(), validateBody(UserSchema.changePassword), changePassword);
 
 export default router;

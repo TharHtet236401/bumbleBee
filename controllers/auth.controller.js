@@ -192,6 +192,15 @@ export const changePassword = async (req, res) => {
             );
         }
 
+        if(newPassword !== confirmedNewPassword){
+            return fMsg(
+                res,
+                "Password change failed",
+                "New password and confirmed new password do not match",
+                400
+            );
+        }
+
         const user = await User.findOne({ email });
         if (!user) {
             return fMsg(res, "Password change failed", "User not found", 404);

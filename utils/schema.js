@@ -18,7 +18,15 @@ export const UserSchema={
         email:Joi.string().pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).required(),
         password:Joi.string().min(8).max(30).required(),
     }),
-    
+    resetPassword:Joi.object({
+        email:Joi.string().pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).required(),
+        newPassword:Joi.string().min(8).max(30).required(),
+    }),
+    changePassword:Joi.object({
+        oldPassword:Joi.string().min(8).max(30).required(),
+        newPassword:Joi.string().min(8).max(30).required(),
+        confirmedNewPassword:Joi.string().valid(Joi.ref("newPassword")).required(),
+    })
 }
 
 export const SchoolSchema={
