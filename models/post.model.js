@@ -8,8 +8,7 @@ const postSchema = new mongoose.Schema({
     },
     schoolId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "School",
-        required: true,
+        ref: "School"
     },
     classId: {
         type: mongoose.Schema.Types.ObjectId,
