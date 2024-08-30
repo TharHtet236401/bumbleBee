@@ -3,12 +3,14 @@ import Class from "../models/class.model.js";
 import Student from "../models/student.model.js";
 import User from "../models/user.model.js";
 import { fMsg } from "../utils/libby.js";
+import mongoose from "mongoose";
 
 export const createRequest = async (req, res) => {
   // When the guardian and the teacher want to join the class
   try {
-    const { classCode, childName } = req.body;
+    const { classCode, childName, studentDOB } = req.body;
     const userId = req.user._id;
+    const user = await User.findById(userId);
 
     // Find the desired class using the provided class code
     const desireClass = await Class.findOne({ classCode });
@@ -46,6 +48,17 @@ export const createRequest = async (req, res) => {
       );
     }
 
+    // console.log("user.classes: " + user.classes + "\ntype of user.classes: " + typeof user.classes + "\ndesiredClassid: " + desireClass._id + "\ndesiredClass type:" + typeof desireClass._id)
+    //check whether the class has already been joined
+
+    for(let eachClass of user.classes){
+      console.log("each Class is " + eachClass)
+      if(eachClass.toString() == desireClass._id.toString()){
+
+        return fMsg(res, "User has already joined this class", null, 400)
+      }
+    }
+
     // Create a new pending request
     const request = new PendingRequest({
       sender: userId,
@@ -53,6 +66,7 @@ export const createRequest = async (req, res) => {
       classCode: classCode,
       roles: req.user.roles,
       studentName: childName,
+      studentDOB: studentDOB
     });
 
     await request.save();
@@ -65,7 +79,7 @@ export const createRequest = async (req, res) => {
 
 export const readRequest = async (req, res)=> {
   try{
-    const { classId }  = req.body;
+    const { classId, studentId }  = req.body;
 
     const classObj = await Class.findById(classId)
 
@@ -79,7 +93,6 @@ export const readRequest = async (req, res)=> {
     const reader = await User.findById(readerId);
 
     //currently, since there is only one role, "0" index array will be used. Considerations need to be done in the future. 
-    const readerEmail = reader.email;
     const readerRole = reader.roles[0];
 
     let requestsType;
@@ -93,28 +106,60 @@ export const readRequest = async (req, res)=> {
     } 
     //only the teacher, who is responsible for the class should be viewing the class
     else{
-      const teacher= await User.findOne({email: readerEmail, roles: ['teacher']});
-      let codeVerify = false;
-
-      for(const eachClass of teacher.classes){
-        const classObj = await Class.findById(eachClass)
-        classCodes.push(classObj.classCode);
+      const teacher = await User.findOne({_id: readerId, roles: ['teacher']})
+      
+      if(teacher == null) {
+        return fMsg(res, "You do not have permission to read", "error", 403)
+      }
+      if(teacher.classes == []){
+        return fMsg(res, "You do not have permission to read", error, 403)
       }
 
-      console.log(classCodes);
-      classCodes.forEach((code) => {
-        if(code == classCode){
-          codeVerify = true;
+      if(studentId == null){
+        return fMsg(res, "Something went wrong with student Id", "error", 404)
+      }
+      if (!mongoose.Types.ObjectId.isValid(studentId)) {
+        return fMsg(res, "Invalid student Id", "error", 404);
+      }
+      const student = await Student.findById(studentId)
+      if(student == null){
+        return fMsg(res, "There is no such student " ,"error", 404)
+      }
+      
+      
+      let classVerify = false;
+      
+      while(classVerify == false){
+        //change into for loop
+        teacher.classes.forEach((eachClass) => {
+          if(eachClass.toString() === classId.toString()){
+            classVerify = true;
+          }
+          
+        })
+        if(classVerify != true){
+          return fMsg(res, "You do not have permission to read", "error", 403)
         }
-      })
+      }
+      requestsType = "Guardian"
+      let pendingRequests = await PendingRequest.find({roles: ['guardian'], desireClass: classId});
+      // console.log(pendingRequests)
 
-      if(codeVerify == false){
-        //if the class is not assigned to teacher. 
-        return fMsg(res, "You have no permission to view the requests", null, 200);
+      let requestCondition = false;
+      while(requestCondition == false){
+        for(const eachRequest of pendingRequests){
+          console.log(eachRequest.studentDOB === student.dateofBirth)
+          if(eachRequest.studentName == student.name && eachRequest.studentDOB.toString() == student.dateofBirth.toString()){
+            requests = await PendingRequest.find({roles: ['guardian'], desireClass: classId, studentName: student.name, studentDOB: student.dateofBirth});
+            console.log("This is requests: " + requests);
+            requestCondition = true;
+          }
+        }
+        if(requestCondition == false){
+          return fMsg(res, "There are no requests for this student at the moment", null, 200);
+        }
       }
 
-      requestsType = "Guardian"
-      requests = await PendingRequest.find({roles: ['guardian'], classCode: classCode})
     }
 
     if(requests.length === 0){
@@ -142,18 +187,20 @@ export const respondRequest = async(req, res) => {
     const readerRole = reader.roles[0];
     
     if(classObj == null){
-      return fMsg(res, "Invalid choice", classObj, 404);
+      return fMsg(res, "Invalid Class", classObj, 404);
     }
 
     const request= await PendingRequest.findById({_id: requestId});
     if(request == null){
-      return fMsg(res, "Invalid request", request, 404)
+      return fMsg(res, "Invalid Request Id", request, 404)
     }
 
     const requester = await User.findById(request.sender);
+    let output = [];
     let content;
     let decision;
 
+  
 
     if(readerRole == "admin"){
       switch(response){
@@ -167,33 +214,101 @@ export const respondRequest = async(req, res) => {
           await requester.save();
 
           // remove the request
-          const removedRequest = await PendingRequest.findOneAndDelete(requestId);
+          await PendingRequest.findOneAndDelete({_id: requestId});
 
           content = "teacher";
           decision = "accepted";
-
-          fMsg(res, `${content} got ${decision}`, removedRequest, 200)
-
+          output = [newTeacher, newClass]
           break;
+
         case false:
+          await PendingRequest.findOneAndDelete({_id: requestId});
+          content = "teacher";
+          decision = "rejected";
+
+          output = []
           break;
+
         default:
-          break;
+          return fMsg(res, "Wrong response ", "Error", 400)
       }
     }else if(readerRole == "teacher"){
       switch(response){
         case true:
+          let newGuardian;
+          let newChild;
+          //‌add the sender into the class's guardians
+          const classGuardian =  classObj.guardians.push(request.sender);
+
+          //add the guardian into the student's guardian list if it is not added
+
+          const studentName = request.studentName;
+          const studentDOB = request.studentDOB;
+
+          const student = await Student.findOne({name: studentName, dateofBirth: studentDOB});
+          
+          let guardianAlreadyAdded = false;
+
+         
+          while(guardianAlreadyAdded == false){
+            console.log("while loop is working")
+            student.guardians.forEach((guardian) => {
+              if(guardian == requester){
+                console.log("this should be correct")
+                guardianAlreadyAdded = true;
+              }
+            })
+
+            if(guardianAlreadyAdded == false){
+              console.log("student guardians? " + student.guardians)
+              newGuardian = student.guardians.push(requester)
+              guardianAlreadyAdded = true
+              console.log("it works")
+            }
+          }
+
+          //add child to the guardian
+          let childAlreadyAdded = false;
+
+          while(childAlreadyAdded == false){
+            requester.childern.forEach((child) => {
+              if(child == student){
+                childAlreadyAdded = true;
+              }
+            })
+
+            if(childAlreadyAdded == false){
+              newChild = requester.childern.push(student)
+              childAlreadyAdded = true;
+            }
+          }
+          
+
+          //delete the request
+          await PendingRequest.findOneAndDelete({_id: requestId});
+
+          content = "guardian";
+          decision = "accepted";
+          output = [classGuardian, newGuardian, newChild]
           break;
-        case false:
-          break;
-        default:
-          break;
+
+          case false:
+            await PendingRequest.findOneAndDelete({_id: requestId});
+            content = "guardian";
+            decision = "rejected";
+  
+            output = []
+            break;
+  
+          default:
+            return fMsg(res, "Wrong response ", "Error", 400)
+
       }
     }else{
       return fMsg(res, "You don't have any permission", "Error", 403)
     }
 
-    
+    fMsg(res, `${content} got ${decision}`, output, 200)
 
     
   }catch(error){

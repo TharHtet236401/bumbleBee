@@ -20,8 +20,10 @@ const pendingRequestSchema = new mongoose.Schema({
         required: true
     },
     studentName: {
-        type: String,
-        required: true
+        type: String
+    },
+    studentDOB: {
+        type: Date
     }
 })
 
