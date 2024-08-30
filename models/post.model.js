@@ -11,10 +11,6 @@ const postSchema = new mongoose.Schema({
         ref: "School",
         required: true,
     },
-    grade: {
-        type: String,
-        required: true,
-    },
     classId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Class"

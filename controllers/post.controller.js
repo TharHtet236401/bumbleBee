@@ -2,7 +2,8 @@ import Post from '../models/post.model.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { fMsg } from "../utils/libby.js";
-import {deleteFile} from "../utils/libby.js";
+import { deleteFile } from "../utils/libby.js";
+import Class from '../models/class.model.js';
 import User from '../models/user.model.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,6 +39,15 @@ export const createPost = async (req, res) => {
 
         await post.save();
         await post.populate('posted_by', 'userName profilePicture roles');
+
+        if (contentType === 'announcement' && classId) {
+            // Find the class and push the post ID to the announcements array
+            await Class.findByIdAndUpdate(
+                classId,
+                { $push: { announcements: post._id } },
+                { new: true }
+            );
+        }
 
         fMsg(res, "Post created successfully", post, 201);
     } catch (error) {
@@ -79,26 +89,26 @@ export const getAnnouncements = async (req, res) => {
     try {
 
         const userId = req.user._id
-        const userInfo = await User.findById(userId, 'schools classes' ).lean();
+        const userInfo = await User.findById(userId,  'classes' ).lean();
 
-        console.log(userInfo)
-        const schools = userInfo.schools
         const classes = userInfo.classes
-        const type = 'announcement';
 
         const query = {
-            schoolId: { $in: schools },
-            classId: { $in: classes },
-            contentType: type
+            _id: { $in: classes },
         }
 
-        console.log(query)
-
-        const posts = await Post.find(query)
+        const announcements = await Class.find(query, 'announcements')
                                 .sort({ createdAt: -1 })
-                                .populate('posted_by', 'userName profilePicture roles')
+                                .populate({
+                                    path: 'announcements',
+                                    populate: {
+                                        path: 'posted_by',
+                                        select: 'userName profilePicture roles'
+                                    }
+                                })
+                                .lean();
 
-        fMsg(res, "Posts fetched successfully", posts, 200);
+        fMsg(res, "Announcements fetched successfully", announcements, 200);
     } catch (error) {
         console.log(error)
         fMsg(res, "Error in fetching posts", error, 500);

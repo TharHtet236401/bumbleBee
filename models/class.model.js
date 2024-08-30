@@ -35,7 +35,7 @@ const classSchema = new mongoose.Schema({
     },
     announcements: {
         type: [mongoose.Schema.Types.ObjectId], // Updated to reference ObjectId
-        ref: "Announcement",
+        ref: "Post",
     },
 });
 
