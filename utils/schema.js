@@ -18,7 +18,15 @@ export const UserSchema={
         email:Joi.string().pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).required(),
         password:Joi.string().min(8).max(30).required(),
     }),
-    
+    resetPassword:Joi.object({
+        email:Joi.string().pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).required(),
+        newPassword:Joi.string().min(8).max(30).required(),
+    }),
+    changePassword:Joi.object({
+        oldPassword:Joi.string().min(8).max(30).required(),
+        newPassword:Joi.string().min(8).max(30).required(),
+        confirmedNewPassword:Joi.string().valid(Joi.ref("newPassword")).required(),
+    })
 }
 
 export const SchoolSchema={
@@ -35,15 +43,23 @@ export const PostSchema = {
         heading: Joi.string().min(3).max(50).required(),
         body: Joi.string().min(3).max(500),
         contentType: Joi.string().valid("announcement", "feed").required(),
-        classId: Joi.string().required(),
-        schoolId: Joi.string().required(),
-        grade: Joi.string().required()
+        classId: Joi.string().when(Joi.ref('contentType'), {
+            is: 'announcement',
+            then: Joi.required(),
+            otherwise: Joi.forbidden()
+        }),
+        schoolId: Joi.string().when(Joi.ref('contentType'), {
+            is: 'feed',
+            then: Joi.required(),
+            otherwise: Joi.forbidden()
+        }),
+
     }).unknown(true),
     edit: Joi.object({
         heading: Joi.string().min(3).max(50),
         body: Joi.string().min(3).max(500)
     }).unknown(true)
-}
+}   
 
 export const ClassSchema = {
     create:Joi.object({

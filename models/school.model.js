@@ -1,32 +1,31 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const schoolSchema = new mongoose.Schema({
     schoolName: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     },
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     },
     phone: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     },
     address: {
         type: String,
-        required: true
+        required: true,
     },
     classes: {
         type: [mongoose.Schema.Types.ObjectId], // Updated to reference ObjectId
-        ref: 'Class',
-    }
-   
+        ref: "Class",
+    },
 });
 
-const School = mongoose.model('School', schoolSchema);
+const School = mongoose.model("School", schoolSchema);
 
 export default School;
