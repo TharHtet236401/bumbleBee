@@ -81,7 +81,7 @@ export const getAnnouncements = async (req, res) => {
         const userId = req.user._id
         const userInfo = await User.findById(userId, 'schools classes' ).lean();
 
-        console.log(userInfo)
+        
         const schools = userInfo.schools
         const classes = userInfo.classes
         const type = 'announcement';
@@ -92,7 +92,7 @@ export const getAnnouncements = async (req, res) => {
             contentType: type
         }
 
-        console.log(query)
+       
 
         const posts = await Post.find(query)
                                 .sort({ createdAt: -1 })
