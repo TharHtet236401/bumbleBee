@@ -38,6 +38,7 @@ export const createRequest = async (req, res) => {
       sender: userId,
       desireClass: desireClass._id,
       name: childName,
+      studentDOB: studentDOB
     });
     if (existingRequest) {
       return fMsg(
@@ -48,12 +49,44 @@ export const createRequest = async (req, res) => {
       );
     }
 
+    let student;
+    if(childName != null && studentDOB != null){
+      student = await Student.find({name: childName, dateofBirth: studentDOB});
+    }
+
     // console.log("user.classes: " + user.classes + "\ntype of user.classes: " + typeof user.classes + "\ndesiredClassid: " + desireClass._id + "\ndesiredClass type:" + typeof desireClass._id)
     //check whether the class has already been joined
 
     for(let eachClass of user.classes){
       console.log("each Class is " + eachClass)
       if(eachClass.toString() == desireClass._id.toString()){
+
+        //There can be error in the future, if the user has both role of teacher and parent.
+
+        //TWIN SCENARIO need further considerations
+        // let requestDuplicate = true;
+
+        //   if(user.roles.includes("guardian")){
+        //     let studentCheck = false;
+        //     while(studentCheck == false){
+        //       if(user.childern == null){
+        //         studentCheck = true;
+        //         requestDuplicate = false;
+        //       }
+
+        //       for(let eachChild of user.childern){
+        //         if(eachChild == student){
+        //           return fMsg(res, "Your child is already in the class", null, 400)
+        //         }
+        //       }
+        //       studentCheck = true;
+        //       requestDuplicate = false;
+        //     }
+        //   }
+        
+        // if(requestDuplicate == true){
+        //   return fMsg(res, "User has already joined this class", null, 400)
+        // }
 
         return fMsg(res, "User has already joined this class", null, 400)
       }
@@ -237,8 +270,13 @@ export const respondRequest = async(req, res) => {
         case true:
           let newGuardian;
           let newChild;
+          let newSchool;
           //‌add the sender into the class's guardians
-          const classGuardian =  classObj.guardians.push(request.sender);
+          const classGuardian = await Class.findOneAndUpdate(
+            {_id: classId},
+            {"$push": {guardians: request.sender}}
+          );
+          // const classGuardian =  classObj.guardians.push(request.sender);
 
           //add the guardian into the student's guardian list if it is not added
 
@@ -253,7 +291,7 @@ export const respondRequest = async(req, res) => {
           while(guardianAlreadyAdded == false){
             console.log("while loop is working")
             student.guardians.forEach((guardian) => {
-              if(guardian == requester){
+              if(guardian.toString() == requester.toString()){
                 console.log("this should be correct")
                 guardianAlreadyAdded = true;
               }
@@ -261,7 +299,11 @@ export const respondRequest = async(req, res) => {
 
             if(guardianAlreadyAdded == false){
               console.log("student guardians? " + student.guardians)
-              newGuardian = student.guardians.push(requester)
+              // newGuardian = student.guardians.push(requester)
+              newGuardian = await Student.findOneAndUpdate(
+                {_id: student._id},
+                {"$push": {guardians: request.sender}}
+              );
               guardianAlreadyAdded = true
               console.log("it works")
             }
@@ -272,24 +314,72 @@ export const respondRequest = async(req, res) => {
 
           while(childAlreadyAdded == false){
             requester.childern.forEach((child) => {
-              if(child == student){
+              if(child.toString() == student.toString()){
+                console.log("there is already child")
                 childAlreadyAdded = true;
               }
             })
 
             if(childAlreadyAdded == false){
-              newChild = requester.childern.push(student)
+              console.log("child is being pushed")
+              // newChild = requester.childern.push(student)
+              newChild = await User.findOneAndUpdate(
+                {_id: request},
+                {"$push": {children: student._id}}
+              )
               childAlreadyAdded = true;
+            }
+          }
+
+          //if the guardian is not already in class, push that again as well
+          let classAlreadyAdded = false;
+
+          while(classAlreadyAdded == false){
+            requester.classes.forEach((eachClass) => {
+              if(eachClass.toString()== classId.toString()){
+                console.log("there is already class")
+                classAlreadyAdded = true;
+              }
+            })
+
+            if(classAlreadyAdded == false){
+              console.log("class is added")
+              newChild = await User.findOneAndUpdate(
+                {_id: request.sender},
+                {"$push": {classes: classId}}
+              )
+
+              classAlreadyAdded = true;
             }
           }
           
 
+          let schoolAlreadyAdded = false;
+          while(schoolAlreadyAdded == false){
+            requester.schools.forEach((eachSchool) => {
+              if(eachSchool.toString() == classObj.school.toString()){
+                console.log("there is already school")
+                schoolAlreadyAdded = true
+              }
+            })
+
+            if(schoolAlreadyAdded == false){
+              console.log("school is added")
+              newSchool = await User.findOneAndUpdate(
+                {_id: request.sender},
+                {"$push": {schools: classObj.school}}
+              )
+
+              schoolAlreadyAdded = true;
+            }
+          }
+          
           //delete the request
           await PendingRequest.findOneAndDelete({_id: requestId});
 
           content = "guardian";
           decision = "accepted";
-          output = [classGuardian, newGuardian, newChild]
+          output = [classGuardian, newGuardian, newChild, newSchool]
           break;
 
           case false:
