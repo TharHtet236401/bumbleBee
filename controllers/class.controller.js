@@ -80,6 +80,8 @@ export const editClass = async(req, res) => {
             return fMsg(res, "There is no such class ", err.message, 200)
         }
 
+        //duplicate class name return something. 
+
         const editedClass = await Class.findByIdAndUpdate(
             classId,
             {
