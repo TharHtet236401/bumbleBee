@@ -289,10 +289,11 @@ export const respondRequest = async(req, res) => {
 
          
           while(guardianAlreadyAdded == false){
-            console.log("while loop is working")
+            console.log("Student Object " + student)
             student.guardians.forEach((guardian) => {
-              if(guardian.toString() == requester.toString()){
-                console.log("this should be correct")
+              console.log("Each Guardian: " + guardian + "\nRequester id: (Probably Not) " + requester + "\nRequester Id: " + request.sender)
+              if(guardian.toString() == request.sender.toString()){
+                console.log("There is already guardian in the student")
                 guardianAlreadyAdded = true;
               }
             })
@@ -305,7 +306,7 @@ export const respondRequest = async(req, res) => {
                 {"$push": {guardians: request.sender}}
               );
               guardianAlreadyAdded = true
-              console.log("it works")
+              console.log("New Guardian" + newGuardian)
             }
           }
 
@@ -314,19 +315,20 @@ export const respondRequest = async(req, res) => {
 
           while(childAlreadyAdded == false){
             requester.childern.forEach((child) => {
-              if(child.toString() == student.toString()){
+              if(child.toString() == student._id.toString()){
                 console.log("there is already child")
                 childAlreadyAdded = true;
               }
             })
 
             if(childAlreadyAdded == false){
-              console.log("child is being pushed")
+
               // newChild = requester.childern.push(student)
               newChild = await User.findOneAndUpdate(
-                {_id: request},
-                {"$push": {children: student._id}}
+                {_id: request.sender},
+                {"$push": {childern: student._id}}
               )
+              console.log("child is being created " + newChild)
               childAlreadyAdded = true;
             }
           }
@@ -343,7 +345,7 @@ export const respondRequest = async(req, res) => {
             })
 
             if(classAlreadyAdded == false){
-              console.log("class is added")
+              console.log("class is added ")
               newChild = await User.findOneAndUpdate(
                 {_id: request.sender},
                 {"$push": {classes: classId}}
@@ -373,6 +375,49 @@ export const respondRequest = async(req, res) => {
               schoolAlreadyAdded = true;
             }
           }
+
+          //school is added in the student
+          let studentAddSchool = false;
+          while(studentAddSchool == false){
+            student.schools.forEach((eachSchool) => {
+              if(eachSchool.toString() == classObj.school.toString()){
+                console.log("there is already school for student")
+                studentAddSchool = true
+              }
+            })
+
+            if(studentAddSchool == false){
+              console.log("school is added to student")
+              newSchool = await Student.findOneAndUpdate(
+                {_id: student._id},
+                {"$push": {schools: classObj.school}}
+              )
+
+              studentAddSchool = true;
+            }
+          }
+
+          let studentAddClass = false;
+          while(studentAddClass == false){
+            student.classes.forEach((eachClass) => {
+              if(eachClass.toString() == classId.toString()){
+                console.log("there is already class for student")
+                studentAddClass = true
+              }
+            })
+
+            if(studentAddClass == false){
+              console.log("class is added to student")
+              newSchool = await Student.findOneAndUpdate(
+                {_id: student._id},
+                {"$push": {classes: classId}}
+              )
+
+              studentAddClass = true;
+            }
+          }
+
+          //class is added in the student
           
           //delete the request
           await PendingRequest.findOneAndDelete({_id: requestId});
