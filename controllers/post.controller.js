@@ -154,9 +154,13 @@ export const editPost = async (req, res) => {
             req.body.contentPicture = `/uploads/post_images/${req.file.filename}`;
         }
 
-        const post = await Post.findByIdAndUpdate(req.params.post_id, {
-            ...req.body
-        }, { new: true });
+        const post = await Post.findByIdAndUpdate(
+            req.params.post_id,
+            {
+                ...req.body
+            },
+            { new: true }
+        );
         fMsg(res, "Post updated successfully", post, 200);
     } catch (error) {
         console.log(error)

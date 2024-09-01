@@ -13,7 +13,11 @@ export const UserSchema={
             then: Joi.required(),
             otherwise: Joi.optional()
         })
-    }),
+    }).unknown(true),
+    edit:Joi.object({
+        userName:Joi.string().min(3).max(100),
+        phone: Joi.string().min(7).max(11)
+    }).unknown(true),
     login:Joi.object({  
         email:Joi.string().pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).required(),
         password:Joi.string().min(8).max(30).required(),
