@@ -14,6 +14,7 @@ import userRoute from "./routes/user.route.js";
 import postRoute from "./routes/post.route.js";
 import studentRoute from "./routes/student.route.js";
 import requestRoute from "./routes/request.route.js";
+import testRoute from "./routes/test.route.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,6 +51,8 @@ app.use("/api/student", studentRoute);
 
 // request
 app.use("/api/request", requestRoute);
+
+app.use("/api/test/", testRoute);
 
 app.use("*", (req, res) => {
     res.status(404).json({ con: false, message: "Invalid route" });
