@@ -13,20 +13,26 @@ export const updateUserInfo = async (req, res) => {
         const userId = req.user._id;
         const userInfo = await User.findById(userId);
         const username = req.body.userName;
+        const oldPath = path.join(__dirname, "..", userInfo.profilePicture);
+
         if (username && (req.file == undefined || req.file == null)) {
-            const oldPath = path.join(__dirname, "..", userInfo.profilePicture);
+
 
             fs.access(oldPath, fs.constants.F_OK, (err) => {
-                if (err) {
-                    console.log("Path does not exist");
-                    fMsg(res, "Path does not exist", err, 500);
+                if (!err) {
+                    // user has a profile picture only username is updated
+                    // do nothing
                 } else {
-                    deleteFile(oldPath)
+                    // user does not have a profile picture
+                    // generate a new profile picture with dicebear
+                    const encodedUsername = encodeURIComponent(username);
+                    req.body.profilePicture = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedUsername}`;
                 }
             });
-            const encodedUsername = encodeURIComponent(username);
-            req.body.profilePicture = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedUsername}`;
+
         } else if (req.file) {
+            // user has a profile picture and is updating it
+            // replace it with new one
             req.body.profilePicture = `/uploads/profile_pictures/${req.file.filename}`;
         } 
 
