@@ -16,9 +16,6 @@ export const updateUserInfo = async (req, res) => {
         const oldPath = path.join(__dirname, "..", userInfo.profilePicture);
 
         if (username && (req.file == undefined || req.file == null)) {
-            
-            console.log('username', username)
-            console.log('req.file', req.file)
 
 
             fs.access(oldPath, fs.constants.F_OK, (err) => {
@@ -32,26 +29,13 @@ export const updateUserInfo = async (req, res) => {
                     req.body.profilePicture = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedUsername}`;
                 }
             });
-            // fs.access(oldPath, fs.constants.F_OK, (err) => {
-            //     if (!err) {
-            //         console.log("file exists");
-            //         
- 
-            //     } else {
-            //         console.log("file does not exist");
-            //         const encodedUsername = encodeURIComponent(username);
-            //         req.body.profilePicture = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedUsername}`;
-            //         console.log(req.body.profilePicture)
-            //     }
-            // });
 
         } else if (req.file) {
             // user has a profile picture and is updating it
             // replace it with new one
-            console.log('req.file', req.file)
             req.body.profilePicture = `/uploads/profile_pictures/${req.file.filename}`;
         } 
-        console.log('req.body', req.body)
+
         const user = await User.findByIdAndUpdate(
             userId,
             {
