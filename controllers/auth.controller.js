@@ -13,6 +13,7 @@ const __dirname = path.dirname(__filename);
 export const register = async (req, res) => {
     // Handles user registration by creating a new user in the database
     try {
+
         let {
             userName,
             email,
@@ -26,10 +27,12 @@ export const register = async (req, res) => {
 
         const encodedUsername = encodeURIComponent(userName);
 
+
         profilePicture = req.file
             ? `/uploads/profile_pictures/${req.file.filename}`
             : `https://api.dicebear.com/9.x/initials/svg?seed=${encodedUsername}`;
 
+        
         if (password !== confirmedPassword) {
             return fMsg(
                 res,
@@ -51,7 +54,7 @@ export const register = async (req, res) => {
             roles,
             ...otherInfos,
         };
-
+        // console.log(req.body)
         //save the new user to the database
         const user = await User.create(newUser);
 
