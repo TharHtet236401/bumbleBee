@@ -24,6 +24,11 @@ const pendingRequestSchema = new mongoose.Schema({
     },
     studentDOB: {
         type: Date
+    },
+    status: {
+        type: String,
+        enum: ['pending', 'accepted', 'rejected'],
+        default: 'pending'
     }
 })
 
