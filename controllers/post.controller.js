@@ -109,6 +109,10 @@ export const getAnnouncements = async (req, res) => {
 
         const classes = userInfo.classes
 
+        if(classes.length == 0){
+            return fMsg(res, "No classes registered for you", [], 200);
+        }
+
         const query = {
             _id: { $in: classes },
         }
