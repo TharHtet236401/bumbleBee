@@ -33,11 +33,11 @@ export const createRequest = async (req, res) => {
     //         guardian.classes.push(desireClass._id)
     //         await guardian.save()
 
-    // Check if the user already has a pending request for this class
+    // Check if the user already has a  request for this class
     const existingRequest = await PendingRequest.findOne({
       sender: userId,
       desireClass: desireClass._id,
-      name: childName,
+      studentName: childName,
       studentDOB: studentDOB
     });
     if (existingRequest) {
@@ -57,9 +57,9 @@ export const createRequest = async (req, res) => {
     // console.log("user.classes: " + user.classes + "\ntype of user.classes: " + typeof user.classes + "\ndesiredClassid: " + desireClass._id + "\ndesiredClass type:" + typeof desireClass._id)
     //check whether the class has already been joined
 
-    for(let eachClass of user.classes){
-      console.log("each Class is " + eachClass)
-      if(eachClass.toString() == desireClass._id.toString()){
+    // for(let eachClass of user.classes){
+    //   console.log("each Class is " + eachClass)
+    //   if(eachClass.toString() == desireClass._id.toString()){
 
         //There can be error in the future, if the user has both role of teacher and parent.
 
@@ -88,9 +88,9 @@ export const createRequest = async (req, res) => {
         //   return fMsg(res, "User has already joined this class", null, 400)
         // }
 
-        return fMsg(res, "User has already joined this class", null, 400)
-      }
-    }
+    //     return fMsg(res, "User has already joined this class", null, 400)
+    //   }
+    // }
 
     // Create a new pending request
     const request = new PendingRequest({
@@ -134,7 +134,7 @@ export const readRequest = async (req, res)=> {
     
     if(readerRole == "admin"){
       requestsType = "Teacher";
-      requests = await PendingRequest.find({roles: ['teacher'], classCode: classCode});
+      requests = await PendingRequest.find({roles: ['teacher'], classCode: classCode, status: "pending"});
       console.log(requests)
     } 
     //only the teacher, who is responsible for the class should be viewing the class
@@ -175,7 +175,7 @@ export const readRequest = async (req, res)=> {
         }
       }
       requestsType = "Guardian"
-      let pendingRequests = await PendingRequest.find({roles: ['guardian'], desireClass: classId});
+      let pendingRequests = await PendingRequest.find({roles: ['guardian'], desireClass: classId, status: "pending"});
       // console.log(pendingRequests)
 
       let requestCondition = false;
@@ -183,7 +183,7 @@ export const readRequest = async (req, res)=> {
         for(const eachRequest of pendingRequests){
           console.log(eachRequest.studentDOB === student.dateofBirth)
           if(eachRequest.studentName == student.name && eachRequest.studentDOB.toString() == student.dateofBirth.toString()){
-            requests = await PendingRequest.find({roles: ['guardian'], desireClass: classId, studentName: student.name, studentDOB: student.dateofBirth});
+            requests = await PendingRequest.find({roles: ['guardian'], desireClass: classId, studentName: student.name, studentDOB: student.dateofBirth, status: "pending"});
             console.log("This is requests: " + requests);
             requestCondition = true;
           }
@@ -223,7 +223,7 @@ export const respondRequest = async(req, res) => {
       return fMsg(res, "Invalid Class", classObj, 404);
     }
 
-    const request= await PendingRequest.findById({_id: requestId});
+    const request= await PendingRequest.findById({_id: requestId, status: "pending"});
     if(request == null){
       return fMsg(res, "Invalid Request Id", request, 404)
     }
@@ -247,15 +247,18 @@ export const respondRequest = async(req, res) => {
           await requester.save();
 
           // remove the request
-          await PendingRequest.findOneAndDelete({_id: requestId});
+          // await PendingRequest.findOneAndDelete({_id: requestId});
+          await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"accepted"})
 
           content = "teacher";
           decision = "accepted";
-          output = [newTeacher, newClass]
+          output = null;
+          // output = [newTeacher, newClass]
           break;
 
         case false:
-          await PendingRequest.findOneAndDelete({_id: requestId});
+          // await PendingRequest.findOneAndDelete({_id: requestId});
+          await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"rejected"})
           content = "teacher";
           decision = "rejected";
 
@@ -269,13 +272,10 @@ export const respondRequest = async(req, res) => {
       switch(response){
         case true:
           let newGuardian;
+          let classGuardian;
           let newChild;
           let newSchool;
-          //‌add the sender into the class's guardians
-          const classGuardian = await Class.findOneAndUpdate(
-            {_id: classId},
-            {"$push": {guardians: request.sender}}
-          );
+          
           // const classGuardian =  classObj.guardians.push(request.sender);
 
           //add the guardian into the student's guardian list if it is not added
@@ -354,6 +354,33 @@ export const respondRequest = async(req, res) => {
               classAlreadyAdded = true;
             }
           }
+
+          const classObj = await Class.findById(request.desireClass);
+
+          let classAddGuardian = false;
+          while(classAddGuardian == false){
+            classObj.guardians.forEach((eachGuardian) => {
+              if(eachGuardian.toString()== request.sender.toString()){
+                console.log("there is already guardian")
+                classAddGuardian = true;
+              }
+            })
+
+            if(classAddGuardian == false){
+              console.log("guardian is added ")
+              //‌add the sender into the class's guardians
+              classGuardian = await Class.findOneAndUpdate(
+                {_id: classId},
+                {"$push": {guardians: request.sender}}
+              );
+              // newGuardian = await User.findOneAndUpdate(
+              //   {_id: request.sender},
+              //   {"$push": {classes: classId}}
+              // )
+
+              classAddGuardian = true;
+            }
+          }
           
 
           let schoolAlreadyAdded = false;
@@ -420,7 +447,8 @@ export const respondRequest = async(req, res) => {
           //class is added in the student
           
           //delete the request
-          await PendingRequest.findOneAndDelete({_id: requestId});
+          // await PendingRequest.findOneAndDelete({_id: requestId});
+          await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"accepted"})
 
           content = "guardian";
           decision = "accepted";
@@ -428,7 +456,8 @@ export const respondRequest = async(req, res) => {
           break;
 
           case false:
-            await PendingRequest.findOneAndDelete({_id: requestId});
+            // await PendingRequest.findOneAndDelete({_id: requestId});
+            await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"rejected"})
             content = "guardian";
             decision = "rejected";
   
