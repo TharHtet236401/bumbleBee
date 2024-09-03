@@ -3,7 +3,6 @@ import { fileURLToPath } from "url";
 import { fMsg, paginate } from "../utils/libby.js";
 import fs from "fs";
 import path from "path";
-import { deleteFile } from "../utils/libby.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
