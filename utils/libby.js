@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import Class from "../models/class.model.js";
 
 import fs from "fs";
 
@@ -32,8 +33,7 @@ export const genToken = (payload) =>
     );
 
 // utils/pagination.js
-export const paginate = async (model, filter, page = 1, limit = 10) => {
-    //have to discus with frontend team to know how much data they want to fetch each time
+export const paginate = async (model, filter, page = 1, limit = 10, sortField = null, populate = []) => {
     try {
         // Calculate the number of documents to skip
         const skip = (page - 1) * limit;
@@ -44,8 +44,23 @@ export const paginate = async (model, filter, page = 1, limit = 10) => {
         // Calculate total pages based on total items
         const totalPages = Math.ceil(totalItems / limit);
 
-        // Fetch paginated items from the database
-        const items = await model.find(filter).skip(skip).limit(limit);
+        // Query to paginate items from the database
+        let query = model.find(filter).skip(skip).limit(limit);
+
+        // Apply sorting if a sortField is provided
+        if (sortField) {
+            query = query.sort({ [sortField]: -1 }); // Sort by the provided field (descending)
+        }
+
+        // Apply populate if provided
+        if (populate.length > 0) {
+            populate.forEach(pop => {
+                query = query.populate(pop);
+            });
+        }
+
+        // Execute the query and get the items
+        const items = await query;
 
         return {
             items,
@@ -57,6 +72,29 @@ export const paginate = async (model, filter, page = 1, limit = 10) => {
         throw new Error("Error in pagination: " + error.message);
     }
 };
+
+export const paginateAnnouncements = ( announcementDoc, page = 1, limit = 10) => {
+    try {
+        // Calculate the number of documents to skip
+        const skip = (page - 1) * limit;
+
+        // Calculate total items and pages
+        const totalItems = announcementDoc[0].announcements.length;
+        const totalPages = Math.ceil(totalItems / limit);
+
+        // Slice announcements for pagination
+        const paginatedAnnouncements = announcementDoc[0].announcements.slice(skip, skip + limit);
+        return {
+            items: paginatedAnnouncements,
+            totalItems,
+            totalPages,
+            currentPage: page,
+        };
+    } catch (error) {
+        throw new Error("Error in pagination: " + error.message);
+    }
+};
+
 
 export const deleteFile = (filePath) => {
     fs.unlink(filePath, (err) => {
