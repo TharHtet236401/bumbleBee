@@ -177,10 +177,15 @@ export const readClassByAdmin = async (req, res) => { // differenet admins can r
 };
 
 
-export const readClassByTeacherandGuardian = async (req, res) => {
+export const readClassByTeacherAndGuardian = async (req, res) => {
     try{
         //After swam htet to complete the class data, we will add it here
-        
+        const currentUser = await User.findById(req.user._id).populate('classes'); // Populate only the classes field
+        const classesToRead = currentUser.classes;
+        if(classesToRead.length == 0){
+            return fMsg(res, "No classes registered for you", [], 200);
+        }
+        fMsg(res, "Classes found", classesToRead, 200);
     }catch(err){
         console.log(err)
         fMsg(res, "error in reading the classes", err.message, 500)

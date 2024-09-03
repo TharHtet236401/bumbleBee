@@ -29,8 +29,14 @@ const pendingRequestSchema = new mongoose.Schema({
         type: String,
         enum: ['pending', 'accepted', 'rejected'],
         default: 'pending'
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
 })
+pendingRequestSchema.index({ status: 1, classCode: 1, roles: 1 })
+pendingRequestSchema.index({ status:1 })
 
 const PendingRequest = mongoose.model("PendingRequest", pendingRequestSchema);
 

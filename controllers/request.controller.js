@@ -112,6 +112,9 @@ export const createRequest = async (req, res) => {
 
 export const readRequest = async (req, res)=> {
   try{
+
+    //input from the front end which student's guardian requests the teacher wants to see
+    //or the teacher's request  whichh the admim wants to see the respective requests
     const { classId, studentId }  = req.body;
 
     const classObj = await Class.findById(classId)
@@ -132,13 +135,13 @@ export const readRequest = async (req, res)=> {
     let requests;
     let classCodes = [];
     
-    if(readerRole == "admin"){
+    if(readerRole == "admin"){ // the reader is admin , the requests are for the teacher
       requestsType = "Teacher";
       requests = await PendingRequest.find({roles: ['teacher'], classCode: classCode, status: "pending"});
-      console.log(requests)
+      // console.log(requests)
     } 
     //only the teacher, who is responsible for the class should be viewing the class
-    else{
+    else{ // the reader is teacher , the requests are for the guardian
       const teacher = await User.findOne({_id: readerId, roles: ['teacher']})
       
       if(teacher == null) {
@@ -161,7 +164,7 @@ export const readRequest = async (req, res)=> {
       
       
       let classVerify = false;
-      
+      //this block checks whether the teacher is responsible for the class
       while(classVerify == false){
         //change into for loop
         teacher.classes.forEach((eachClass) => {
