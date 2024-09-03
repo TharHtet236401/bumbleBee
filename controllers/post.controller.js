@@ -1,7 +1,7 @@
 import Post from '../models/post.model.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { fMsg } from "../utils/libby.js";
+import { fMsg, paginate, paginateAnnouncements } from "../utils/libby.js";
 import { deleteFile } from "../utils/libby.js";
 import Class from '../models/class.model.js';
 import User from '../models/user.model.js';
@@ -73,12 +73,28 @@ export const getFeeds = async (req, res) => {
             schoolId: { $in: schoolIds },
             contentType: type
         }
+        
+        const page = parseInt(req.query.page) || 1;
 
-        const posts = await Post.find(query)
-                                .sort({ createdAt: -1 })
-                                .populate('posted_by', 'userName profilePicture roles')
+        const sortField = 'createdAt'
 
-        fMsg(res, "Posts fetched successfully", posts, 200);
+        const populate = {"posted_by": "userName profilePicture roles"}
+
+        const populateString = Object.entries(populate).map(([path, select]) => ({
+            path,
+            select
+        }));
+
+        const paginatedFeeds = await paginate(
+            Post,
+            query,
+            page,
+            10,
+            sortField,
+            populateString
+        );
+
+        fMsg(res, "Posts fetched successfully", paginatedFeeds, 200);
     } catch (error) {
         console.log(error)
         fMsg(res, "Error in fetching posts", error, 500);
@@ -97,6 +113,8 @@ export const getAnnouncements = async (req, res) => {
             _id: { $in: classes },
         }
 
+        const page = parseInt(req.query.page) || 1;
+
         const announcements = await Class.find(query, 'announcements')
                                 .sort({ createdAt: -1 })
                                 .populate({
@@ -108,12 +126,18 @@ export const getAnnouncements = async (req, res) => {
                                 })
                                 .lean();
 
-        fMsg(res, "Announcements fetched successfully", announcements, 200);
+        const paginatedResults =  paginateAnnouncements(announcements, page);
+
+        
+
+        fMsg(res, "Announcements fetched successfully", paginatedResults, 200);
     } catch (error) {
-        console.log(error)
-        fMsg(res, "Error in fetching posts", error, 500);
+        console.log(error);
+        fMsg(res, "Error in fetching announcements", error, 500);
     }
 };
+
+
 
 export const filterFeeds = async (req, res) => {
     try {
