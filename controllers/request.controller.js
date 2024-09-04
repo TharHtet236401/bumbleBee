@@ -9,6 +9,18 @@ export const createRequest = async (req, res) => {
   // When the guardian and the teacher want to join the class
   try {
     const { classCode, childName, studentDOB } = req.body;
+
+    const currentUser = await User.findById(req.user._id)
+
+    if(!classCode){
+      return fMsg(res, "Please provide all the required fields", null, 400)
+    }
+
+    if(currentUser.roles.includes("guardian")){
+      if(!childName || !studentDOB){
+        return fMsg(res, "Please provide all the required fields", null, 400)
+      }
+    }
     const userId = req.user._id;
     const user = await User.findById(userId);
 

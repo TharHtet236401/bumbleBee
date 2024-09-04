@@ -15,7 +15,7 @@ export const createClass = async(req, res) => {
         let codeGenerate = false;
         let duplicateError = false;
 
-        //find the classes of that school
+        //find the classes of that school to check the input class name and grade are already exists in that school
         school.classes.forEach((element) => classLists.push(element))
         
 
@@ -74,6 +74,10 @@ export const createClass = async(req, res) => {
 export const editClass = async(req, res) => {
     try{
         const { classId, grade, className } = req.body;
+
+        if(!classId || !grade || !className){
+            return fMsg(res, "Please provide all the required fields", null, 400)
+        }
         const classObj = await Class.findById(classId);
 
         if(!classObj){
