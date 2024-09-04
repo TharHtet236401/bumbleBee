@@ -10,6 +10,8 @@ export const createRequest = async (req, res) => {
   try {
     const { classCode, childName, studentDOB } = req.body;
 
+
+
     const currentUser = await User.findById(req.user._id)
 
     if(!classCode){
@@ -128,6 +130,18 @@ export const readRequest = async (req, res)=> {
     //input from the front end which student's guardian requests the teacher wants to see
     //or the teacher's request  whichh the admim wants to see the respective requests
     const { classId, studentId }  = req.body;
+    const readerId = req.user._id; 
+    const reader = await User.findById(readerId);
+    if(classId == null){
+      return fMsg(res, "Please provide all the required fields", null, 400)
+    }
+
+    if(req.user.roles.includes("guardian")){
+      if(!studentId){
+        return fMsg(res, "Please provide all the required fields", null, 400)
+      }
+    }
+    
 
     const classObj = await Class.findById(classId)
 
@@ -137,8 +151,7 @@ export const readRequest = async (req, res)=> {
 
     const classCode = classObj.classCode;
 
-    const readerId = req.user._id; 
-    const reader = await User.findById(readerId);
+    
 
     //currently, since there is only one role, "0" index array will be used. Considerations need to be done in the future. 
     const readerRole = reader.roles[0];
