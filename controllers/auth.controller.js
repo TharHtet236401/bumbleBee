@@ -248,5 +248,17 @@ export const changePassword = async (req, res) => {
     }
 };
 
+export const logout = async (req, res) => {
+    try {
+        // Since JWT is stateless, we don't need to invalidate the token on the server
+        // The actual "logout" happens on the client-side by removing the token
+        // For now, we'll just send a success message
+        fMsg(res, "Logout successful", "User has been logged out", 200);
+    } catch (error) {
+        fMsg(res, "Logout failed", error.message, 500);
+    }
+};
+
 //note
 //acutually we dont have to generate token for both login and register, it may depend on the workflow of UI but discuss later ..But i have created both but will delete one base on discussion
+
