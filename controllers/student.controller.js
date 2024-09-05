@@ -1,34 +1,38 @@
 import Student from "../models/student.model.js";
 import Class from "../models/class.model.js";
 import { fMsg } from "../utils/libby.js";
+import User from "../models/user.model.js";
 
 export const addStudentToClass = async (req, res) => {
     try {
         const class_id = req.params.class_id;
-        const { name, dateofBirth } = req.body;
+        const { name, dateofBirth, newStudent = false } = req.body;
+
         // Find if the student already exists
         let student = await Student.findOne({ name, dateofBirth });
-        if (student) {
-            // Check if class_id is already in student's classes array
 
-            student.classes.push(class_id);g
-
-            await student.save();
-        } else {
-            // Create a new student if not found
-
+        if (student && !newStudent) {
+            // Existing student, add class if not already present
+            if (!student.classes.includes(class_id)) {
+                student.classes.push(class_id);
+                await student.save();
+            }
+        } else if (!student || newStudent) {
+            // Create a new student if not found or newStudent is true
             student = await Student.create({
                 name,
                 dateofBirth,
-                classes: [class_id], // Initialize with the class_id
+                classes: [class_id],
             });
         }
 
         // Find the class to add the student to
         const studentClass = await Class.findById(class_id);
         if (!studentClass.students.includes(student._id)) {
-            studentClass.students.push(student._id); // Push the student's ID to the class's students array
+            studentClass.students.push(student._id);
             await studentClass.save();
+        } else {
+            return fMsg(res, "Student already in class", null, 400);
         }
 
         fMsg(res, "Student created or updated successfully", student, 201);
@@ -85,3 +89,37 @@ export const getStudentInfo = async (req, res, next) => {
         next(error);
     }
 }
+
+
+///new version starts here 
+
+
+export const checkStudentExists = async (req, res, next) => {
+    try {
+        const { name, dateofBirth } = req.body;
+        const currentUser = await User.findById(req.user._id);
+        console.log(currentUser);
+        const studentList = await Student.find({ name, dateofBirth })
+            .populate('classes', 'grade className school');
+        
+        if (studentList.length > 0) {
+            const formattedStudentList = studentList.map(student => ({
+                _id: student._id,
+                name: student.name,
+                dateofBirth: student.dateofBirth,
+                classes: student.classes.map(cls => ({
+                    grade: cls.grade,
+                    className: cls.className,
+                    school: cls.school
+                }))
+            }));
+            fMsg(res, "Student with that name and date of birth exists in database", formattedStudentList, 200);
+        } else {
+            fMsg(res, "Student does not exist in the database", null, 404);
+        }
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
