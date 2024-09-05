@@ -1,4 +1,4 @@
-import { register, login, passwordReset, changePassword } from "../controllers/auth.controller.js";
+import { register, login, passwordReset, changePassword,logout } from "../controllers/auth.controller.js";
 import { validateToken, validateBody } from "../utils/validator.js";
 import { UserSchema } from "../utils/schema.js";
 import { parse } from 'path';
@@ -26,5 +26,5 @@ router.post("/register", upload.single('profilePicture'), validateBody(UserSchem
 router.post("/login", validateBody(UserSchema.login), login);
 router.post("/passwordReset", validateBody(UserSchema.resetPassword), passwordReset);
 router.post("/changePassword", validateToken(), validateBody(UserSchema.changePassword), changePassword);
-
+router.post("/logout", validateToken(), logout);
 export default router;
