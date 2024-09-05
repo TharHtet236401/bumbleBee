@@ -1,6 +1,7 @@
 import Student from "../models/student.model.js";
 import Class from "../models/class.model.js";
 import { fMsg } from "../utils/libby.js";
+import User from "../models/user.model.js";
 
 export const addStudentToClass = async (req, res) => {
     try {
@@ -11,7 +12,7 @@ export const addStudentToClass = async (req, res) => {
         if (student) {
             // Check if class_id is already in student's classes array
 
-            student.classes.push(class_id);g
+            student.classes.push(class_id);
 
             await student.save();
         } else {
@@ -29,6 +30,8 @@ export const addStudentToClass = async (req, res) => {
         if (!studentClass.students.includes(student._id)) {
             studentClass.students.push(student._id); // Push the student's ID to the class's students array
             await studentClass.save();
+        }else{
+            return fMsg(res, "Student already in class", null, 400);
         }
 
         fMsg(res, "Student created or updated successfully", student, 201);
@@ -82,6 +85,27 @@ export const getStudentInfo = async (req, res, next) => {
         }
         fMsg(res, "Student fetched successfully", student, 200);
     }catch(error){
+        next(error);
+    }
+}
+
+
+///new version starts here 
+
+
+export const checkStudentExists = async (req, res,next) => {
+    try {
+        const { name, dateofBirth } = req.body;
+        const currentUser = await User.findById(req.user._id);
+        console.log(currentUser);
+        const studentList = await Student.find({name,dateofBirth});
+        if (studentList.length > 0) {
+             fMsg(res, "Student with that name and date of birth exists in database", studentList, 200);
+        }else{
+            fMsg(res, "Student does not exist in the database", null, 404);
+        }
+    }
+    catch (error) {
         next(error);
     }
 }

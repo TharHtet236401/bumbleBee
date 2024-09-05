@@ -246,6 +246,7 @@ export const respondRequest = async(req, res) => {
     //currently, since there is only one role, "0" index array will be used. Considerations need to be done in the future. 
     const readerEmail = reader.email;
     const readerRole = reader.roles[0];
+    const readerSchool = reader.schools[0];
     
     if(classObj == null){
       return fMsg(res, "Invalid Class", classObj, 404);
@@ -272,6 +273,10 @@ export const respondRequest = async(req, res) => {
 
           //add the class into user profile
           const newClass = requester.classes.push(classId);
+          await requester.save();
+
+          //add the school into user profile
+          const newSchool = requester.schools.push(readerSchool);
           await requester.save();
 
           // remove the request
