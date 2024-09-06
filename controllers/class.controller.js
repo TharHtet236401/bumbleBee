@@ -51,7 +51,7 @@ export const createClass = async(req, res) => {
 
         //return this if there is duplicate class name
         if(duplicateError){
-            return fMsg(res, "There is already that class name for your school. ", null, 200)
+            return next(new Error("There is already that class name for your school. "))
         }
         //create a new class
         const newClass = await Class.create({
@@ -67,7 +67,7 @@ export const createClass = async(req, res) => {
         
     }catch(err){
         console.log(err)
-        fMsg(res, "error in creating class", err.message, 500)
+        next(err);
     }
 }
 
@@ -76,12 +76,12 @@ export const editClass = async(req, res) => {
         const { classId, grade, className } = req.body;
 
         if(!classId || !grade || !className){
-            return fMsg(res, "Please provide all the required fields", null, 400)
+            return next(new Error("Please provide all the required fields"))
         }
         const classObj = await Class.findById(classId);
 
         if(!classObj){
-            return fMsg(res, "There is no such class ", err.message, 200)
+            return next(new Error("There is no such class "))
         }
 
         //duplicate class name return something. 
@@ -99,7 +99,7 @@ export const editClass = async(req, res) => {
         
     }catch(err){
         console.log(err);
-        fMsg(res, "error in updating the class", err.message, 500)
+        next(err);
     }
 }
 
@@ -108,14 +108,14 @@ export const readAllClasses = async(req, res) => {
 
         const allClasses = await Class.find({});
         if(allClasses == null){
-            return fMsg(res, "There are no classes at the moment", err.message, 200)
+            return next(new Error("There are no classes at the moment"))
         }
 
         fMsg(res, "All Classes are found", allClasses, 200)
     }
     catch(err){
         console.log(err)
-        fMsg(res, "error in reading the classes", err.message, 500)
+        next(err);
     }
 }
 
@@ -125,7 +125,7 @@ export const deleteClass = async(req, res) => {
         const { classId } = req.body;
         const classObj = await Class.findById(classId);
         if(!classObj){
-            return fMsg(res, "There is no such class",err.message, 200)
+            return next(new Error("There is no such class"))
         }
 
         const schoolId = classObj.school;
@@ -140,7 +140,7 @@ export const deleteClass = async(req, res) => {
 
     }catch(err){
         console.log(err)
-        fMsg(res, "error in deleting class", err.message, 500)
+        next(err);
     }
 }
 
@@ -149,13 +149,13 @@ export const readClassByAdmin = async (req, res) => { // differenet admins can r
         // Find the user and populate the school data if it's required
         const user = await User.findById(req.user._id);
         if (!user) {
-            return fMsg(res, "User not found", null, 404);
+            return next(new Error("User not found"));
         }
 
         // Assuming user.schools is an array and we need to handle multiple schools in the future
         const schoolId = user.schools[0];
         if (!schoolId) {
-            return fMsg(res, "No school associated with this user", null, 400);
+            return next(new Error("No school associated with this user"));
         }
 
         
@@ -165,18 +165,18 @@ export const readClassByAdmin = async (req, res) => { // differenet admins can r
         ]);
 
         if (!school) {
-            return fMsg(res, "School not found", null, 404);
+            return next(new Error("School not found"));
         }
 
         if (!classes || classes.length === 0) {
-            return fMsg(res, "No classes found for this school", [], 200);
+            return next(new Error("No classes found for this school"));
         }
 
         fMsg(res, "Classes found", classes, 200);
 
     } catch (err) {
         console.error("Error in reading the class:", err);
-        fMsg(res, "Error in reading the class", err.message, 500);
+        next(err);
     }
 };
 
@@ -187,11 +187,11 @@ export const readClassByTeacherAndGuardian = async (req, res) => {
         const currentUser = await User.findById(req.user._id).populate('classes'); // Populate only the classes field
         const classesToRead = currentUser.classes;
         if(classesToRead.length == 0){
-            return fMsg(res, "No classes registered for you", [], 200);
+            return next(new Error("No classes registered for you"));
         }
         fMsg(res, "Classes found", classesToRead, 200);
     }catch(err){
         console.log(err)
-        fMsg(res, "error in reading the classes", err.message, 500)
+        next(err);
     }
 }
