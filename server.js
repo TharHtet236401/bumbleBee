@@ -55,13 +55,13 @@ app.use("/api/request", requestRoute);
 app.use("/api/test/", testRoute);
 
 app.use("*", (req, res) => {
-    res.status(404).json({ con: false, message: "Invalid route" });
+    res.status(404).json({ con: false, msg: "Invalid route" });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
     err.status = err.status || 505;
-    res.status(err.status).json({ con: false, message: err.message });
+    res.status(err.status).json({ con: false, msg: err.message });
 });
 
 app.listen(process.env.PORT, () => {

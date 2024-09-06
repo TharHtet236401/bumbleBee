@@ -4,7 +4,7 @@ import School from "../models/school.model.js";
 import Class from "../models/class.model.js";
 import { generateClassCode } from "../utils/libby.js";
 
-export const createClass = async(req, res) => {
+export const createClass = async(req, res, next) => {
     try{
         const { grade, className } = req.body;
         const user = await User.findById(req.user._id);  //find the user
@@ -71,7 +71,7 @@ export const createClass = async(req, res) => {
     }
 }
 
-export const editClass = async(req, res) => {
+export const editClass = async(req, res, next) => {
     try{
         const { classId, grade, className } = req.body;
 
@@ -103,7 +103,7 @@ export const editClass = async(req, res) => {
     }
 }
 
-export const readAllClasses = async(req, res) => {
+export const readAllClasses = async(req, res, next) => {
     try{
 
         const allClasses = await Class.find({});
@@ -119,7 +119,7 @@ export const readAllClasses = async(req, res) => {
     }
 }
 
-export const deleteClass = async(req, res) => {
+export const deleteClass = async(req, res, next) => {
     try{
         
         const { classId } = req.body;
@@ -144,7 +144,7 @@ export const deleteClass = async(req, res) => {
     }
 }
 
-export const readClassByAdmin = async (req, res) => { // differenet admins can read different schools classes
+export const readClassByAdmin = async (req, res, next) => { // differenet admins can read different schools classes
     try {
         // Find the user and populate the school data if it's required
         const user = await User.findById(req.user._id);
@@ -181,7 +181,7 @@ export const readClassByAdmin = async (req, res) => { // differenet admins can r
 };
 
 
-export const readClassByTeacherAndGuardian = async (req, res) => {
+export const readClassByTeacherAndGuardian = async (req, res, next) => {
     try{
         //After swam htet to complete the class data, we will add it here
         const currentUser = await User.findById(req.user._id).populate('classes'); // Populate only the classes field

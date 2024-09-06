@@ -5,11 +5,12 @@ import { fMsg, paginate, paginateAnnouncements } from "../utils/libby.js";
 import { deleteFile } from "../utils/libby.js";
 import Class from '../models/class.model.js';
 import User from '../models/user.model.js';
+import { nextTick } from 'process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const createPost = async (req, res) => {
+export const createPost = async (req, res, next) => {
     try {
 
         let {
@@ -56,11 +57,11 @@ export const createPost = async (req, res) => {
             const oldFilePath = path.join(__dirname, '..', req.file.path);
             deleteFile(oldFilePath);
         }
-        fMsg(res, "error in creating post", error, 500);
+        next(error);
     }
 };
 
-export const getFeeds = async (req, res) => {
+export const getFeeds = async (req, res, next) => {
     try {
     
         const userId = req.user._id
@@ -97,11 +98,11 @@ export const getFeeds = async (req, res) => {
         fMsg(res, "Posts fetched successfully", paginatedFeeds, 200);
     } catch (error) {
         console.log(error)
-        fMsg(res, "Error in fetching posts", error, 500);
+        next(error);
     }
 };
 
-export const getAnnouncements = async (req, res) => {
+export const getAnnouncements = async (req, res, next) => {
     try {
 
         const userId = req.user._id
@@ -110,7 +111,7 @@ export const getAnnouncements = async (req, res) => {
         const classes = userInfo.classes
 
         if(classes.length == 0){
-            return fMsg(res, "No classes registered for you", [], 200);
+            return next(new Error("No classes registered for you"));
         }
 
         const query = {
@@ -137,13 +138,13 @@ export const getAnnouncements = async (req, res) => {
         fMsg(res, "Announcements fetched successfully", paginatedResults, 200);
     } catch (error) {
         console.log(error);
-        fMsg(res, "Error in fetching announcements", error, 500);
+        next(error);
     }
 };
 
 
 
-export const filterFeeds = async (req, res) => {
+export const filterFeeds = async (req, res, next) => {
     try {
 
         const { grade, contentType, classId, schoolId } = req.query;
@@ -162,12 +163,12 @@ export const filterFeeds = async (req, res) => {
         fMsg(res, "Posts fetched successfully", posts, 200);
     } catch (error) {
         console.log(error);
-        fMsg(res, "Error in fetching posts", error, 500);
+        next(error);
     }
 };
 
 
-export const editPost = async (req, res) => {
+export const editPost = async (req, res, next) => {
     try {
 
         // delete the old file if a new file is uploaded
@@ -192,25 +193,25 @@ export const editPost = async (req, res) => {
         fMsg(res, "Post updated successfully", post, 200);
     } catch (error) {
         console.log(error)
-        fMsg(res, "error in updating post", error, 500);
+        next(error);
     }
 };
 
-export const deletePost = async (req, res) => {
+export const deletePost = async (req, res, next) => {
     try {
         // Find the post by ID and delete it
         const post = await Post.findByIdAndDelete(req.params.post_id);
         
         // Check if the post was found and deleted
         if (!post) {
-            return fMsg(res, "Post not found", null, 404);
+            return next(new Error("Post not found"));
         }
 
         // Respond with a success message
         fMsg(res, "Post deleted successfully", post, 200);
     } catch (error) {
 
-        fMsg(res, "Error in deleting post", error, 500);
+        next(error);
     }
 };
 
