@@ -7,7 +7,7 @@ import path from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const updateUserInfo = async (req, res) => {
+export const updateUserInfo = async (req, res,next) => {
     try {
         const userId = req.user._id;
         const userInfo = await User.findById(userId);
@@ -45,29 +45,29 @@ export const updateUserInfo = async (req, res) => {
         fMsg(res, "User updated successfully", user, 200);
     } catch (error) {
         console.log(error);
-        fMsg(res, "error in updating user", error, 500);
+        next(error);
     }
 };
 
-export const deleteUser = async (req, res) => {
+export const deleteUser = async (req, res,next) => {
     try {
         const userId = req.params.userId;
         const user = await User.findByIdAndDelete(userId);
         fMsg(res, "User deleted successfully", user, 200);
     } catch (error) {
         console.log(error);
-        fMsg(res, "error in deleting user", error, 500);
+        next(error);
     }
 };
 
-export const getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res,next) => {
     //admin function
     try {
         const currentUser = req.user;
         const admin = await User.findById(currentUser._id);
 
         if (!admin) {
-            return fMsg(res, "Admin not found", [], 404);
+            return next(new Error("Admin not found"))
         }
 
         const usersSchoolId = admin.schools[0]; // Fetching usersSchoolId here
@@ -84,6 +84,6 @@ export const getAllUsers = async (req, res) => {
         // Return paginated response
         fMsg(res, "Users fetched successfully", paginatedData, 200);
     } catch (error) {
-        fMsg(res, "Error in fetching users", error, 500);
+        next(error);
     }
 };
