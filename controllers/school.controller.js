@@ -2,30 +2,30 @@ import School from "../models/school.model.js";
 import User from "../models/user.model.js";
 import { fMsg } from "../utils/libby.js";
 
-export const createSchool = async (req, res) => {
+export const createSchool = async (req, res, next) => {
   try {
     // Get the current user from the request
     const currentUser = req.user;
     if (!currentUser) {
-      return fMsg(res, "User not authenticated", null, 401);
+      return next(new Error("User not authenticated"))
     }
 
     // Extract school details from the request body
     const { schoolName, address, phone, email } = req.body;
     if (!schoolName || !address || !phone || !email) {
-      return fMsg(res, "All fields are required", null, 400);
+      return next(new Error("All fields are required"))
     }
 
     // Check if the school already exists
     const school = await School.findOne({ schoolName });
     if (school) {
-      return fMsg(res, "School already exists", null, 400);
+      return next(new Error("School already exists"))
     }
 
     // Find the user in the database
     const userDb = await User.findById(currentUser._id);
     if (!userDb) {
-      return fMsg(res, "User not found", null, 404);
+      return next(new Error("User not found"))
     }
 
     // Create a new school
@@ -43,11 +43,11 @@ export const createSchool = async (req, res) => {
   } catch (error) {
     // Log the error for debugging
     console.error(error);
-    fMsg(res, "Error in creating school", error, 500);
+    next(error);
   }
 };
 
-export const editSchool = async (req, res) => {
+export const editSchool = async (req, res, next) => {
   try {
     // Extract data from request body
     const { schoolName, address, phone, email } = req.body;
@@ -55,13 +55,13 @@ export const editSchool = async (req, res) => {
 
     // Check if user is authenticated
     if (!currentUser) {
-      return fMsg(res, "User not authenticated", null, 401);
+      return next(new Error("User not authenticated"))
     }
 
     // Find the user in the database
     const userDb = await User.findById(currentUser._id);
     if (!userDb) {
-      return fMsg(res, "User not found", null, 404);
+      return next(new Error("User not found"))
     }
 
     // Get the school ID from the user's schools array
@@ -70,7 +70,7 @@ export const editSchool = async (req, res) => {
     // Find the school by ID
     const school = await School.findById(schoolId);
     if (!school) {
-      return fMsg(res, "School not found", null, 404);
+      return next(new Error("School not found"))
     }
 
     // Update the school details
@@ -109,25 +109,25 @@ export const editSchool = async (req, res) => {
 // };
 
 
-export const getSchool = async (req, res) => { 
+export const getSchool = async (req, res, next) => { 
   try {
     const currentUser_id = req.user._id;
     const userObj = await User.findById(currentUser_id);
     
     // Check if the user has associated schools
     if (!userObj.schools || userObj.schools.length === 0) {
-      return fMsg(res, "No associated schools found", null, 404);
+      return next(new Error("No associated schools found"))
     }
 
     // Fetch all schools associated with the user
     const schools = await School.find({ _id: { $in: userObj.schools } });
 
     if (schools.length === 0) {
-      return fMsg(res, "No schools found", null, 404);
+      return next(new Error("No schools found"))
     }
 
     fMsg(res, "Schools fetched successfully", schools, 200);
   } catch (error) {
-    fMsg(res, "Error in fetching schools", error, 500);
+    next(error);
   }
 };
