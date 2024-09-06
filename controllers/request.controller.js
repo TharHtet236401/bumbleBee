@@ -5,7 +5,7 @@ import User from "../models/user.model.js";
 import { fMsg } from "../utils/libby.js";
 import mongoose from "mongoose";
 
-export const createRequest = async (req, res) => {
+export const createRequest = async (req, res, next) => {
   // When the guardian and the teacher want to join the class
   try {
     const { classCode, childName, studentDOB } = req.body;
@@ -15,12 +15,12 @@ export const createRequest = async (req, res) => {
     const currentUser = await User.findById(req.user._id)
 
     if(!classCode){
-      return fMsg(res, "Please provide all the required fields", null, 400)
+      return next(new Error("Please provide all the required fields"))
     }
 
     if(currentUser.roles.includes("guardian")){
       if(!childName || !studentDOB){
-        return fMsg(res, "Please provide all the required fields", null, 400)
+        return next(new Error("Please provide all the required fields"))
       }
     }
     const userId = req.user._id;
@@ -29,12 +29,7 @@ export const createRequest = async (req, res) => {
     // Find the desired class using the provided class code
     const desireClass = await Class.findOne({ classCode });
     if (!desireClass) {
-      return fMsg(
-        res,
-        "Class not found",
-        "The class with the given code does not exist",
-        404
-      );
+      return next(new Error("Class not found"))
     }
 
     //to add the student to the guardian and the class , but it will work only if the teacher accpet the request , so i just comment it
@@ -55,12 +50,7 @@ export const createRequest = async (req, res) => {
       studentDOB: studentDOB
     });
     if (existingRequest) {
-      return fMsg(
-        res,
-        "Request already exists",
-        "You already have a pending request for this class",
-        400
-      );
+      return next(new Error("Request already exists"))
     }
 
     let student;
@@ -120,11 +110,11 @@ export const createRequest = async (req, res) => {
 
     fMsg(res, "Request created successfully", request, 200);
   } catch (error) {
-    fMsg(res, "Error in creating request", error.message, 500);
+    next(error);
   }
 };
 
-export const readRequest = async (req, res)=> {
+export const readRequest = async (req, res, next)=> {
   try{
 
     //input from the front end which student's guardian requests the teacher wants to see
@@ -133,12 +123,12 @@ export const readRequest = async (req, res)=> {
     const readerId = req.user._id; 
     const reader = await User.findById(readerId);
     if(classId == null){
-      return fMsg(res, "Please provide all the required fields", null, 400)
+      return next(new Error("Please provide all the required fields"))
     }
 
     if(req.user.roles.includes("guardian")){
       if(!studentId){
-        return fMsg(res, "Please provide all the required fields", null, 400)
+        return next(new Error("Please provide all the required fields"))
       }
     }
     
@@ -146,7 +136,7 @@ export const readRequest = async (req, res)=> {
     const classObj = await Class.findById(classId)
 
     if(!classObj){
-      return fMsg(res, "Class not found", "The class does not exist", 404)
+      return next(new Error("Class not found"))
     }
 
     const classCode = classObj.classCode;
@@ -170,21 +160,21 @@ export const readRequest = async (req, res)=> {
       const teacher = await User.findOne({_id: readerId, roles: ['teacher']})
       
       if(teacher == null) {
-        return fMsg(res, "You do not have permission to read", "error", 403)
+        return next(new Error("You do not have permission to read"))
       }
       if(teacher.classes == []){
-        return fMsg(res, "You do not have permission to read", error, 403)
+        return next(new Error("You do not have permission to read"))
       }
 
       if(studentId == null){
-        return fMsg(res, "Something went wrong with student Id", "error", 404)
+        return next(new Error("Something went wrong with student Id"))
       }
       if (!mongoose.Types.ObjectId.isValid(studentId)) {
-        return fMsg(res, "Invalid student Id", "error", 404);
+        return next(new Error("Invalid student Id"))
       }
       const student = await Student.findById(studentId)
       if(student == null){
-        return fMsg(res, "There is no such student " ,"error", 404)
+        return next(new Error("There is no such student "))
       }
       
       
@@ -199,7 +189,7 @@ export const readRequest = async (req, res)=> {
           
         })
         if(classVerify != true){
-          return fMsg(res, "You do not have permission to read", "error", 403)
+          return next(new Error("You do not have permission to read"))
         }
       }
       requestsType = "Guardian"
@@ -217,25 +207,25 @@ export const readRequest = async (req, res)=> {
           }
         }
         if(requestCondition == false){
-          return fMsg(res, "There are no requests for this student at the moment", null, 200);
+          return next(new Error("There are no requests for this student at the moment"))
         }
       }
 
     }
 
     if(requests.length === 0){
-      return fMsg(res, "There are no requests at the moment", null, 200);
+      return next(new Error("There are no requests at the moment"))
     }
 
     fMsg(res, `${requestsType} requests`, requests, 200);
 
   }catch(error){
     console.log(error);
-    fMsg(res, "Error in reading pending requests", error.message, 500);
+    next(error);
   }
 }
 
-export const respondRequest = async(req, res) => {
+export const respondRequest = async(req, res, next) => {
   try{
     const { classId, requestId, response } = req.body;
     
@@ -249,12 +239,12 @@ export const respondRequest = async(req, res) => {
     const readerSchool = reader.schools[0];
     
     if(classObj == null){
-      return fMsg(res, "Invalid Class", classObj, 404);
+      return next(new Error("Invalid Class"))
     }
 
     const request= await PendingRequest.findById({_id: requestId, status: "pending"});
     if(request == null){
-      return fMsg(res, "Invalid Request Id", request, 404)
+      return next(new Error("Invalid Request Id"))
     }
 
     const requester = await User.findById(request.sender);
@@ -299,7 +289,7 @@ export const respondRequest = async(req, res) => {
           break;
 
         default:
-          return fMsg(res, "Wrong response ", "Error", 400)
+          return next(new Error("Wrong response "))
       }
     }else if(readerRole == "teacher"){
       switch(response){
@@ -498,18 +488,18 @@ export const respondRequest = async(req, res) => {
             break;
   
           default:
-            return fMsg(res, "Wrong response ", "Error", 400)
+            return next(new Error("Wrong response "))
 
       }
     }else{
-      return fMsg(res, "You don't have any permission", "Error", 403)
+      return next(new Error("You don't have any permission"))
     }
 
-    fMsg(res, `${content} got ${decision}`, output, 200)
+    next(new Error(`${content} got ${decision}`))
 
     
   }catch(error){
     console.log(error);
-    fMsg(res, "Error in responding to the request", error, 500)
+    next(error);
   }
 }
