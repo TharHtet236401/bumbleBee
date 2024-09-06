@@ -3,7 +3,7 @@ import Class from "../models/class.model.js";
 import { fMsg } from "../utils/libby.js";
 import User from "../models/user.model.js";
 
-export const addStudentToClass = async (req, res) => {
+export const addStudentToClass = async (req, res,next) => {
     try {
         const class_id = req.params.class_id;
         const { name, dateofBirth, newStudent = false } = req.body;
@@ -32,39 +32,39 @@ export const addStudentToClass = async (req, res) => {
             studentClass.students.push(student._id);
             await studentClass.save();
         } else {
-            return fMsg(res, "Student already in class", null, 400);
+            return next(new Error("Student already in class"))
         }
 
         fMsg(res, "Student created or updated successfully", student, 201);
     } catch (error) {
-        fMsg(res, "Error in creating or updating student", error, 500);
+        next(error);
     }
 };
 
-export const getStudentsByClass = async (req, res) => {
+export const getStudentsByClass = async (req, res,next) => {
     try {
         const class_id = req.params.class_id;
         const classObj = await Class.findById(class_id).populate('students'); // Populate students
 
         // const students = await Student.find({ classes: class_id });We can also search like
         if (!classObj) {
-            return fMsg(res, "Class not found", null, 404); // Return if class not found
+            return next(new Error("Class not found")) // Return if class not found
         }
 
         fMsg(res, "Students fetched successfully", classObj.students, 200); // Return populated students
     } catch (error) {
-        fMsg(res, "Error in fetching students", error, 500);
+        next(error);
     }
 };
 
 
-export const getStudentsByClassCode = async (req, res) => {
+export const getStudentsByClassCode = async (req, res,next) => {
     try {
         const classCode = req.params.classCode;
         const classObj = await Class.findOne({ classCode }).populate('students');
         
         if (!classObj) {
-            return fMsg(res, "Class not found", null, 404);
+            return next(new Error("Class not found"))
         }
         const students = classObj.students.map(student => ({
             _id: student._id,
@@ -73,7 +73,7 @@ export const getStudentsByClassCode = async (req, res) => {
         }));
         fMsg(res, "Students fetched successfully", students, 200);
     } catch (error) {
-        fMsg(res, "Error in fetching students", error, 500);
+        next(error);
     }
 }
 
@@ -82,7 +82,7 @@ export const getStudentInfo = async (req, res, next) => {
         const studentId = req.params.studentId;
         const student = await Student.findById(studentId);
         if (!student) {
-            return fMsg(res, "Student not found", null, 404);
+            return next(new Error("Student not found"))
         }
         fMsg(res, "Student fetched successfully", student, 200);
     }catch(error){
@@ -115,7 +115,7 @@ export const checkStudentExists = async (req, res, next) => {
             }));
             fMsg(res, "Student with that name and date of birth exists in database", formattedStudentList, 200);
         } else {
-            fMsg(res, "Student does not exist in the database", null, 404);
+            next(new Error("Student does not exist in the database"))
         }
     }
     catch (error) {
