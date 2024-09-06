@@ -10,7 +10,7 @@ import { encode, genToken, fMsg, decode } from "../utils/libby.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
     // Handles user registration by creating a new user in the database
     try {
 
@@ -25,21 +25,25 @@ export const register = async (req, res) => {
             ...otherInfos
         } = req.body;
 
+        const findEmail = await User.findOne({ email });
+        const findPhone = await User.findOne({ phone });
+        if (findEmail) {
+            return next(new Error("Email already exists"));
+        }
+        if (findPhone) {
+            return next(new Error("Phone number already exists"));
+        }
         const encodedUsername = encodeURIComponent(userName);
 
 
+        
         profilePicture = req.file
             ? `/uploads/profile_pictures/${req.file.filename}`
             : `https://api.dicebear.com/9.x/initials/svg?seed=${encodedUsername}`;
 
         
         if (password !== confirmedPassword) {
-            return fMsg(
-                res,
-                "Registration failed",
-                "Passwords do not match",
-                400
-            );
+            return next(new Error("Passwords do not match"));
         }
 
         //you can use bcrypt to hash the password that encode function can be found in utils/libby.js
@@ -85,46 +89,31 @@ export const register = async (req, res) => {
             const oldFilePath = path.join(__dirname, "..", req.file.path);
             deleteFile(oldFilePath);
         }
-        fMsg(res, "Registration failed", error.message, 500);
+        next(error);
     }
 };
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
     // Handles user login by verifying email and password
     try {
         const { email, password } = req.body;
 
         // if the email or password is not provided, return an error message
         if (!email || !password) {
-            return fMsg(
-                res,
-                "Login failed",
-                "Email and password are required",
-                400
-            );
+            return next(new Error("Email and password are required"));
         }
 
         //search the user in the database by email
         const user = await User.findOne({ email });
         if (!user) {
-            return fMsg(
-                res,
-                "Login failed",
-                "Invalid username or password",
-                404
-            );
+            return next(new Error("Invalid username or password"));
         }
 
         //check if the password is correct and decode the password
         const isMatch = decode(password, user.password);
 
         if (!isMatch) {
-            return fMsg(
-                res,
-                "Login failed",
-                "Invalid username or password",
-                400
-            );
+            return next(new Error("Invalid username or password"));
         }
 
         // this is to encrypt the user id and create a token
@@ -143,26 +132,21 @@ export const login = async (req, res) => {
         //this is to send the response and token to the client-frontend and save in local storage
         fMsg(res, "Login Successfully", { userInfo, token }, 200);
     } catch (error) {
-        fMsg(res, "Login failed", error.message, 500);
+        next(error);
     }
 };
 
-export const passwordReset = async (req, res) => {
+export const passwordReset = async (req, res,next) => {
     try {
         const { email, newPassword } = req.body;
 
         if (!email.trim() || !newPassword.trim()) {
-            return fMsg(
-                res,
-                "Password reset failed",
-                "Email and new password are required",
-                400
-            );
+            return next(new Error("All fields are required"));
         }
         const user = await User.findOne({ email });
 
         if (!user) {
-            return fMsg(res, "Password reset failed", "User not found", 404);
+            return next(new Error("User not found"));
         }
 
         const hashedPassword = encode(newPassword);
@@ -171,11 +155,11 @@ export const passwordReset = async (req, res) => {
 
         fMsg(res, "Password reset successful", "Password has been reset", 200);
     } catch (error) {
-        fMsg(res, "Password reset failed", error.message, 500);
+        next(error);
     }
 };
 
-export const changePassword = async (req, res) => {
+export const changePassword = async (req, res,next) => {
     try {
         const { email } = req.user;
 
@@ -187,55 +171,30 @@ export const changePassword = async (req, res) => {
             !newPassword.trim() ||
             !confirmedNewPassword.trim()
         ) {
-            return fMsg(
-                res,
-                "Password change failed",
-                "Email, old password, new password and confirmed new password are required",
-                400
-            );
+            return next(new Error("All fields are required"));
         }
 
         if(newPassword !== confirmedNewPassword){
-            return fMsg(
-                res,
-                "Password change failed",
-                "New password and confirmed new password do not match",
-                400
-            );
+            return next(new Error("New password and confirmed new password do not match"));
         }
 
         const user = await User.findOne({ email });
         if (!user) {
-            return fMsg(res, "Password change failed", "User not found", 404);
+            return next(new Error("User not found"));
         }
 
         const isMatch = decode(oldPassword, user.password);
 
         if (!isMatch) {
-            return fMsg(
-                res,
-                "Password change failed",
-                "Invalid old password",
-                400
-            );
+            return next(new Error("Invalid old password"));
         }
 
         if (newPassword !== confirmedNewPassword) {
-            return fMsg(
-                res,
-                "Password change failed",
-                "New password and confirmed new password do not match",
-                400
-            );
+            return next(new Error("New password and confirmed new password do not match"));
         }
 
         if (newPassword === oldPassword) {
-            return fMsg(
-                res,
-                "Password change failed",
-                "New password and old password are the same",
-                400
-            );
+            return next(new Error("New password and old password are the same"));
         }
 
         const hashedPassword = encode(newPassword);
@@ -244,7 +203,7 @@ export const changePassword = async (req, res) => {
 
         fMsg(res, "Password change successful", "Password has been changed", 200);
     } catch (error) {
-        fMsg(res, "Password change failed", error.message, 500);
+        next(error);
     }
 };
 
@@ -255,7 +214,7 @@ export const logout = async (req, res) => {
         // For now, we'll just send a success message
         fMsg(res, "Logout successful", "User has been logged out", 200);
     } catch (error) {
-        fMsg(res, "Logout failed", error.message, 500);
+        next(error);
     }
 };
 
