@@ -6,7 +6,7 @@ import { generateClassCode } from "../utils/libby.js";
 
 export const createClass = async(req, res, next) => {
     try{
-        const { grade, className } = req.body;
+        const  { grade, className } = req.body;
         const user = await User.findById(req.user._id);  //find the user
         const schoolId = user.schools[0]; //0 is defined here, because it is assuming that there is only one school for one admin at the moment
         const school = await School.findById(schoolId); //find the school
@@ -28,14 +28,14 @@ export const createClass = async(req, res, next) => {
             //generate the class code with 4 digits.
             generatedClassCode = generateClassCode(4);
             
-
             if(classLists.length > 0){
                 for(const classId of classLists){
                     const c = await Class.findById(classId);
                     
-                    
                     //During the code generation, the duplicate name will also be checked
+                    
                     if(c.className == className && c.grade == grade){
+                        
                         duplicateError = true;
                     }
 

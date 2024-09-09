@@ -24,6 +24,7 @@ const app = express();
 // middlewares
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
 app.use(
     "/uploads/post_images",
     express.static(path.join(__dirname, "uploads/post_images"))
