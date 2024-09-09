@@ -38,10 +38,16 @@ export const updateUserInfo = async (req, res, next) => {
         }
         else if ( req.file != undefined || req.file != null) {
             // user is updating profile picture
-            await fs.promises.access(oldPath, fs.constants.F_OK);
-            console.log(`${oldPath} exists`);
-            deleteFile(oldPath);
-            req.body.profilePicture = `/uploads/profile_pictures/${req.file.filename}`;
+            try {
+                await fs.promises.access(oldPath, fs.constants.F_OK);
+                console.log(`${oldPath} exists`);
+                deleteFile(oldPath);
+                req.body.profilePicture = `/uploads/profile_pictures/${req.file.filename}`;
+            } catch(err) {
+
+                req.body.profilePicture = `/uploads/profile_pictures/${req.file.filename}`;
+            }
+
         }
 
         const user = await User.findByIdAndUpdate(
