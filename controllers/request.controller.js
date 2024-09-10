@@ -214,7 +214,7 @@ export const readRequest = async (req, res, next)=> {
     }
 
     if(requests.length === 0){
-      return next(new Error("There are no requests at the moment"))
+      return fMsg(res, "There are no requests at the moment", null, 200)
     }
 
     fMsg(res, `${requestsType} requests`, requests, 200);
@@ -495,7 +495,7 @@ export const respondRequest = async(req, res, next) => {
       return next(new Error("You don't have any permission"))
     }
 
-    next(new Error(`${content} got ${decision}`))
+    fMsg(res, `${content} got ${decision}`, output, 200)
 
     
   }catch(error){

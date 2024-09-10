@@ -3,28 +3,35 @@ import Class from "../models/class.model.js";
 import { fMsg } from "../utils/libby.js";
 import User from "../models/user.model.js";
 
-export const addStudentToClass = async (req, res,next) => {
+export const addNewStudentToClass = async (req, res,next) => {
     try {
         const class_id = req.params.class_id;
-        const { name, dateofBirth, newStudent = false } = req.body;
+        const currentUser = await User.findById(req.user._id);
+        const currentUserSchool = currentUser.schools[0];
+        const { name, dateofBirth, newStudent = true } = req.body;
 
+        // we do not need to check as the teacher will add this student and passed the pop out screen
+        
         // Find if the student already exists
-        let student = await Student.findOne({ name, dateofBirth });
+        // let student = await Student.findOne({ name, dateofBirth,currentUserSchool });
 
-        if (student && !newStudent) {
-            // Existing student, add class if not already present
-            if (!student.classes.includes(class_id)) {
-                student.classes.push(class_id);
-                await student.save();
-            }
-        } else if (!student || newStudent) {
+        // if (student && !newStudent) {
+        //     // Existing student, add class if not already present
+        //     if (!student.classes.includes(class_id)) {
+        //         student.classes.push(class_id);
+        //         await student.save();
+        //     }
+        // } else if (!student || newStudent) {
             // Create a new student if not found or newStudent is true
-            student = await Student.create({
+            const student = await Student.create({
                 name,
                 dateofBirth,
                 classes: [class_id],
+                schools: [currentUserSchool]
             });
-        }
+
+        
+        // }
 
         // Find the class to add the student to
         const studentClass = await Class.findById(class_id);
@@ -97,25 +104,20 @@ export const getStudentInfo = async (req, res, next) => {
 export const checkStudentExists = async (req, res, next) => {
     try {
         const { name, dateofBirth } = req.body;
+
+        if(!name || !dateofBirth){
+            return next(new Error("Name and date of birth are required"))
+        }
         const currentUser = await User.findById(req.user._id);
-        console.log(currentUser);
-        const studentList = await Student.find({ name, dateofBirth })
-            .populate('classes', 'grade className school');
+        const currentUserSchool = currentUser.schools[0];
+        const studentList = await Student.find({ name, dateofBirth, schools: currentUserSchool })
+            .populate('classes', 'grade className ');
         
         if (studentList.length > 0) {
-            const formattedStudentList = studentList.map(student => ({
-                _id: student._id,
-                name: student.name,
-                dateofBirth: student.dateofBirth,
-                classes: student.classes.map(cls => ({
-                    grade: cls.grade,
-                    className: cls.className,
-                    school: cls.school
-                }))
-            }));
-            fMsg(res, "Student with that name and date of birth exists in database", formattedStudentList, 200);
+            fMsg(res, "Student with that name and date of birth exists in database", studentList, 200);
         } else {
-            next(new Error("Student does not exist in the database"))
+            // we use this here fMsg as the request is success .
+            fMsg(res, "Student with that name and date of birth does not exist in database", null, 200);
         }
     }
     catch (error) {
@@ -123,3 +125,36 @@ export const checkStudentExists = async (req, res, next) => {
     }
 }
 
+export const addStudentToMultipleClass = async (req, res, next) => {
+
+    try {
+        const class_id = req.params.class_id;
+        const { student_id } = req.body;
+        
+        // Use Promise.all to run both queries concurrently
+        const [student, classObj] = await Promise.all([
+            Student.findById(student_id),
+            Class.findById(class_id)
+        ]);
+
+        if (!student || !classObj) {
+            return next(new Error("Student or class not found"));
+        }
+
+        if (student.classes.includes(class_id)) {
+            return next(new Error("Student already in class"));
+        }
+
+        // Use $addToSet to avoid duplicates and update both documents in parallel
+        await Promise.all([
+            Student.findByIdAndUpdate(student_id, { $addToSet: { classes: class_id } }),
+            Class.findByIdAndUpdate(class_id, { $addToSet: { students: student_id } })
+        ]);
+
+        // Fetch the updated student document
+        const updatedStudent = await Student.findById(student_id);
+        fMsg(res, "Student added successfully", updatedStudent, 201);
+    } catch (error) {
+        next(error);
+    }
+}
