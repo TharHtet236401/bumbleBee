@@ -133,16 +133,19 @@ export const readRequest = async (req, res, next)=> {
     const { classId, studentId }  = req.body;
     const readerId = req.user._id; 
     const reader = await User.findById(readerId);
+
+
+    //for both teacher and admin, the classId is required
     if(classId == null){
       return next(new Error("Please provide all the required fields"))
     }
 
-    // if(req.user.roles.includes("guardian")){
-    //   if(!studentId){
-    //     return next(new Error("Please provide all the required fields"))
-    //   }
-    // }
-    
+    //as a role of teacher to read the requests for the guardian, he/she will provide to know the studentId to know that student's guardian requests
+    if(req.user.roles.includes("teacher")){
+      if(!studentId){
+        return next(new Error("Please provide all the required fields"))
+      }
+    }
 
     const classObj = await Class.findById(classId)
 
@@ -210,10 +213,10 @@ export const readRequest = async (req, res, next)=> {
       let requestCondition = false;
       while(requestCondition == false){
         for(const eachRequest of pendingRequests){
-          console.log(eachRequest.studentDOB === student.dateofBirth)
+          // console.log(eachRequest.studentDOB === student.dateofBirth)
           if(eachRequest.studentName == student.name && eachRequest.studentDOB.toString() == student.dateofBirth.toString()){
             requests = await PendingRequest.find({roles: ['guardian'], desireClass: classId, studentName: student.name, studentDOB: student.dateofBirth, status: "pending"});
-            console.log("This is requests: " + requests);
+            // console.log("This is requests: " + requests);
             requestCondition = true;
           }
         }
@@ -236,9 +239,17 @@ export const readRequest = async (req, res, next)=> {
   }
 }
 
+
+//this function is for the teacher to respond the requests for the guardian
+//this function is also for the admin to respond the requests for the teacher 
 export const respondRequest = async(req, res, next) => {
   try{
     const { classId, requestId, response } = req.body;
+
+    //might delete later if frontend can handle the error 
+    if(!classId || !requestId || response == null){
+      return next(new Error("Please provide all the required fields"))
+    }
     
     const classObj = await Class.findById(classId);
 
