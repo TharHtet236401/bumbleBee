@@ -131,3 +131,19 @@ export const getSchool = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteSchool = async (req, res, next) => {
+  try {
+    const currentUser_id = req.user._id;
+    const userObj = await User.findById(currentUser_id);
+    const schoolId = userObj.schools[0];
+    const school = await School.findById(schoolId);
+    if (!school) {
+      return next(new Error("School not found"))
+    }
+    await School.findByIdAndDelete(schoolId);
+    fMsg(res, "School deleted successfully", null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
