@@ -158,3 +158,24 @@ export const addStudentToMultipleClass = async (req, res, next) => {
         next(error);
     }
 }
+
+
+///edit student with the input of studentId in params and name and dateofBirth in body
+export const editStudent = async (req, res, next) => {
+    try {
+        const studentId = req.params.studentId;
+        const { name, dateofBirth } = req.body;
+        if(!name && !dateofBirth){
+            return next(new Error("Name and date of birth are required"))
+        }
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return next(new Error("Student not found"));
+        }
+        const updatedStudent = await Student.findByIdAndUpdate(studentId, { name, dateofBirth }, { new: true });
+    
+        fMsg(res, "Student updated successfully", updatedStudent, 200);
+    } catch (error) {
+        next(error);
+    }
+}
