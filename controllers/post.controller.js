@@ -10,6 +10,7 @@ import { nextTick } from 'process';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+//it will create the post and if the post is an announcement, it will add the post id to the class's announcements array
 export const createPost = async (req, res, next) => {
     try {
 
@@ -61,6 +62,7 @@ export const createPost = async (req, res, next) => {
     }
 };
 
+//it will get the feeds for the user depending on the school id he/she is in
 export const getFeeds = async (req, res, next) => {
     try {
     
@@ -102,6 +104,7 @@ export const getFeeds = async (req, res, next) => {
     }
 };
 
+//it will get the announcements for the user depending on the class id he/she is in
 export const getAnnouncements = async (req, res, next) => {
     try {
 
@@ -144,6 +147,8 @@ export const getAnnouncements = async (req, res, next) => {
 
 
 
+//this may be useful for the admin to filter the feeds for the school
+//admin function
 export const filterFeeds = async (req, res, next) => {
     try {
 
@@ -167,7 +172,7 @@ export const filterFeeds = async (req, res, next) => {
     }
 };
 
-
+// this may allow the user to edit the post
 export const editPost = async (req, res, next) => {
     try {
 
@@ -197,20 +202,23 @@ export const editPost = async (req, res, next) => {
     }
 };
 
+//this will delete the post and if the post is an announcement, it will remove the post id from the class's announcements array
 export const deletePost = async (req, res, next) => {
     try {
-        // Find the post by ID and delete it
+        // Find and delete the post in one operation
         const post = await Post.findByIdAndDelete(req.params.post_id);
-        
-        // Check if the post was found and deleted
         if (!post) {
             return next(new Error("Post not found"));
+        }
+
+        // If the post is an announcement, remove the post id from the class's announcements array
+        if (post.contentType === 'announcement' && post.classId) {
+            await Class.findByIdAndUpdate(post.classId, { $pull: { announcements: post._id } });
         }
 
         // Respond with a success message
         fMsg(res, "Post deleted successfully", post, 200);
     } catch (error) {
-
         next(error);
     }
 };

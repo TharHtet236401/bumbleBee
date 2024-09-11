@@ -35,7 +35,7 @@ export const validateBody = (schema) => {
 export let validateToken = () => {
     return (req, res, next) => {
         if (!req.headers.authorization) {
-            return res.status(401).json({ con: false, msg: "Unauthorized" });
+            return next(new Error("Unauthorized"));
         }
 
         let token = req.headers.authorization.split(" ")[1];
@@ -47,7 +47,7 @@ export let validateToken = () => {
             next();
         } catch (error) {
             console.error("Token verification error:", error.message);
-            return res.status(401).json({ con: false, msg: "Invalid token" });
+            return next(new Error("Invalid token"));
         }
     };
 };
@@ -56,7 +56,7 @@ export const isAdmin = () => {
     return (req, res, next) => {
         const roles = req.user.roles;
         if (!roles.includes("admin")) {
-            return fMsg(res, "Unauthorized", "You are not an admin");
+            return next(new Error("You are not an admin"));
         }
         next();
     };
@@ -66,7 +66,7 @@ export const isTeacher = () => {
     return (req, res, next) => {
         const roles = req.user.roles;
         if (!roles.includes("teacher")) {
-            return fMsg(res, "Unauthorized", "You are not a teacher");
+            return next(new Error("You are not a teacher"));
         }
         next();
     };
@@ -76,7 +76,7 @@ export const postRBAC = () => {
     return (req, res, next) => {
         const roles = req.user.roles;
         if (roles.includes("teacher") && req.body.contentType === "feed") {
-            return fMsg(res, "Unauthorized", "Teachers cannot post/modify feeds");
+            return next(new Error("Teachers cannot post/modify feeds"));
         }
         next();
     };
@@ -86,7 +86,7 @@ export const isNotParents = () => {
     return (req, res, next) => {
         const roles = req.user.roles;
         if (roles.includes("guardian")) {
-            return fMsg(res, "Unauthorized", "You are a guardian");
+            return next(new Error("You are a guardian"));
         }
         next();
     };
@@ -98,11 +98,7 @@ export const isEditorStranger = () => {
         const post = req.params.post_id;
         const postUser = await Post.findById(post);
         if (user != postUser.posted_by._id) {
-            return fMsg(
-                res,
-                "Unauthorized",
-                "You are not the author of this post"
-            );
+            return next(new Error("You are not the author of this post"));
         }
         next();
     };
