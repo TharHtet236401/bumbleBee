@@ -5,6 +5,8 @@ import User from "../models/user.model.js";
 import { fMsg } from "../utils/libby.js";
 import mongoose from "mongoose";
 
+//this function is for the guardian to create a request to join the class with classCode, childName, studentDOB
+//this function is also for the teacher to create a request to join the class with classCode
 export const createRequest = async (req, res, next) => {
   // When the guardian and the teacher want to join the class
   try {
@@ -14,10 +16,14 @@ export const createRequest = async (req, res, next) => {
 
     const currentUser = await User.findById(req.user._id)
 
+    //mighte delete this if frontend can handle the error
+    //the classCode is required for both guardian and teacher
     if(!classCode){
       return next(new Error("Please provide all the required fields"))
     }
 
+    //if the user is guardian, the childName and studentDOB are required
+    // if the user is teacher, the classCode is required
     if(currentUser.roles.includes("guardian")){
       if(!childName || !studentDOB){
         return next(new Error("Please provide all the required fields"))
@@ -43,20 +49,22 @@ export const createRequest = async (req, res, next) => {
     //         await guardian.save()
 
     // Check if the user already has a  request for this class
+    // that will find the pending request for the same class
     const existingRequest = await PendingRequest.findOne({
-      sender: userId,
+      sender: userId,//the user id will differ if there are duplicate student with name and DOB
       desireClass: desireClass._id,
       studentName: childName,
       studentDOB: studentDOB
     });
+
     if (existingRequest) {
       return next(new Error("Request already exists"))
     }
 
-    let student;
-    if(childName != null && studentDOB != null){
-      student = await Student.find({name: childName, dateofBirth: studentDOB});
-    }
+    // let student;
+    // if(childName != null && studentDOB != null){
+    //   student = await Student.find({name: childName, dateofBirth: studentDOB});
+    // }
 
     // console.log("user.classes: " + user.classes + "\ntype of user.classes: " + typeof user.classes + "\ndesiredClassid: " + desireClass._id + "\ndesiredClass type:" + typeof desireClass._id)
     //check whether the class has already been joined
@@ -96,7 +104,7 @@ export const createRequest = async (req, res, next) => {
     //   }
     // }
 
-    // Create a new pending request
+    // Create a new pending request and save it to pendingrequest collection
     const request = new PendingRequest({
       sender: userId,
       desireClass: desireClass._id,
@@ -114,6 +122,9 @@ export const createRequest = async (req, res, next) => {
   }
 };
 
+
+// this function is for the teacher to read the requests for the guardian
+//this function is also for the admin to read the requests for the teacher
 export const readRequest = async (req, res, next)=> {
   try{
 
@@ -126,11 +137,11 @@ export const readRequest = async (req, res, next)=> {
       return next(new Error("Please provide all the required fields"))
     }
 
-    if(req.user.roles.includes("guardian")){
-      if(!studentId){
-        return next(new Error("Please provide all the required fields"))
-      }
-    }
+    // if(req.user.roles.includes("guardian")){
+    //   if(!studentId){
+    //     return next(new Error("Please provide all the required fields"))
+    //   }
+    // }
     
 
     const classObj = await Class.findById(classId)
