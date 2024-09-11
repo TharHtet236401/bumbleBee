@@ -99,6 +99,7 @@ export const login = async (req, res, next) => {
         const { email, password } = req.body;
 
         // if the email or password is not provided, return an error message
+        //might delete later if the front end can handle the error message
         if (!email || !password) {
             return next(new Error("Email and password are required"));
         }
@@ -165,6 +166,8 @@ export const changePassword = async (req, res,next) => {
 
         const { oldPassword, newPassword, confirmedNewPassword } = req.body;
 
+
+        //might delete later if the front end can handle the error message
         if (
             !email.trim() ||
             !oldPassword.trim() ||
@@ -174,6 +177,7 @@ export const changePassword = async (req, res,next) => {
             return next(new Error("All fields are required"));
         }
 
+        //might delete later if the front end can handle the error message
         if(newPassword !== confirmedNewPassword){
             return next(new Error("New password and confirmed new password do not match"));
         }
@@ -193,6 +197,7 @@ export const changePassword = async (req, res,next) => {
             return next(new Error("New password and confirmed new password do not match"));
         }
 
+        //might delete later if the front end can handle the error message
         if (newPassword === oldPassword) {
             return next(new Error("New password and old password are the same"));
         }
@@ -220,4 +225,6 @@ export const logout = async (req, res) => {
 
 //note
 //acutually we dont have to generate token for both login and register, it may depend on the workflow of UI but discuss later ..But i have created both but will delete one base on discussion
+
+//note
 
