@@ -23,6 +23,7 @@ export const createClass = async(req, res, next) => {
     
 
         //loop that checks whether or not the code generated is unique or not
+        //also check the duplicate class name and grade
         codeGenerationLoop:
         while(codeGenerate == false){
             //generate the class code with 4 digits.
@@ -34,11 +35,13 @@ export const createClass = async(req, res, next) => {
                     
                     //During the code generation, the duplicate name will also be checked
                     
+                    //to find out new class name and grade are already exists in the school
                     if(c.className == className && c.grade == grade){
                         
                         duplicateError = true;
                     }
 
+                    //to find out the generated class code is already exists in the school
                     if(c.classCode == generatedClassCode){
                         continue codeGenerationLoop;
                     }
@@ -75,8 +78,12 @@ export const editClass = async(req, res, next) => {
     try{
         const { classId, grade, className } = req.body;
 
-        if(!classId || !grade || !className){
-            return next(new Error("Please provide all the required fields"))
+        if(!classId){
+            return next(new Error("Please provide the class id"))
+        }
+        //might delete later if the front end can handle the error message
+        if( !grade && !className){
+            return next(new Error("Please provide at least one field to update"))
         }
         const classObj = await Class.findById(classId);
 
@@ -103,6 +110,7 @@ export const editClass = async(req, res, next) => {
     }
 }
 
+//it might not be useful as it will serach all the classes in the entire database
 export const readAllClasses = async(req, res, next) => {
     try{
 
@@ -119,9 +127,13 @@ export const readAllClasses = async(req, res, next) => {
     }
 }
 
+
 export const deleteClass = async(req, res, next) => {
     try{
-        
+        //might delete later if the front end can handle the error message
+        if(!classId){
+            return next(new Error("Please provide the class id"))
+        }
         const { classId } = req.body;
         const classObj = await Class.findById(classId);
         if(!classObj){
@@ -159,6 +171,7 @@ export const readClassByAdmin = async (req, res, next) => { // differenet admins
         }
 
         
+        // Fetch the school and its classes simultaneously using Promise.all
         const [school, classes] = await Promise.all([
             School.findById(schoolId),
             Class.find({ school: schoolId })
