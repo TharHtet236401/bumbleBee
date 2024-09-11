@@ -179,3 +179,37 @@ export const editStudent = async (req, res, next) => {
         next(error);
     }
 }
+
+
+export const deleteStudent = async (req, res, next) => {
+    try {
+        const studentId = req.params.studentId;
+
+        // Find the student by ID
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return next(new Error("Student not found"));
+        }
+
+        // Find all the classes the student is enrolled in
+        const classObjs = await Class.find({ _id: { $in: student.classes } });
+
+        // Delete the student's guardians (if any)
+        await User.deleteMany({ _id: { $in: student.guardians } });
+
+        // Remove the student from each class
+        await Promise.all(
+            classObjs.map((classObj) => 
+                Class.findByIdAndUpdate(classObj._id, { $pull: { students: studentId } })
+            )
+        );
+
+        // Delete the student
+        await Student.findByIdAndDelete(studentId);
+
+        // Send response
+        fMsg(res, "Student deleted successfully", student, 200);
+    } catch (error) {
+        next(error);
+    }
+}
