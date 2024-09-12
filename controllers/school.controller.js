@@ -89,7 +89,7 @@ export const editSchool = async (req, res, next) => {
     fMsg(res, "School updated successfully", updatedSchool, 200);
   } catch (error) {
     // Handle errors
-    fMsg(res, "error in updating school", error, 500);
+    next(error);
   }
 };
 

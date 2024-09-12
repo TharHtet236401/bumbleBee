@@ -42,7 +42,7 @@ export const addNewStudentToClass = async (req, res,next) => {
             return next(new Error("Student already in class"))
         }
 
-        fMsg(res, "Student created or updated successfully", student, 201);
+        fMsg(res, "Student created or updated successfully", student, 200);
     } catch (error) {
         next(error);
     }
@@ -153,7 +153,7 @@ export const addStudentToMultipleClass = async (req, res, next) => {
 
         // Fetch the updated student document
         const updatedStudent = await Student.findById(student_id);
-        fMsg(res, "Student added successfully", updatedStudent, 201);
+        fMsg(res, "Student added successfully", updatedStudent, 200);
     } catch (error) {
         next(error);
     }
