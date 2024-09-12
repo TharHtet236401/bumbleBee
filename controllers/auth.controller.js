@@ -81,7 +81,7 @@ export const register = async (req, res, next) => {
             res,
             "Registered Successfully",
             { user: userWithoutPassword, token },
-            201
+            200
         );
     } catch (error) {
         console.log(error);

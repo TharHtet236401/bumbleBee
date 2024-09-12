@@ -51,7 +51,7 @@ export const createPost = async (req, res, next) => {
             );
         }
 
-        fMsg(res, "Post created successfully", post, 201);
+        fMsg(res, "Post created successfully", post, 200);
     } catch (error) {
         console.log(error)
         if (req.file) {
