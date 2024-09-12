@@ -1,4 +1,4 @@
-import { createSchool, editSchool, getSchool } from "../controllers/school.controller.js";
+import { createSchool, editSchool, getSchool ,deleteSchool} from "../controllers/school.controller.js";
 import { validateToken, isAdmin ,validateBody} from "../utils/validator.js"
 import { SchoolSchema } from "../utils/schema.js";
 import express from "express";
@@ -11,5 +11,7 @@ router.post("/create",validateToken(), validateBody(SchoolSchema.create), create
 router.put("/edit/", validateToken(), isAdmin(), editSchool);
 
 router.get("/getSchool", validateToken(), getSchool);
+
+router.delete("/delete", validateToken(), isAdmin(), deleteSchool);
 
 export default router;
