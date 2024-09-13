@@ -7,7 +7,11 @@ import { generateClassCode } from "../utils/libby.js";
 export const createClass = async(req, res, next) => {
     try{
         const  { grade, className } = req.body;
-        const user = await User.findById(req.user._id);  //find the user
+        const user = await User.findById(req.user._id);  
+        //find the user
+        if(user.schools.length == 0){
+            return next(new Error("You are not associated with any school"))
+        }
         const schoolId = user.schools[0]; //0 is defined here, because it is assuming that there is only one school for one admin at the moment
         const school = await School.findById(schoolId); //find the school
         
@@ -15,6 +19,8 @@ export const createClass = async(req, res, next) => {
         let codeGenerate = false;
         let duplicateError = false;
 
+       
+     
         //find the classes of that school to check the input class name and grade are already exists in that school
         school.classes.forEach((element) => classLists.push(element))
         
