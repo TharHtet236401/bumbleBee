@@ -51,7 +51,7 @@ export let validateToken = () => {
         }
     };
 };
-
+    
 export const isAdmin = () => {
     return (req, res, next) => {
         const roles = req.user.roles;

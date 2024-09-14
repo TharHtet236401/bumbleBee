@@ -5,7 +5,7 @@ import express from "express";
 const router = express.Router();
 
 
-router.post("/create",validateToken(), validateBody(SchoolSchema.create), createSchool);
+router.post("/create",validateToken(), isAdmin(), validateBody(SchoolSchema.create), createSchool);
 
 // validdateToken is to check who the user is and isAdmin check it is admin or not
 router.put("/edit/", validateToken(), isAdmin(), editSchool);
