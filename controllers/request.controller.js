@@ -12,9 +12,8 @@ export const createRequest = async (req, res, next) => {
   try {
     const { classCode, childName, studentDOB } = req.body;
 
-
-
     const currentUser = await User.findById(req.user._id)
+    const students = await Student.find({name: childName, dateofBirth: studentDOB});
 
     //mighte delete this if frontend can handle the error
     //the classCode is required for both guardian and teacher
@@ -28,6 +27,10 @@ export const createRequest = async (req, res, next) => {
       if(!childName || !studentDOB){
         return next(new Error("Please provide all the required fields"))
       }
+
+      console.log("This is the guardian data: " + currentUser)
+      console.log("These are students data: " + students  )
+      
     }
     const userId = req.user._id;
     const user = await User.findById(userId);
@@ -38,18 +41,7 @@ export const createRequest = async (req, res, next) => {
       return next(new Error("Class not found"))
     }
 
-    //to add the student to the guardian and the class , but it will work only if the teacher accpet the request , so i just comment it
-    // if(req.user.roles.includes("guardian")){
-    //     const guardian = await User.findById(userId)
 
-    //     if(!guardian.childern.includes(student_id)){
-    //         guardian.childern.push(student_id)
-
-    //         guardian.classes.push(desireClass._id)
-    //         await guardian.save()
-
-    // Check if the user already has a  request for this class
-    // that will find the pending request for the same class
     const existingRequest = await PendingRequest.findOne({
       sender: userId,//the user id will differ if there are duplicate student with name and DOB
       desireClass: desireClass._id,
@@ -60,49 +52,6 @@ export const createRequest = async (req, res, next) => {
     if (existingRequest) {
       return next(new Error("Request already exists"))
     }
-
-    // let student;
-    // if(childName != null && studentDOB != null){
-    //   student = await Student.find({name: childName, dateofBirth: studentDOB});
-    // }
-
-    // console.log("user.classes: " + user.classes + "\ntype of user.classes: " + typeof user.classes + "\ndesiredClassid: " + desireClass._id + "\ndesiredClass type:" + typeof desireClass._id)
-    //check whether the class has already been joined
-
-    // for(let eachClass of user.classes){
-    //   console.log("each Class is " + eachClass)
-    //   if(eachClass.toString() == desireClass._id.toString()){
-
-        //There can be error in the future, if the user has both role of teacher and parent.
-
-        //TWIN SCENARIO need further considerations
-        // let requestDuplicate = true;
-
-        //   if(user.roles.includes("guardian")){
-        //     let studentCheck = false;
-        //     while(studentCheck == false){
-        //       if(user.childern == null){
-        //         studentCheck = true;
-        //         requestDuplicate = false;
-        //       }
-
-        //       for(let eachChild of user.childern){
-        //         if(eachChild == student){
-        //           return fMsg(res, "Your child is already in the class", null, 400)
-        //         }
-        //       }
-        //       studentCheck = true;
-        //       requestDuplicate = false;
-        //     }
-        //   }
-        
-        // if(requestDuplicate == true){
-        //   return fMsg(res, "User has already joined this class", null, 400)
-        // }
-
-    //     return fMsg(res, "User has already joined this class", null, 400)
-    //   }
-    // }
 
     // Create a new pending request and save it to pendingrequest collection
     const request = new PendingRequest({
@@ -136,13 +85,6 @@ export const readRequest = async (req, res, next)=> {
     if(classId == null){
       return next(new Error("Please provide all the required fields"))
     }
-
-    // if(req.user.roles.includes("guardian")){
-    //   if(!studentId){
-    //     return next(new Error("Please provide all the required fields"))
-    //   }
-    // }
-    
 
     const classObj = await Class.findById(classId)
 
