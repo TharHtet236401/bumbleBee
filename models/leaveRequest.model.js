@@ -31,7 +31,7 @@ const leaveRequestSchema = new mongoose.Schema({
   },
   reason: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "RequestTypes",
+    ref: "LeaveRequestType",
     required: true,
   },
   description: {
