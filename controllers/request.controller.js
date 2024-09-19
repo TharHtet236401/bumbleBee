@@ -137,13 +137,13 @@ export const readRequest = async (req, res, next)=> {
 
     //for both teacher and admin, the classId is required
     if(classId == null){
-      return next(new Error("Please provide all the required fields"))
+      return next(new Error("Please provide all the required field   s"))
     }
 
     //as a role of teacher to read the requests for the guardian, he/she will provide to know the studentId to know that student's guardian requests
     if(req.user.roles.includes("teacher")){
       if(!studentId){
-        return next(new Error("Please provide all the required fields"))
+        return next(new Error("Please provide all the required field    s"))
       }
     }
 

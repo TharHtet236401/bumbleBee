@@ -97,6 +97,22 @@ export const getStudentInfo = async (req, res, next) => {
     }
 }
 
+export const getStudentByParent = async (req, res, next) => {
+    try {
+        const userObj = await User.findById(req.user._id).populate('childern');
+        
+        if (!userObj) {
+            return next(new Error("Parent not found"));
+        }
+      
+        const children = userObj.childern || [];
+        fMsg(res, "Children fetched successfully", children, 200);
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
 
 ///new version starts here 
 
