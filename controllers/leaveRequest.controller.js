@@ -27,6 +27,7 @@ export const createLeaveRequest = async (req, res, next) => {
       endDate,
       reason,
       senderId,
+      description,
     });
 
     if (existingRequest) {
@@ -69,3 +70,5 @@ export const createLeaveRequest = async (req, res, next) => {
     next(error);
   }
 };
+
+
