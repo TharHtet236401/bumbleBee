@@ -5,19 +5,54 @@ import { fMsg, paginate, paginateAnnouncements } from "../utils/libby.js";
 import { deleteFile } from "../utils/libby.js";
 import Class from '../models/class.model.js';
 import User from '../models/user.model.js';
-import { nextTick } from 'process';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+dotenv.config();
 
-//it will create the post and if the post is an announcement, it will add the post id to the class's announcements array
+// Initialize Supabase client with your project URL and service role key
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+console.log('Supabase URL:', supabaseUrl);
+console.log('Supabase Service Key length:', supabaseServiceKey.length);
+console.log('Supabase client initialized:', !!supabase);
+
+const createPostsBucketIfNotExists = async () => {
+    try {
+        const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+        if (listError) {
+            console.error('Error listing buckets:', listError);
+            return;
+        }
+
+        if (!buckets.some(bucket => bucket.name === 'posts')) {
+            const { data, error } = await supabase.storage.createBucket('posts', { public: false });
+            if (error) {
+                console.error('Error creating posts bucket:', error);
+                console.error('Error details:', JSON.stringify(error, null, 2));
+            } else {
+                console.log('Posts bucket created successfully');
+            }
+        } else {
+            console.log('Posts bucket already exists');
+        }
+    } catch (error) {
+        console.error('Unexpected error in createPostsBucketIfNotExists:', error);
+    }
+};
+
+createPostsBucketIfNotExists();
+
 export const createPost = async (req, res, next) => {
     try {
+        console.log('Authenticated user:', req.user);
+        console.log('File:', req.file);
 
-        let {
+        const {
             heading,
             body,
-            contentPicture,
             contentType,
             reactions,
             classId,
@@ -26,7 +61,47 @@ export const createPost = async (req, res, next) => {
 
         const posted_by = req.user._id;
 
-        contentPicture = req.file ? `/uploads/post_images/${req.file.filename}` : null;
+        let contentPicture = null;
+
+        if (req.file) {
+            const file = req.file;
+            const fileExt = file.originalname.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            
+            try {
+                console.log('Attempting Supabase upload');
+                console.log('File details:', { name: fileName, size: file.size, mimetype: file.mimetype });
+                
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('posts')
+                    .upload(fileName, file.buffer, {
+                        contentType: file.mimetype,
+                        upsert: false
+                    });
+
+                console.log('Upload result:', JSON.stringify({ uploadData, uploadError }, null, 2));
+
+                if (uploadError) {
+                    console.error('Supabase upload error:', JSON.stringify(uploadError, null, 2));
+                    throw new Error(`File upload failed: ${uploadError.message}`);
+                }
+
+                const { data: urlData, error: urlError } = supabase.storage
+                    .from('posts')
+                    .getPublicUrl(fileName);
+
+                if (urlError) {
+                    console.error('Error getting public URL:', JSON.stringify(urlError, null, 2));
+                    throw new Error('Failed to get public URL for uploaded file');
+                }
+
+                contentPicture = urlData.publicUrl;
+                console.log('File uploaded successfully. Public URL:', contentPicture);
+            } catch (uploadError) {
+                console.error('Detailed Supabase upload error:', JSON.stringify(uploadError, null, 2));
+                return next(new Error(`File upload failed: ${uploadError.message}`));
+            }
+        }
 
         const post = new Post({
             posted_by,
@@ -43,7 +118,6 @@ export const createPost = async (req, res, next) => {
         await post.populate('posted_by', 'userName profilePicture roles');
 
         if (contentType === 'announcement' && classId) {
-            // Find the class and push the post ID to the announcements array
             await Class.findByIdAndUpdate(
                 classId,
                 { $push: { announcements: post._id } },
@@ -53,16 +127,11 @@ export const createPost = async (req, res, next) => {
 
         fMsg(res, "Post created successfully", post, 200);
     } catch (error) {
-        console.log(error)
-        if (req.file) {
-            const oldFilePath = path.join(__dirname, '..', req.file.path);
-            deleteFile(oldFilePath);
-        }
+        console.error('Detailed error in createPost:', error);
         next(error);
     }
 };
 
-//it will get the feeds for the user depending on the school id he/she is in
 export const getFeeds = async (req, res, next) => {
     try {
     
@@ -104,7 +173,6 @@ export const getFeeds = async (req, res, next) => {
     }
 };
 
-//it will get the announcements for the user depending on the class id he/she is in
 export const getAnnouncements = async (req, res, next) => {
     try {
 
@@ -145,16 +213,11 @@ export const getAnnouncements = async (req, res, next) => {
     }
 };
 
-
-
-//this may be useful for the admin to filter the feeds for the school
-//admin function
 export const filterFeeds = async (req, res, next) => {
     try {
 
         const { grade, contentType, classId, schoolId } = req.query;
         
-        // Construct query object
         let query = {};
         if (schoolId) query.schoolId = schoolId;
         if (grade) query.grade = grade;
@@ -172,55 +235,76 @@ export const filterFeeds = async (req, res, next) => {
     }
 };
 
-// this may allow the user to edit the post
 export const editPost = async (req, res, next) => {
-    console.log(req.params.post_id)
     try {
-
-        // delete the old file if a new file is uploaded
-        if (req.file) {
-            const post = await Post.findById(req.params.post_id);
-            if (post.contentPicture) {
-
-                const oldFilePath = path.join(__dirname, '..', 'uploads', 'post_images' , path.basename(post.contentPicture));
-                deleteFile(oldFilePath);
-
-            }
-            req.body.contentPicture = `/uploads/post_images/${req.file.filename}`;
+        const post = await Post.findById(req.params.post_id);
+        if (!post) {
+            return next(new Error("Post not found"));
         }
 
-        const post = await Post.findByIdAndUpdate(
+        if (req.file) {
+            if (post.contentPicture) {
+                const oldFileName = post.contentPicture.split('/').pop();
+                const { error: deleteError } = await supabase.storage
+                    .from('posts')
+                    .remove([oldFileName]);
+                
+                if (deleteError) {
+                    console.error("Error deleting old file from Supabase:", deleteError);
+                }
+            }
+
+            const file = req.file;
+            const fileExt = file.originalname.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            
+            const { data, error } = await supabase.storage
+                .from('posts')
+                .upload(fileName, file.buffer, {
+                    contentType: file.mimetype,
+                });
+
+            if (error) {
+                console.error('Supabase upload error:', error);
+                return next(new Error('File upload failed. Please try again.'));
+            }
+
+            const { data: urlData } = supabase.storage
+                .from('posts')
+                .getPublicUrl(fileName);
+
+            req.body.contentPicture = urlData.publicUrl;
+        }
+
+        const updatedPost = await Post.findByIdAndUpdate(
             req.params.post_id,
             {
                 ...req.body
             },
             { new: true }
         );
-        fMsg(res, "Post updated successfully", post, 200);
+        fMsg(res, "Post updated successfully", updatedPost, 200);
     } catch (error) {
-        console.log(error)
+        console.error('Error in editPost:', error);
         next(error);
     }
 };
 
-//this will delete the post and if the post is an announcement, it will remove the post id from the class's announcements array
 export const deletePost = async (req, res, next) => {
     try {
-        // Find and delete the post in one operation
         const post = await Post.findByIdAndDelete(req.params.post_id);
         if (!post) {
             return next(new Error("Post not found"));
         }
 
-        // If the post is an announcement, remove the post id from the class's announcements array
         if (post.contentType === 'announcement' && post.classId) {
             await Class.findByIdAndUpdate(post.classId, { $pull: { announcements: post._id } });
         }
 
-        // Respond with a success message
         fMsg(res, "Post deleted successfully", post, 200);
     } catch (error) {
         next(error);
     }
 };
+
 
