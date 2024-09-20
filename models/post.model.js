@@ -1,44 +1,48 @@
 import mongoose from "mongoose";
 
-const postSchema = new mongoose.Schema({
+const postSchema = new mongoose.Schema(
+  {
     posted_by: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     schoolId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "School"
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
     },
     classId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Class"
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class",
     },
     heading: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     body: {
-        type: String,
+      type: String,
     },
     contentPicture: {
-        type: String,
+      type: String,
     },
     contentType: {
-        type: String,
-        enum: ["announcement", "feed"], //annoucment for whole school, feed for class
-        required: true,
-        index: true,
+      type: String,
+      enum: ["announcement", "feed"], //annoucment class, general feed for whole school
+      required: true,
+      index: true,
     },
     reactions: {
-        type: Number,
-        default: 0,
+      type: Number,
+      default: 0,
     },
+    documents: [{ type: String }], // Array of document URLs
     createdAt: {
-        type: Date,
-        default: Date.now,
+      type: Date,
+      default: Date.now,
     },
-});
+  },
+  { timestamps: true }
+);
 
 postSchema.index({ contentType: 1 });
 const Post = mongoose.model("Post", postSchema);
