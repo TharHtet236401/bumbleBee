@@ -7,11 +7,12 @@ import Class from "../models/class.model.js";
 import User from "../models/user.model.js";
 import initializeSupabase from "../config/connectSupaBase.js";
 import dotenv from "dotenv";
+import {
+  uploadImageToSupabase,
+  deleteImageFromSupabase,
+} from "../utils/supabaseUpload.js";
 
 dotenv.config();
-
-// Initialize Supabase client
-const supabase = initializeSupabase();
 
 const createPostsBucketIfNotExists = async () => {
   try {
@@ -44,58 +45,16 @@ const createPostsBucketIfNotExists = async () => {
 
 export const createPost = async (req, res, next) => {
   try {
-    if (!supabase) {
-      return next(new Error("Supabase client not initialized"));
-    }
     const { heading, body, contentType, reactions, classId, schoolId } =
       req.body;
-
     const posted_by = req.user._id;
 
     let contentPicture = null;
 
     if (req.file) {
-      const file = req.file;
-      const fileExt = file.originalname.split(".").pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-
       try {
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("posts")
-          .upload(fileName, file.buffer, {
-            contentType: file.mimetype,
-            upsert: false,
-          });
-
-        // console.log('Upload result:', JSON.stringify({ uploadData, uploadError }, null, 2));
-
-        if (uploadError) {
-          console.error(
-            "Supabase upload error:",
-            JSON.stringify(uploadError, null, 2)
-          );
-          throw new Error(`File upload failed: ${uploadError.message}`);
-        }
-
-        const { data: urlData, error: urlError } = supabase.storage
-          .from("posts")
-          .getPublicUrl(fileName);
-
-        if (urlError) {
-          console.error(
-            "Error getting public URL:",
-            JSON.stringify(urlError, null, 2)
-          );
-          throw new Error("Failed to get public URL for uploaded file");
-        }
-
-        contentPicture = urlData.publicUrl;
-        console.log("File uploaded successfully. Public URL:", contentPicture);
+        contentPicture = await uploadImageToSupabase(req.file,'posts');
       } catch (uploadError) {
-        console.error(
-          "Detailed Supabase upload error:",
-          JSON.stringify(uploadError, null, 2)
-        );
         return next(new Error(`File upload failed: ${uploadError.message}`));
       }
     }
@@ -235,37 +194,21 @@ export const editPost = async (req, res, next) => {
     }
 
     if (req.file) {
-      if (post.contentPicture) {
-        const oldFileName = post.contentPicture.split("/").pop();
-        const { error: deleteError } = await supabase.storage
-          .from("posts")
-          .remove([oldFileName]);
-
-        if (deleteError) {
-          console.error("Error deleting old file from Supabase:", deleteError);
+      try {
+        // Delete old file if it exists
+        if (post.contentPicture) {
+          await deleteImageFromSupabase(post.contentPicture, "posts");
         }
+
+        // Upload new file
+        const newContentPicture = await uploadImageToSupabase(
+          req.file,
+          "posts"
+        );
+        req.body.contentPicture = newContentPicture;
+      } catch (uploadError) {
+        return next(new Error(`File operation failed: ${uploadError.message}`));
       }
-
-      const file = req.file;
-      const fileExt = file.originalname.split(".").pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-
-      const { data, error } = await supabase.storage
-        .from("posts")
-        .upload(fileName, file.buffer, {
-          contentType: file.mimetype,
-        });
-
-      if (error) {
-        console.error("Supabase upload error:", error);
-        return next(new Error("File upload failed. Please try again."));
-      }
-
-      const { data: urlData } = supabase.storage
-        .from("posts")
-        .getPublicUrl(fileName);
-
-      req.body.contentPicture = urlData.publicUrl;
     }
 
     const updatedPost = await Post.findByIdAndUpdate(
@@ -284,10 +227,23 @@ export const editPost = async (req, res, next) => {
 
 export const deletePost = async (req, res, next) => {
   try {
-    const post = await Post.findByIdAndDelete(req.params.post_id);
+    const post = await Post.findById(req.params.post_id);
     if (!post) {
       return next(new Error("Post not found"));
     }
+
+    // Delete associated file from Supabase if it exists
+    if (post.contentPicture) {
+      try {
+        await deleteImageFromSupabase(post.contentPicture, "posts");
+      } catch (deleteError) {
+        console.error("Error deleting file from Supabase:", deleteError);
+        // Decide if you want to stop the post deletion if file deletion fails
+        // return next(new Error(`File deletion failed: ${deleteError.message}`));
+      }
+    }
+
+    await Post.findByIdAndDelete(req.params.post_id);
 
     if (post.contentType === "announcement" && post.classId) {
       await Class.findByIdAndUpdate(post.classId, {
