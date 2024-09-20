@@ -3,7 +3,8 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import connectToMongoDB from "./db/connectMongoDb.js";
+import connectToMongoDB from "./config/connectMongoDb.js";
+// import { createProfilePicturesBucketIfNotExists } from './utils/supabaseUpload.js';
 
 dotenv.config();
 
@@ -71,6 +72,8 @@ app.use((err, req, res, next) => {
     err.status = err.status || 505;
     res.status(err.status).json({ con: false, msg: err.message });
 });
+
+// createProfilePicturesBucketIfNotExists();
 
 app.listen(process.env.PORT, () => {
     connectToMongoDB();

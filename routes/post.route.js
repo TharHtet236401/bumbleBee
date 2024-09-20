@@ -24,17 +24,8 @@ import { validateBody } from "../utils/validator.js";
 
 const router = express.Router();
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/post_images');
-    },
-    filename: (req, file, cb) => {
-        const { name, ext } = parse(file.originalname);
-        cb(null, `${Date.now()}${ext}`); // Ensure unique file names
-    }
-});
-
-const upload = multer({ storage });
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 //** important: don't change the middleware order */
 router.post("/create", validateToken(), upload.single('contentPicture'), validateBody(PostSchema.create), isNotParents(), createPost);
