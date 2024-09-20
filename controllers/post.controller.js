@@ -10,38 +10,11 @@ import dotenv from "dotenv";
 import {
   uploadImageToSupabase,
   deleteImageFromSupabase,
+  uploadDocumentToSupabase,
+  deleteDocumentFromSupabase,
 } from "../utils/supabaseUpload.js";
 
 dotenv.config();
-
-const createPostsBucketIfNotExists = async () => {
-  try {
-    const { data: buckets, error: listError } =
-      await supabase.storage.listBuckets();
-    if (listError) {
-      console.error("Error listing buckets:", listError);
-      return;
-    }
-
-    if (!buckets.some((bucket) => bucket.name === "posts")) {
-      const { data, error } = await supabase.storage.createBucket("posts", {
-        public: false,
-      });
-      if (error) {
-        console.error("Error creating posts bucket:", error);
-        console.error("Error details:", JSON.stringify(error, null, 2));
-      } else {
-        console.log("Posts bucket created successfully");
-      }
-    } else {
-      console.log("Posts bucket already exists");
-    }
-  } catch (error) {
-    console.error("Unexpected error in createPostsBucketIfNotExists:", error);
-  }
-};
-
-// createPostsBucketIfNotExists();
 
 export const createPost = async (req, res, next) => {
   try {
@@ -50,12 +23,26 @@ export const createPost = async (req, res, next) => {
     const posted_by = req.user._id;
 
     let contentPicture = null;
+    let documents = [];
 
     if (req.file) {
       try {
-        contentPicture = await uploadImageToSupabase(req.file,'posts');
+        contentPicture = await uploadImageToSupabase(req.file, "posts");
       } catch (uploadError) {
         return next(new Error(`File upload failed: ${uploadError.message}`));
+      }
+    }
+
+    if (req.files && req.files.documents) {
+      try {
+        for (const file of req.files.documents) {
+          const documentUrl = await uploadDocumentToSupabase(file, "documents");
+          documents.push(documentUrl);
+        }
+      } catch (uploadError) {
+        return next(
+          new Error(`Document upload failed: ${uploadError.message}`)
+        );
       }
     }
 
@@ -68,6 +55,7 @@ export const createPost = async (req, res, next) => {
       reactions,
       classId,
       schoolId,
+      documents,
     });
 
     await post.save();
@@ -211,6 +199,21 @@ export const editPost = async (req, res, next) => {
       }
     }
 
+    if (req.files && req.files.documents) {
+      // Delete old documents
+      for (const docUrl of post.documents) {
+        await deleteDocumentFromSupabase(docUrl, "documents");
+      }
+
+      // Upload new documents
+      const newDocuments = [];
+      for (const file of req.files.documents) {
+        const documentUrl = await uploadDocumentToSupabase(file, "documents");
+        newDocuments.push(documentUrl);
+      }
+      req.body.documents = newDocuments;
+    }
+
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.post_id,
       {
@@ -234,13 +237,12 @@ export const deletePost = async (req, res, next) => {
 
     // Delete associated file from Supabase if it exists
     if (post.contentPicture) {
-      try {
-        await deleteImageFromSupabase(post.contentPicture, "posts");
-      } catch (deleteError) {
-        console.error("Error deleting file from Supabase:", deleteError);
-        // Decide if you want to stop the post deletion if file deletion fails
-        // return next(new Error(`File deletion failed: ${deleteError.message}`));
-      }
+      await deleteImageFromSupabase(post.contentPicture, "posts");
+    }
+
+    // Delete associated documents
+    for (const docUrl of post.documents) {
+      await deleteDocumentFromSupabase(docUrl, "documents");
     }
 
     await Post.findByIdAndDelete(req.params.post_id);
