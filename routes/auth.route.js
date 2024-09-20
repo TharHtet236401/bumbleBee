@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
 
         const { ext } = parse(file.originalname);
 
-        cb(null, `${req.body.email}${ext}`); // Ensure unique file names
+        cb(null, `${Date.now()}${ext}`); // Ensure unique file names
     }
 });
 
