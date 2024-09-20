@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import connectToMongoDB from "./db/connectMongoDb.js";
+import connectToMongoDB from "./config/connectMongoDb.js";
 
 dotenv.config();
 
