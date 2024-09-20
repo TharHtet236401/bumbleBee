@@ -54,7 +54,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-router.put("/update", validateToken(), fetchUserEmail, upload.single('profilePicture'), validateBody(UserSchema.edit), updateUserInfo);
+router.put("/update", validateToken(), upload.single('profilePicture'), validateBody(UserSchema.edit), updateUserInfo);
 
 router.post("/delete/:userId", deleteUser);
 

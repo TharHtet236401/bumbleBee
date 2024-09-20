@@ -174,6 +174,7 @@ export const filterFeeds = async (req, res, next) => {
 
 // this may allow the user to edit the post
 export const editPost = async (req, res, next) => {
+    console.log(req.params.post_id)
     try {
 
         // delete the old file if a new file is uploaded
