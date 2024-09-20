@@ -83,7 +83,6 @@ export const deleteImageFromSupabase = async (fileUrl, bucketName) => {
       throw new Error(`File deletion failed: ${error.message}`);
     }
 
-    console.log(`File ${fileName} deleted successfully from ${bucketName}`);
     return true;
   } catch (error) {
     console.error(
@@ -91,5 +90,33 @@ export const deleteImageFromSupabase = async (fileUrl, bucketName) => {
       JSON.stringify(error, null, 2)
     );
     throw error;
+  }
+};
+
+
+//may be one time used function and one of my mistakes to create it   
+export const createProfilePicturesBucketIfNotExists = async () => {
+  try {
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    if (listError) {
+      console.error("Error listing buckets:", listError);
+      return;
+    }
+
+    if (!buckets.some(bucket => bucket.name === 'profile-pictures')) {
+      const { data, error } = await supabase.storage.createBucket('profile-pictures', { 
+        public: true  // Set to true if you want profile pictures to be publicly accessible
+      });
+      if (error) {
+        console.error("Error creating profile-pictures bucket:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
+      } else {
+        console.log("Profile-pictures bucket created successfully");
+      }
+    } else {
+      console.log("Profile-pictures bucket already exists");
+    }
+  } catch (error) {
+    console.error("Unexpected error in createProfilePicturesBucketIfNotExists:", error);
   }
 };
