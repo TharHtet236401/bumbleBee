@@ -5,7 +5,10 @@ import {
   getStudentsByClassCode,
   getStudentInfo,
   checkStudentExists,
-  addStudentToMultipleClass
+  addStudentToMultipleClass,
+  editStudent,
+  deleteStudent,
+  getStudentByParent
 } from "../controllers/student.controller.js";
 import { isTeacher, validateToken } from "../utils/validator.js";
 
@@ -15,6 +18,10 @@ router.post("/add/:class_id", validateToken(), isTeacher(), addNewStudentToClass
 router.get("/get/:class_id", validateToken(), isTeacher(), getStudentsByClass);
 router.get("/getByClassCode/:classCode",validateToken(), getStudentsByClassCode);
 router.get("/getStudentInfo/:studentId", validateToken(), getStudentInfo);
+router.get("/getStudentByParent", validateToken(), getStudentByParent);
+router.put("/edit/:studentId", validateToken(), editStudent);
+router.delete("/delete/:studentId", validateToken(), deleteStudent);
+
 
 //new version routes
 

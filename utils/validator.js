@@ -51,7 +51,7 @@ export let validateToken = () => {
         }
     };
 };
-
+    
 export const isAdmin = () => {
     return (req, res, next) => {
         const roles = req.user.roles;
@@ -96,9 +96,20 @@ export const isEditorStranger = () => {
     return async (req, res, next) => {
         const user = req.user._id;
         const post = req.params.post_id;
+        const roles = req.user.roles;
         const postUser = await Post.findById(post);
-        if (user != postUser.posted_by._id) {
+        if (user != postUser.posted_by._id && !roles.includes("admin")){
             return next(new Error("You are not the author of this post"));
+        }
+        next();
+    };
+};
+
+export const isGuardian = () => {
+    return (req, res, next) => {
+        const roles = req.user.roles;
+        if (!roles.includes("guardian") && !roles.includes("admin")) {
+            return next(new Error("You are not a guardian"));
         }
         next();
     };

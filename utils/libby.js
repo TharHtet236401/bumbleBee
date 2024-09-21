@@ -101,7 +101,7 @@ export const deleteFile = (filePath) => {
         if (err) {
             console.error(`Error deleting file: ${filePath}`, err);
         } else {
-            console.log(`File deleted: ${filePath}`);
+            // console.log(`File deleted: ${filePath}`);
         }
     });
 };

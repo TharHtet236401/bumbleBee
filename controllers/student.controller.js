@@ -42,7 +42,7 @@ export const addNewStudentToClass = async (req, res,next) => {
             return next(new Error("Student already in class"))
         }
 
-        fMsg(res, "Student created or updated successfully", student, 201);
+        fMsg(res, "Student created or updated successfully", student, 200);
     } catch (error) {
         next(error);
     }
@@ -93,6 +93,22 @@ export const getStudentInfo = async (req, res, next) => {
         }
         fMsg(res, "Student fetched successfully", student, 200);
     }catch(error){
+        next(error);
+    }
+}
+
+export const getStudentByParent = async (req, res, next) => {
+    try {
+        const userObj = await User.findById(req.user._id).populate('childern');
+        
+        if (!userObj) {
+            return next(new Error("Parent not found"));
+        }
+      
+        const children = userObj.childern || [];
+        fMsg(res, "Children fetched successfully", children, 200);
+    }
+    catch (error) {
         next(error);
     }
 }
@@ -153,11 +169,67 @@ export const addStudentToMultipleClass = async (req, res, next) => {
 
         // Fetch the updated student document
         const updatedStudent = await Student.findById(student_id);
-        fMsg(res, "Student added successfully", updatedStudent, 201);
+        fMsg(res, "Student added successfully", updatedStudent, 200);
     } catch (error) {
         next(error);
     }
 }
+
+
+///edit student with the input of studentId in params and name and dateofBirth in body
+export const editStudent = async (req, res, next) => {
+    try {
+        const studentId = req.params.studentId;
+        const { name, dateofBirth } = req.body;
+        if(!name && !dateofBirth){
+            return next(new Error("Name and date of birth are required"))
+        }
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return next(new Error("Student not found"));
+        }
+        const updatedStudent = await Student.findByIdAndUpdate(studentId, { name, dateofBirth }, { new: true });
+    
+        fMsg(res, "Student updated successfully", updatedStudent, 200);
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+export const deleteStudent = async (req, res, next) => {
+    try {
+        const studentId = req.params.studentId;
+
+        // Find the student by ID
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return next(new Error("Student not found"));
+        }
+
+        // Find all the classes the student is enrolled in
+        const classObjs = await Class.find({ _id: { $in: student.classes } });
+
+        // Delete the student's guardians (if any)
+        await User.deleteMany({ _id: { $in: student.guardians } });
+
+        // Remove the student from each class
+        await Promise.all(
+            classObjs.map((classObj) => 
+                Class.findByIdAndUpdate(classObj._id, { $pull: { students: studentId } })
+            )
+        );
+
+        // Delete the student
+        await Student.findByIdAndDelete(studentId);
+
+        // Send response
+        fMsg(res, "Student deleted successfully", student, 200);
+    } catch (error) {
+        next(error);
+    }
+}
+
 
 //FOR TWIN SCENARIO
 export const checkDuplicateStudents = async(desiredClass) => {
