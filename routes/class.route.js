@@ -20,4 +20,5 @@ router.get(
   validateToken(),
   readClassByTeacherAndGuardian
 );
+router.get('/admin', validateToken(),isAdmin(), readClassByAdmin);
 export default router;

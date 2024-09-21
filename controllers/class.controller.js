@@ -162,55 +162,71 @@ export const deleteClass = async(req, res, next) => {
     }
 }
 
-export const readClassByAdmin = async (req, res, next) => { // differenet admins can read different schools classes
+export const readClassByAdmin = async (req, res) => {
     try {
-        // Find the user and populate the school data if it's required
         const user = await User.findById(req.user._id);
         if (!user) {
-            return next(new Error("User not found"));
+            return res.status(404).json({ message: "User not found" });
         }
-
-        // Assuming user.schools is an array and we need to handle multiple schools in the future
         const schoolId = user.schools[0];
-        if (!schoolId) {
-            return next(new Error("No school associated with this user"));
-        }
+        const { page = 1 } = req.query; // Default to page 1
+        const limit = 10; // Fixed limit of 10 items per page
 
+        const skip = (page - 1) * limit;
         
-        // Fetch the school and its classes simultaneously using Promise.all
-        const [school, classes] = await Promise.all([
-            School.findById(schoolId),
-            Class.find({ school: schoolId })
-        ]);
+        const classes = await Class.find({ school: schoolId })
 
-        if (!school) {
-            return next(new Error("School not found"));
-        }
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 }); // Sort by creation date, newest first
 
-        if (!classes || classes.length === 0) {
-            return next(new Error("No classes found for this school"));
-        }
+        const total = await Class.countDocuments({ school: schoolId });
 
-        fMsg(res, "Classes found", classes, 200);
+        fMsg(res, "Classes found", {
+            classes,
+            currentPage: Number(page),
+            totalPages: Math.ceil(total / limit),
+            totalClasses: total
+        }, 200);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
 
-    } catch (err) {
-        console.error("Error in reading the class:", err);
-        next(err);
     }
 };
 
 
 export const readClassByTeacherAndGuardian = async (req, res, next) => {
-    try{
-        //After swam htet to complete the class data, we will add it here
-        const currentUser = await User.findById(req.user._id).populate('classes'); // Populate only the classes field
-        const classesToRead = currentUser.classes;
-        if(classesToRead.length == 0){
+    try {
+        
+        
+        const { page = 1 } = req.query; // Default to page 1
+        const limit = 10; // Fixed limit of 10 items per page
+
+        const skip = (page - 1) * limit;
+
+        const currentUser = await User.findById(req.user._id).populate({
+            path: 'classes',
+            options: {
+                skip: skip,
+                limit: limit,
+                sort: { createdAt: -1 } // Sort by creation date, newest first
+            }
+        });
+
+        if (currentUser.classes.length === 0) {
             return next(new Error("No classes registered for you"));
         }
-        fMsg(res, "Classes found", classesToRead, 200);
-    }catch(err){
-        console.log(err)
+
+        const totalClasses = await User.findById(req.user._id).populate('classes').then(user => user.classes.length);
+
+        fMsg(res, "Classes found", {
+            classes: currentUser.classes,
+            currentPage: Number(page),
+            totalPages: Math.ceil(totalClasses / limit),
+            totalClasses: totalClasses
+        }, 200);
+    } catch (err) {
+        console.log(err);
         next(err);
     }
 }
