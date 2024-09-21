@@ -12,7 +12,7 @@ router.put("/edit", validateToken(), isGuardian(), editLeaveRequest);
 
 router.delete("/delete", validateToken(), isGuardian(), deleteLeaveRequest);
 
-router.post("/respond", validateToken(), isTeacher(), respondLeaveRequest);
+router.put("/respond", validateToken(), isTeacher(), respondLeaveRequest);
 router.get("/reasons", getLeaveReasons);
 
 export default router;
