@@ -72,4 +72,64 @@ export const createLeaveRequest = async (req, res, next) => {
   }
 };
 
+export const readLeaveRequest = async(req, res, next) => {
+  try{
+    const senderId = req.user._id;
+    const user = await User.findById(senderId);
 
+    console.log("this function is running")
+
+    const { classId } = req.body
+
+    //ensures that only teachers who are assigned to the class can view the requests 
+    let classPermission = false;
+    while(classPermission == false){
+      for(let i = 0; i < user.classes.length; i++){
+        
+        if(user.classes[i] == classId){
+          console.log("it is same")
+          classPermission = true;
+          break;
+        }
+      }
+      if(classPermission == false){
+        classPermission = true;
+        return fMsg(res, "You don't have permission to view the leave requests from other class", 403)
+      }
+    }
+    
+
+    const classObj = await Class.findById(classId);
+    //this might not need this but just in case before frontend is ready
+    if(!classObj){
+      return next(new Error("Class not found"));
+    }
+
+    let leaveRequests = await LeaveRequest.find({classId: classId});
+    fMsg(res, "Leave requests", leaveRequests, 200);
+
+
+  } catch(error){
+    next(error)
+  }
+}
+
+export const editLeaveRequest = async(req, res, next) => {
+  const senderId = req.user._id;
+    const user = await User.findById(senderId);
+    const { studentId, classId, startDate, endDate, reason, description } =
+      req.body;
+
+    // Check if end date is earlier than start date
+    if (new Date(endDate) < new Date(startDate)) {
+      return next(new Error("End date cannot be earlier than start date"));
+    }
+}
+
+export const deleteLeaveRequest = async(req, res,  next) => {
+  
+}
+
+export const respondLeaveRequest = async(req, res, next) => {
+
+}
