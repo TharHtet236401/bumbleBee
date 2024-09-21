@@ -1,6 +1,7 @@
 import PendingRequest from "../models/pendingRequest.model.js";
 import Class from "../models/class.model.js";
 import Student from "../models/student.model.js";
+import {checkDuplicateStudents} from "./student.controller.js"
 import User from "../models/user.model.js";
 import { fMsg } from "../utils/libby.js";
 import mongoose from "mongoose";
@@ -28,8 +29,8 @@ export const createRequest = async (req, res, next) => {
         return next(new Error("Please provide all the required fields"))
       }
 
-      console.log("This is the guardian data: " + currentUser)
-      console.log("These are students data: " + students  )
+      // console.log("This is the guardian data: " + currentUser)
+      // console.log("These are students data: " + students  )
       
     }
     const userId = req.user._id;
@@ -41,6 +42,13 @@ export const createRequest = async (req, res, next) => {
       return next(new Error("Class not found"))
     }
 
+    //FOR TWIN SCENARIO
+    //1. check whether or not the class students have duplicate name and birthday
+    let response = await checkDuplicateStudents(desireClass);
+    console.log("The duplicate students " + response)
+    
+
+    //2. check whether or not those students have guardians
 
     const existingRequest = await PendingRequest.findOne({
       sender: userId,//the user id will differ if there are duplicate student with name and DOB

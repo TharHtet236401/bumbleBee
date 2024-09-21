@@ -1,6 +1,6 @@
 import Student from "../models/student.model.js";
 import Class from "../models/class.model.js";
-import { fMsg } from "../utils/libby.js";
+import { fMsg, checkIfDuplicate } from "../utils/libby.js";
 import User from "../models/user.model.js";
 
 export const addNewStudentToClass = async (req, res,next) => {
@@ -156,5 +156,30 @@ export const addStudentToMultipleClass = async (req, res, next) => {
         fMsg(res, "Student added successfully", updatedStudent, 201);
     } catch (error) {
         next(error);
+    }
+}
+
+//FOR TWIN SCENARIO
+export const checkDuplicateStudents = async(desiredClass) => {
+    try{
+        // console.log("These are duplicate students "+ desiredClass.students);
+        let studentsData = [];
+        for(const student of desiredClass.students){
+            let oneStudent = await Student.find({_id: student}).select({"name": 1, "dateofBirth": 1});
+            // console.log("this is one student data " + oneStudent)
+            studentsData.push(oneStudent)
+        }
+
+        console.log("This is student data testing " + studentsData)
+        
+        return checkIfDuplicate(studentsData, "name", "dateofBirth");
+        // teacher.classes.forEach((eachClass) => {
+        //     if(eachClass.toString() === classId.toString()){
+        //       classVerify = true;
+        //     }
+            
+        //   })
+    } catch(error){
+        return error;
     }
 }

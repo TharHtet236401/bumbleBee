@@ -119,3 +119,22 @@ export const generateClassCode = (length) => {
     }
     return result;
 };
+
+//this function checks that if there are any duplicate String/Number inside the array;
+//FOR TWIN SCENARIO
+export const checkIfDuplicate = (object, key1, key2) => {
+    
+    for(let i = 0; i < object.length; i++){
+        for(let j = object.length -1 ; j >i; j --){
+
+            // if((object[i][key1] === object[j][key1]) && (object[i][key2] === object[j][key2])){
+            //     // console.log("first condition: " + object[i].key1 + " and " + object[j][key1])
+            //     // console.log("second condition: " + object[i][key2] + " and " + object[j][key2])
+            //     return true;
+            // } 
+
+            console.log("first condition: " + object[i].name + " and " + object[j][key1])
+        }
+    }
+    return false;
+}
