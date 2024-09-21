@@ -47,14 +47,16 @@ export const createLeaveRequest = async (req, res, next) => {
       return next(new Error("Class not found"));
     }
 
-    //this might not need this but just in case before frontend is ready
-    const reasonObj = await LeaveRequestType.findById(reason);
-    if (!reasonObj) {
-      return next(new Error("Reason not found"));
+    const reasons = ["Health", "Personal", "Others"];
+    if (!reasons.includes(reason)) {
+      return next(new Error("Invalid reason"));
     }
+    
+
 
     const tosaveRequest = {
       senderId,
+
       studentId,
       classId,
       startDate,
@@ -132,4 +134,15 @@ export const deleteLeaveRequest = async(req, res,  next) => {
 
 export const respondLeaveRequest = async(req, res, next) => {
 
+}
+
+export const getLeaveReasons = async (req, res, next) => {
+  try {
+    const reasons = ["Health", "Personal", "Others"];
+    fMsg(res, "Leave reasons", reasons, 200);
+  } catch (error) {
+    next(error);
+    console.log(error)
+
+  }
 }

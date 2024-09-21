@@ -2,6 +2,7 @@ import { createLeaveRequestType, getLeaveRequestTypes, updateLeaveRequestType, d
 import express from "express";
 const router = express.Router();
 
+
 router.post("/create", createLeaveRequestType)
 router.get("/get", getLeaveRequestTypes)
 router.put("/update/:requestTypeId", updateLeaveRequestType)
