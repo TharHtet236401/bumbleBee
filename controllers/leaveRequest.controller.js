@@ -72,4 +72,12 @@ export const createLeaveRequest = async (req, res, next) => {
   }
 };
 
+export const getLeaveReasons = async (req, res, next) => {
+  try {
+    const reasons = ["Health", "Personal", "Others"];
+    fMsg(res, "Leave reasons", reasons, 200);
+  } catch (error) {
+    next(error);
 
+  }
+}
