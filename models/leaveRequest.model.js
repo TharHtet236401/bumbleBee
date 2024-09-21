@@ -30,11 +30,11 @@ const leaveRequestSchema = new mongoose.Schema({
     default: "unread",
   },
   reason: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "LeaveRequestType",
+    type: String,
     required: true,
   },
   description: {
+
     type: String,
     required: true,
   },
