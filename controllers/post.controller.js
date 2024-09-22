@@ -25,7 +25,7 @@ export const createPost = async (req, res, next) => {
     let contentPicture = null;
     let documents = [];
 
-    console.log("Received files:", req.files);
+    
 
     if (req.files && req.files.contentPicture && req.files.contentPicture[0]) {
       try {
