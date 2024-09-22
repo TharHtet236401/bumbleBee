@@ -120,7 +120,8 @@ export const readAllLeaveRequests = async(req, res, next) => {
     for(let i = 0; i < reader.classes.length; i++){
       for(let j = 0; j < reader.childern.length; j++){
         let requests = await LeaveRequest.find({classId: reader.classes[i], studentId: reader.childern[j]});
-        if(requests){
+        if(requests.length>0){
+          console.log("This condition work and requests is " + requests)
           leaveRequests.push(requests)
         }
       }
