@@ -155,7 +155,7 @@ export const readClassByAdmin = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return next(new Error("User is not found"));
     }
     const schoolId = user.schools[0];
     const { page = 1 } = req.query; // Default to page 1
@@ -183,7 +183,7 @@ export const readClassByAdmin = async (req, res) => {
       200
     );
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error)
   }
 };
 
@@ -223,7 +223,6 @@ export const readClassByTeacherAndGuardian = async (req, res, next) => {
       200
     );
   } catch (err) {
-    console.log(err);
     next(err);
   }
 };
