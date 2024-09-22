@@ -65,7 +65,7 @@ export const isAdmin = () => {
 export const isTeacher = () => {
     return (req, res, next) => {
         const roles = req.user.roles;
-        if (!roles.includes("teacher")) {
+        if (!roles.includes("teacher") && !roles.includes("admin")) {
             return next(new Error("You are not a teacher"));
         }
         next();
