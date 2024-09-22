@@ -1,4 +1,4 @@
-import { fMsg } from "../utils/libby.js";
+import { fMsg ,fError} from "../utils/libby.js";
 import User from "../models/user.model.js";
 import School from "../models/school.model.js";
 import Class from "../models/class.model.js";
@@ -6,14 +6,36 @@ import { generateClassCode } from "../utils/libby.js";
 
 export const createClass = async (req, res, next) => {
   try {
+    //that grade input will come from the dropdown menu
+    //that classname input will come from the dropdown menu or text field at first we have no default class names like gradeNames;
     const { grade, className } = req.body;
     const user = await User.findById(req.user._id);
+
+    if(!grade || !className){
+      return fError(res, "Please provide both grade and class name",400);
+    }
     //find the user
     if (user.schools.length == 0) {
-      return next(new Error("You are not associated with any school"));
+      return fError(res, "You are not associated with any school", 400);
     }
-    const schoolId = user.schools[0]; //0 is defined here, because it is assuming that there is only one school for one admin at the moment
-    const school = await School.findById(schoolId); //find the school
+
+    ////find the school and user.schools[0] is the school id as the admin can only from one school at the moment
+    const schoolId = user.schools[0];
+    const school = await School.findById(schoolId);
+   
+
+    //if the user input grade is not in the school's gradeNames, then add it to the school's gradeNames
+    if(!school.gradeNames.includes(grade)){
+      school.gradeNames.push(grade);
+      await school.save();
+    }
+
+    //if the user input class name is not in the school's classNames, then add it to the school's classNames
+    if(!school.classNames.includes(className)){
+      school.classNames.push(className);
+      await school.save();
+    }
+
 
     let classLists = [];
     let codeGenerate = false;
@@ -54,9 +76,7 @@ export const createClass = async (req, res, next) => {
 
     //return this if there is duplicate class name
     if (duplicateError) {
-      return next(
-        new Error("There is already that class name for your school. ")
-      );
+      return fError(res, "There is already that class name for your school. " ,409);
     }
     //create a new class
     const newClass = await Class.create({
@@ -68,7 +88,7 @@ export const createClass = async (req, res, next) => {
 
     school.classes.push(newClass._id);
     await school.save();
-    fMsg(res, "Class created successfully", newClass, 200);
+    fMsg(res, "Class created successfully", newClass, 201);
   } catch (err) {
     console.log(err);
     next(err);
@@ -80,16 +100,16 @@ export const editClass = async (req, res, next) => {
     const { classId, grade, className } = req.body;
 
     if (!classId) {
-      return next(new Error("Please provide the class id"));
+      return fError(res, "Please provide the class id", 400);
     }
     //might delete later if the front end can handle the error message
     if (!grade && !className) {
-      return next(new Error("Please provide at least one field to update"));
+      return fError(res, "Please provide at least one field to update", 400);
     }
     const classObj = await Class.findById(classId);
 
     if (!classObj) {
-      return next(new Error("There is no such class "));
+      return fError(res, "There is no such class ", 404);
     }
 
     //duplicate class name return something.
@@ -115,12 +135,11 @@ export const readAllClasses = async (req, res, next) => {
   try {
     const allClasses = await Class.find({});
     if (allClasses == null) {
-      return next(new Error("There are no classes at the moment"));
+      return fMsg(res, "There are no classes at the moment", {}, 204);
     }
 
     fMsg(res, "All Classes are found", allClasses, 200);
   } catch (err) {
-    console.log(err);
     next(err);
   }
 };
@@ -129,12 +148,12 @@ export const deleteClass = async (req, res, next) => {
   try {
     //might delete later if the front end can handle the error message
     if (!classId) {
-      return next(new Error("Please provide the class id"));
+      return fError(res, "Please provide the class id", 400);
     }
     const { classId } = req.body;
     const classObj = await Class.findById(classId);
     if (!classObj) {
-      return next(new Error("There is no such class"));
+      return fError(res, "There is no such class", 404);
     }
 
     const schoolId = classObj.school;
@@ -155,7 +174,7 @@ export const readClassByAdmin = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) {
-      return next(new Error("User is not found"));
+      return fError(res, "User is not found", 404);
     }
     const schoolId = user.schools[0];
     const { page = 1 } = req.query; // Default to page 1
@@ -204,7 +223,7 @@ export const readClassByTeacherAndGuardian = async (req, res, next) => {
     });
 
     if (currentUser.classes.length === 0) {
-      return next(new Error("No classes registered for you"));
+     return fError(res, "No classes registered for you", 404);
     }
 
     const totalClasses = await User.findById(req.user._id)
@@ -227,4 +246,49 @@ export const readClassByTeacherAndGuardian = async (req, res, next) => {
   }
 };
 
+//this is for the dropdown menu for Grades while creating a new class
 
+export const readGradeNames = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return fError(res, "User is not found", 404);
+    }
+    const schoolId = user.schools[0];
+    const school = await School.findById(schoolId);
+    if (!school) {
+      return fError(res, "School is not found", 404);
+    }
+    const gradeNames = school.gradeNames;
+
+    if (gradeNames.length === 0) {
+      return fMsg(res, "No grade names found", {}, 200);
+    }
+
+    fMsg(res, "Grade names found", gradeNames, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const readClassNames = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return fError(res, "User is not found", 404);
+    }
+    const schoolId = user.schools[0];
+    const school = await School.findById(schoolId);
+    if (!school) {
+      return fError(res, "School is not found", 404);
+    }
+    const classNames = school.classNames;
+
+    if (classNames.length === 0) {
+      return fMsg(res, "No class names found", {}, 200);
+    }
+    fMsg(res, "Class names found", classNames, 200);
+  } catch (err) {
+    next(err);
+  }
+};

@@ -30,12 +30,15 @@ export const createSchool = async (req, res, next) => {
       return next(new Error("User not found"))
     }
 
+    const defaultGradeNames = ["HND","HNC","Grade","Batch","Year"]
+  
     // Create a new school
     const newSchool = await School.create({
       schoolName,
       address,
       phone,
       email,
+      gradeNames:defaultGradeNames,
     });
 
     // Add the new school to the user's (which is adminschools array

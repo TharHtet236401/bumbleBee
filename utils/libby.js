@@ -12,6 +12,10 @@ export const fMsg = (res, msg, result = {}, statusCode = 200) => {
     res.status(statusCode).json({ con: true, msg, result });
 };
 
+export const fError = (res, msg, statusCode = 500) => {
+    res.status(statusCode).json({ con: false, msg});
+};
+
 //you can encode the password
 export const encode = (payload) => {
     return bcrypt.hashSync(payload, 10);

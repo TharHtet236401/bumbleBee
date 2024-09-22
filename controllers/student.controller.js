@@ -87,12 +87,13 @@ export const getStudentsByClassCode = async (req, res,next) => {
 export const getStudentInfo = async (req, res, next) => {
     try {
         const studentId = req.params.studentId;
-        const student = await Student.findById(studentId);
+        const student = await Student.findById(studentId)
+        
         if (!student) {
             return next(new Error("Student not found"))
         }
         fMsg(res, "Student fetched successfully", student, 200);
-    }catch(error){
+    } catch(error) {
         next(error);
     }
 }

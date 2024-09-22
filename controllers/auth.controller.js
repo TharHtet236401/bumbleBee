@@ -5,7 +5,7 @@ import User from "../models/user.model.js";
 
 import { deleteFile } from "../utils/libby.js";
 
-import { encode, genToken, fMsg, decode } from "../utils/libby.js";
+import { encode, genToken, fMsg, decode, fError } from "../utils/libby.js";
 
 import { uploadImageToSupabase } from "../utils/supabaseUpload.js";
 
@@ -27,7 +27,7 @@ export const register = async (req, res, next) => {
     const findEmail = await User.findOne({ email });
     const findPhone = await User.findOne({ phone });
     if (findEmail) {
-      return next(new Error("Email already exists"));
+      return fError(res, "Email already exists", {}, 409);
     }
     if (findPhone) {
       return next(new Error("Phone number already exists"));
