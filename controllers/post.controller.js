@@ -25,9 +25,14 @@ export const createPost = async (req, res, next) => {
     let contentPicture = null;
     let documents = [];
 
-    if (req.file) {
+    console.log("Received files:", req.files);
+
+    if (req.files && req.files.contentPicture && req.files.contentPicture[0]) {
       try {
-        contentPicture = await uploadImageToSupabase(req.file, "posts");
+        contentPicture = await uploadImageToSupabase(
+          req.files.contentPicture[0],
+          "posts"
+        );
       } catch (uploadError) {
         return next(new Error(`File upload failed: ${uploadError.message}`));
       }
@@ -181,7 +186,8 @@ export const editPost = async (req, res, next) => {
       return next(new Error("Post not found"));
     }
 
-    if (req.file) {
+    // Handle contentPicture update
+    if (req.files && req.files.contentPicture && req.files.contentPicture[0]) {
       try {
         // Delete old file if it exists
         if (post.contentPicture) {
@@ -190,28 +196,37 @@ export const editPost = async (req, res, next) => {
 
         // Upload new file
         const newContentPicture = await uploadImageToSupabase(
-          req.file,
+          req.files.contentPicture[0],
           "posts"
         );
         req.body.contentPicture = newContentPicture;
       } catch (uploadError) {
-        return next(new Error(`File operation failed: ${uploadError.message}`));
+        return next(
+          new Error(`Content picture operation failed: ${uploadError.message}`)
+        );
       }
     }
 
+    // Handle documents update
     if (req.files && req.files.documents) {
-      // Delete old documents
-      for (const docUrl of post.documents) {
-        await deleteDocumentFromSupabase(docUrl, "documents");
-      }
+      try {
+        // Delete old documents
+        for (const docUrl of post.documents) {
+          await deleteDocumentFromSupabase(docUrl, "documents");
+        }
 
-      // Upload new documents
-      const newDocuments = [];
-      for (const file of req.files.documents) {
-        const documentUrl = await uploadDocumentToSupabase(file, "documents");
-        newDocuments.push(documentUrl);
+        // Upload new documents
+        const newDocuments = [];
+        for (const file of req.files.documents) {
+          const documentUrl = await uploadDocumentToSupabase(file, "documents");
+          newDocuments.push(documentUrl);
+        }
+        req.body.documents = newDocuments;
+      } catch (uploadError) {
+        return next(
+          new Error(`Documents operation failed: ${uploadError.message}`)
+        );
       }
-      req.body.documents = newDocuments;
     }
 
     const updatedPost = await Post.findByIdAndUpdate(

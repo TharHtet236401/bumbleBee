@@ -49,7 +49,10 @@ router.put(
   validateBody(PostSchema.edit),
   isEditorStranger(),
   isNotParents(),
-  upload.single("contentPicture"),
+  upload.fields([
+    { name: "contentPicture", maxCount: 1 },
+    { name: "documents", maxCount: 5 }, // Allow up to 5 documents
+  ]),
   editPost
 );
 router.delete(
