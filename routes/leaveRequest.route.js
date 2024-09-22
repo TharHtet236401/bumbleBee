@@ -1,12 +1,13 @@
 import express from "express";
-import { createLeaveRequest, readLeaveRequest, editLeaveRequest, deleteLeaveRequest, respondLeaveRequest, getLeaveReasons} from "../controllers/leaveRequest.controller.js";
+import { createLeaveRequest, readLeaveRequestByClass, readAllLeaveRequests, editLeaveRequest, deleteLeaveRequest, respondLeaveRequest, getLeaveReasons} from "../controllers/leaveRequest.controller.js";
 import { isGuardian ,validateToken, isTeacher} from "../utils/validator.js";
 
 const router = express.Router();
 
 router.post("/create", validateToken(), isGuardian(), createLeaveRequest);
 
-router.get("/read", validateToken(), isTeacher(), readLeaveRequest);
+router.get("/readByClass", validateToken(), isTeacher(), readLeaveRequestByClass);
+router.get("/readAllReq", validateToken(), isGuardian(), readAllLeaveRequests);
 
 router.put("/edit", validateToken(), isGuardian(), editLeaveRequest);
 
