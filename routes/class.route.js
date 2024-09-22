@@ -5,7 +5,8 @@ import {
   readAllClasses,
   readClassByAdmin,
   readClassByTeacherAndGuardian,
-  readGradeNames
+  readGradeNames,
+  readClassNames
 } from "../controllers/class.controller.js";
 import { validateToken, isAdmin } from "../utils/validator.js";
 import express from "express";
@@ -23,4 +24,5 @@ router.get(
 );
 router.get('/admin', validateToken(),isAdmin(), readClassByAdmin);
 router.get('/gradeNames', validateToken(), readGradeNames);
+router.get('/classNames', validateToken(), readClassNames);
 export default router;
