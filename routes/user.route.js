@@ -12,6 +12,7 @@ import {
   updateUserInfo,
   deleteUser,
   getAllUsers,
+  getUserById,
 } from "../controllers/user.controller.js";
 
 import User from "../models/user.model.js";
@@ -33,5 +34,7 @@ router.put(
 router.delete("/delete/:userId", deleteUser);
 
 router.get("/all", validateToken(), isAdmin(), getAllUsers);
+
+router.get("/:userId", validateToken(), getUserById);
 
 export default router;

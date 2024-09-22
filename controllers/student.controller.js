@@ -88,10 +88,6 @@ export const getStudentInfo = async (req, res, next) => {
     try {
         const studentId = req.params.studentId;
         const student = await Student.findById(studentId)
-            .populate({
-                path: 'guardians',
-                select: '-password -childern' // Exclude the password field
-            });
         
         if (!student) {
             return next(new Error("Student not found"))
