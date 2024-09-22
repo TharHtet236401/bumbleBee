@@ -1,4 +1,4 @@
-import { fMsg } from "../utils/libby.js";
+import { fMsg ,fError} from "../utils/libby.js";
 import User from "../models/user.model.js";
 import School from "../models/school.model.js";
 import Class from "../models/class.model.js";
@@ -227,4 +227,23 @@ export const readClassByTeacherAndGuardian = async (req, res, next) => {
   }
 };
 
+//this is for the dropdown menu for Grades while creating a new class
+
+export const readGradeNames = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return fError(res, "User is not found", 404);
+    }
+    const schoolId = user.schools[0];
+    const school = await School.findById(schoolId);
+    if (!school) {
+      return fError(res, "School is not found", 404);
+    }
+    const gradeNames = school.gradeNames;
+    fMsg(res, "Grade names found", gradeNames, 200);
+  } catch (err) {
+    next(err);
+  }
+};
 
