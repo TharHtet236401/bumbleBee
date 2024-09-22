@@ -124,9 +124,12 @@ export const getAllUsers = async (req, res) => {
 export const getUserById = async (req, res, next) => {
   try {
     const userId = req.params.userId;
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select('-password');
     if (!user) {
       return next(new Error("User not found"));
     }
+    fMsg(res, "User fetched successfully", user, 200);
+  } catch (error) {
+    next(error);
   }
 }
