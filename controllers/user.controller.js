@@ -99,7 +99,7 @@ export const getAllUsers = async (req, res) => {
     const admin = await User.findById(currentUser._id);
 
     if (!admin) {
-      return fMsg(res, "Admin not found", [], 404);
+      return next(new Error("Admin not found"))
     }
 
     const usersSchoolId = admin.schools[0]; // Fetching usersSchoolId here

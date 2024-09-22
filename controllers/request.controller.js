@@ -137,13 +137,13 @@ export const readRequest = async (req, res, next)=> {
 
     //for both teacher and admin, the classId is required
     if(classId == null){
-      return next(new Error("Please provide all the required field   s"))
+      return next(new Error("Please provide all the required fields"))
     }
 
     //as a role of teacher to read the requests for the guardian, he/she will provide to know the studentId to know that student's guardian requests
     if(req.user.roles.includes("teacher")){
       if(!studentId){
-        return next(new Error("Please provide all the required field    s"))
+        return next(new Error("Please provide all the required fields"))
       }
     }
 
@@ -228,13 +228,12 @@ export const readRequest = async (req, res, next)=> {
     }
 
     if(requests.length === 0){
-      return fMsg(res, "There are no requests at the moment", null, 200)
+      return next(new Error("There are no requests at the moment"))
     }
 
     fMsg(res, `${requestsType} requests`, requests, 200);
 
   }catch(error){
-    console.log(error);
     next(error);
   }
 }
@@ -521,7 +520,6 @@ export const respondRequest = async(req, res, next) => {
 
     
   }catch(error){
-    console.log(error);
     next(error);
   }
 }
