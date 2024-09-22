@@ -24,6 +24,14 @@ const schoolSchema = new mongoose.Schema({
         type: [mongoose.Schema.Types.ObjectId], // Updated to reference ObjectId
         ref: "Class",
     },
+    gradeNames:{
+        type:[String],
+        required:true,
+    },
+    classNames:{
+        type:[String],
+       
+    },
 });
 
 const School = mongoose.model("School", schoolSchema);
