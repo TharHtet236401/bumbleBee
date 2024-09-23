@@ -2,8 +2,8 @@ import User from "../models/user.model.js";
 import LeaveRequest from "../models/leaveRequest.model.js";
 import Class from "../models/class.model.js";
 import Student from "../models/student.model.js";
-import LeaveRequestType from "../models/leaveRequestType.model.js";
-import { fMsg } from "../utils/libby.js";
+import { checkClassPermission } from "../utils/libby.js";
+import { fMsg, fError} from "../utils/libby.js";
 
 ///this function is dedicated for the guardian to create a leave request for the student
 export const createLeaveRequest = async (req, res, next) => {
@@ -17,6 +17,7 @@ export const createLeaveRequest = async (req, res, next) => {
 
     // Check if end date is earlier than start date
     if (new Date(endDate) < new Date(startDate)) {
+      return fError(res, "End date cannot be earlier than start date")
       return next(new Error("End date cannot be earlier than start date"));
     }
 
@@ -80,19 +81,9 @@ export const readLeaveRequestByClass = async(req, res, next) => {
     const { classId } = req.body
 
     //ensures that only teachers who are assigned to the class can view the requests 
-    let classPermission = false;
-    while(classPermission == false){
-      for(let i = 0; i < reader.classes.length; i++){
-        
-        if(reader.classes[i] == classId){
-          classPermission = true;
-          break;
-        }
-      }
-      if(classPermission == false){
-        classPermission = true;
-        return next(new Error("You don't have permission to view the leave requests from other class"))
-      }
+    let classPermission = checkClassPermission(reader.classes, classId);
+    if(!classPermission){
+      return next(new Error("You don't have permission to view the leave requests from other class"))
     }
 
     const classObj = await Class.findById(classId);
@@ -144,20 +135,11 @@ export const editLeaveRequest = async(req, res, next) => {
     const { leaveReqId, studentId, classId, startDate, endDate, reason, description } = req.body;
 
       //ensures that only teachers who are assigned to the class can view the requests 
-      let classPermission = false;
-      while(classPermission == false){
-        for(let i = 0; i < editor.classes.length; i++){
-          
-          if(editor.classes[i] == classId){
-            classPermission = true;
-            break;
-          }
-        }
-        if(classPermission == false){
-          classPermission = true;
-          return next(new Error("You don't have permission to view the leave requests from other class"))
-        }
-      }
+
+    let classPermission = checkClassPermission(editor.classes, classId);
+    if(!classPermission){
+      return next(new Error("You don't have permission to edit the leave requests from other class"))
+    }
 
     //check if the leaveReqId is in the storage
     const leaveReq = await LeaveRequest.findById(leaveReqId)
