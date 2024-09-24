@@ -87,7 +87,9 @@ export const createClass = async (req, res, next) => {
     });
 
     school.classes.push(newClass._id);
+    user.classes.push(newClass._id);
     await school.save();
+    await user.save();
     fMsg(res, "Class created successfully", newClass, 201);
   } catch (err) {
     console.log(err);
@@ -170,7 +172,7 @@ export const deleteClass = async (req, res, next) => {
   }
 };
 
-export const readClassByAdmin = async (req, res) => {
+export const readClassByAdmin = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -183,12 +185,15 @@ export const readClassByAdmin = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const classes = await Class.find({ school: schoolId })
+    
 
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 }); // Sort by creation date, newest first
 
     const total = await Class.countDocuments({ school: schoolId });
+    
+    
 
     fMsg(
       res,
