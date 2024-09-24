@@ -1,8 +1,12 @@
 import Post from "../models/post.model.js";
-import path from "path";
-import { fileURLToPath } from "url";
-import { fMsg, paginate, paginateAnnouncements } from "../utils/libby.js";
-import { deleteFile } from "../utils/libby.js";
+import mongoose from "mongoose";
+import {
+  fMsg,
+  paginate,
+  paginateAnnouncements,
+  fError,
+} from "../utils/libby.js";
+
 import Class from "../models/class.model.js";
 import User from "../models/user.model.js";
 import initializeSupabase from "../config/connectSupaBase.js";
@@ -18,14 +22,45 @@ dotenv.config();
 
 export const createPost = async (req, res, next) => {
   try {
-    const { heading, body, contentType, reactions, classId, schoolId } =
-      req.body;
+    const {
+      heading,
+      body,
+      contentType,
+      reactions,
+      gradeName, // Changed from grade to gradeName
+      className,
+      schoolId,
+    } = req.body;
+
     const posted_by = req.user._id;
+    const userObject = await User.findById(posted_by);
+
+    let classId = null;
+    if(contentType === "announcement"){
+
+      const classExists = await Class.findOne({
+        grade: gradeName,
+        className: className,
+        school: schoolId,
+      });
+
+
+  
+      if(!classExists){
+        return next(new Error("Class not found"));
+      }
+
+      if(!userObject.classes.includes(classExists._id)){
+        return next(new Error("You are not registered in this class"));
+      }
+      classId = classExists._id;
+      console.log(classId);
+
+    }
+   
 
     let contentPicture = null;
     let documents = [];
-
-    
 
     if (req.files && req.files.contentPicture && req.files.contentPicture[0]) {
       try {
@@ -137,11 +172,17 @@ export const getAnnouncements = async (req, res, next) => {
     };
 
     const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    const totalClasses = await Class.countDocuments(query);
 
     const announcements = await Class.find(query, "announcements")
       .sort({ createdAt: -1 })
       .populate({
         path: "announcements",
+        select: "-_id",  // Exclude the _id field
         populate: {
           path: "posted_by",
           select: "userName profilePicture roles",
@@ -149,9 +190,19 @@ export const getAnnouncements = async (req, res, next) => {
       })
       .lean();
 
-    const paginatedResults = paginateAnnouncements(announcements, page);
+    // Flatten the announcements array
+    const allAnnouncements = announcements.flatMap(classDoc => classDoc.announcements);
 
-    fMsg(res, "Announcements fetched successfully", paginatedResults, 200);
+    const paginatedAnnouncements = allAnnouncements.slice(startIndex, endIndex);
+
+    const result = {
+      announcements: paginatedAnnouncements,
+      currentPage: page,
+      totalPages: Math.ceil(allAnnouncements.length / limit),
+      totalAnnouncements: allAnnouncements.length,
+    };
+
+    fMsg(res, "Announcements fetched successfully", result, 200);
   } catch (error) {
     console.log(error);
     next(error);
