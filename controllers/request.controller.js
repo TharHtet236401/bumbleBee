@@ -38,16 +38,6 @@ export const createRequest = async (req, res, next) => {
       return next(new Error("Class not found"))
     }
 
-    //to add the student to the guardian and the class , but it will work only if the teacher accpet the request , so i just comment it
-    // if(req.user.roles.includes("guardian")){
-    //     const guardian = await User.findById(userId)
-
-    //     if(!guardian.childern.includes(student_id)){
-    //         guardian.childern.push(student_id)
-
-    //         guardian.classes.push(desireClass._id)
-    //         await guardian.save()
-
     // Check if the user already has a  request for this class
     // that will find the pending request for the same class
     const existingRequest = await PendingRequest.findOne({
@@ -60,49 +50,6 @@ export const createRequest = async (req, res, next) => {
     if (existingRequest) {
       return next(new Error("Request already exists"))
     }
-
-    // let student;
-    // if(childName != null && studentDOB != null){
-    //   student = await Student.find({name: childName, dateofBirth: studentDOB});
-    // }
-
-    // console.log("user.classes: " + user.classes + "\ntype of user.classes: " + typeof user.classes + "\ndesiredClassid: " + desireClass._id + "\ndesiredClass type:" + typeof desireClass._id)
-    //check whether the class has already been joined
-
-    // for(let eachClass of user.classes){
-    //   console.log("each Class is " + eachClass)
-    //   if(eachClass.toString() == desireClass._id.toString()){
-
-        //There can be error in the future, if the user has both role of teacher and parent.
-
-        //TWIN SCENARIO need further considerations
-        // let requestDuplicate = true;
-
-        //   if(user.roles.includes("guardian")){
-        //     let studentCheck = false;
-        //     while(studentCheck == false){
-        //       if(user.childern == null){
-        //         studentCheck = true;
-        //         requestDuplicate = false;
-        //       }
-
-        //       for(let eachChild of user.childern){
-        //         if(eachChild == student){
-        //           return fMsg(res, "Your child is already in the class", null, 400)
-        //         }
-        //       }
-        //       studentCheck = true;
-        //       requestDuplicate = false;
-        //     }
-        //   }
-        
-        // if(requestDuplicate == true){
-        //   return fMsg(res, "User has already joined this class", null, 400)
-        // }
-
-    //     return fMsg(res, "User has already joined this class", null, 400)
-    //   }
-    // }
 
     // Create a new pending request and save it to pendingrequest collection
     const request = new PendingRequest({
@@ -134,7 +81,6 @@ export const readRequest = async (req, res, next)=> {
     const readerId = req.user._id; 
     const reader = await User.findById(readerId);
 
-
     //for both teacher and admin, the classId is required
     if(classId == null){
       return next(new Error("Please provide all the required fields"))
@@ -146,7 +92,6 @@ export const readRequest = async (req, res, next)=> {
         return next(new Error("Please provide all the required fields"))
       }
     }
-
     const classObj = await Class.findById(classId)
 
     if(!classObj){
@@ -154,8 +99,6 @@ export const readRequest = async (req, res, next)=> {
     }
 
     const classCode = classObj.classCode;
-
-    
 
     //currently, since there is only one role, "0" index array will be used. Considerations need to be done in the future. 
     const readerRole = reader.roles[0];
@@ -167,7 +110,6 @@ export const readRequest = async (req, res, next)=> {
     if(readerRole == "admin"){ // the reader is admin , the requests are for the teacher
       requestsType = "Teacher";
       requests = await PendingRequest.find({roles: ['teacher'], classCode: classCode, status: "pending"});
-      // console.log(requests)
     } 
     //only the teacher, who is responsible for the class should be viewing the class
     else{ // the reader is teacher , the requests are for the guardian
@@ -191,7 +133,6 @@ export const readRequest = async (req, res, next)=> {
         return next(new Error("There is no such student "))
       }
       
-      
       let classVerify = false;
       //this block checks whether the teacher is responsible for the class
       while(classVerify == false){
@@ -208,15 +149,12 @@ export const readRequest = async (req, res, next)=> {
       }
       requestsType = "Guardian"
       let pendingRequests = await PendingRequest.find({roles: ['guardian'], desireClass: classId, status: "pending"});
-      // console.log(pendingRequests)
 
       let requestCondition = false;
       while(requestCondition == false){
         for(const eachRequest of pendingRequests){
-          // console.log(eachRequest.studentDOB === student.dateofBirth)
           if(eachRequest.studentName == student.name && eachRequest.studentDOB.toString() == student.dateofBirth.toString()){
-            requests = await PendingRequest.find({roles: ['guardian'], desireClass: classId, studentName: student.name, studentDOB: student.dateofBirth, status: "pending"});
-            // console.log("This is requests: " + requests);
+            requests = await PendingRequest.find({roles: ['guardian'], desireClass: classId, studentName: student.name, studentDOB: student.dateofBirth, status: "pending"}).populate("sender", "userName email phone relationship");
             requestCondition = true;
           }
         }
@@ -333,24 +271,19 @@ export const respondRequest = async(req, res, next) => {
 
          
           while(guardianAlreadyAdded == false){
-            console.log("Student Object " + student)
             student.guardians.forEach((guardian) => {
-              console.log("Each Guardian: " + guardian + "\nRequester id: (Probably Not) " + requester + "\nRequester Id: " + request.sender)
               if(guardian.toString() == request.sender.toString()){
-                console.log("There is already guardian in the student")
                 guardianAlreadyAdded = true;
               }
             })
 
             if(guardianAlreadyAdded == false){
-              console.log("student guardians? " + student.guardians)
               // newGuardian = student.guardians.push(requester)
               newGuardian = await Student.findOneAndUpdate(
                 {_id: student._id},
                 {"$push": {guardians: request.sender}}
               );
               guardianAlreadyAdded = true
-              console.log("New Guardian" + newGuardian)
             }
           }
 
@@ -360,7 +293,6 @@ export const respondRequest = async(req, res, next) => {
           while(childAlreadyAdded == false){
             requester.childern.forEach((child) => {
               if(child.toString() == student._id.toString()){
-                console.log("there is already child")
                 childAlreadyAdded = true;
               }
             })
@@ -372,7 +304,6 @@ export const respondRequest = async(req, res, next) => {
                 {_id: request.sender},
                 {"$push": {childern: student._id}}
               )
-              console.log("child is being created " + newChild)
               childAlreadyAdded = true;
             }
           }
@@ -383,13 +314,11 @@ export const respondRequest = async(req, res, next) => {
           while(classAlreadyAdded == false){
             requester.classes.forEach((eachClass) => {
               if(eachClass.toString()== classId.toString()){
-                console.log("there is already class")
                 classAlreadyAdded = true;
               }
             })
 
             if(classAlreadyAdded == false){
-              console.log("class is added ")
               newChild = await User.findOneAndUpdate(
                 {_id: request.sender},
                 {"$push": {classes: classId}}
@@ -405,13 +334,11 @@ export const respondRequest = async(req, res, next) => {
           while(classAddGuardian == false){
             classObj.guardians.forEach((eachGuardian) => {
               if(eachGuardian.toString()== request.sender.toString()){
-                console.log("there is already guardian")
                 classAddGuardian = true;
               }
             })
 
             if(classAddGuardian == false){
-              console.log("guardian is added ")
               //‌add the sender into the class's guardians
               classGuardian = await Class.findOneAndUpdate(
                 {_id: classId},
@@ -431,13 +358,11 @@ export const respondRequest = async(req, res, next) => {
           while(schoolAlreadyAdded == false){
             requester.schools.forEach((eachSchool) => {
               if(eachSchool.toString() == classObj.school.toString()){
-                console.log("there is already school")
                 schoolAlreadyAdded = true
               }
             })
 
             if(schoolAlreadyAdded == false){
-              console.log("school is added")
               newSchool = await User.findOneAndUpdate(
                 {_id: request.sender},
                 {"$push": {schools: classObj.school}}
@@ -452,13 +377,11 @@ export const respondRequest = async(req, res, next) => {
           while(studentAddSchool == false){
             student.schools.forEach((eachSchool) => {
               if(eachSchool.toString() == classObj.school.toString()){
-                console.log("there is already school for student")
                 studentAddSchool = true
               }
             })
 
             if(studentAddSchool == false){
-              console.log("school is added to student")
               newSchool = await Student.findOneAndUpdate(
                 {_id: student._id},
                 {"$push": {schools: classObj.school}}
@@ -472,13 +395,11 @@ export const respondRequest = async(req, res, next) => {
           while(studentAddClass == false){
             student.classes.forEach((eachClass) => {
               if(eachClass.toString() == classId.toString()){
-                console.log("there is already class for student")
                 studentAddClass = true
               }
             })
 
             if(studentAddClass == false){
-              console.log("class is added to student")
               newSchool = await Student.findOneAndUpdate(
                 {_id: student._id},
                 {"$push": {classes: classId}}
