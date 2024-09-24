@@ -77,8 +77,9 @@ export const readRequest = async (req, res, next)=> {
 
     //input from the front end which student's guardian requests the teacher wants to see
     //or the teacher's request  whichh the admim wants to see the respective requests
-    const { classId, studentId }  = req.body;
-    //const { classId, studentId }  = req.query;
+
+    const { classId, studentId }  = req.query;
+
     const readerId = req.user._id; 
     const reader = await User.findById(readerId);
 

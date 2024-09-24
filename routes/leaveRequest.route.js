@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/create", validateToken(), isGuardian(), createLeaveRequest);
 
-router.get("/readByClass", validateToken(), isTeacher(), readLeaveRequestByClass);
+router.get("/readByClass/:classId", validateToken(), isTeacher(), readLeaveRequestByClass);
 router.get("/readAllReq", validateToken(), isGuardian(), readAllLeaveRequests);
 
 router.put("/edit", validateToken(), isGuardian(), editLeaveRequest);
