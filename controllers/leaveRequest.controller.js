@@ -78,7 +78,7 @@ export const readLeaveRequestByClass = async(req, res, next) => {
     const readerId = req.user._id;
     const reader = await User.findById(readerId);
 
-    const { classId } = req.body
+    const classId = req.params.classId;
 
     //ensures that only teachers who are assigned to the class can view the requests 
     let classPermission = checkClassPermission(reader.classes, classId);
