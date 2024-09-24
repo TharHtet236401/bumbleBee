@@ -154,7 +154,7 @@ export const readRequest = async (req, res, next)=> {
       while(requestCondition == false){
         for(const eachRequest of pendingRequests){
           if(eachRequest.studentName == student.name && eachRequest.studentDOB.toString() == student.dateofBirth.toString()){
-            requests = await PendingRequest.find({roles: ['guardian'], desireClass: classId, studentName: student.name, studentDOB: student.dateofBirth, status: "pending"}).populate("sender", "name email phone relationship");
+            requests = await PendingRequest.find({roles: ['guardian'], desireClass: classId, studentName: student.name, studentDOB: student.dateofBirth, status: "pending"}).populate("sender", "userName email phone relationship");
             requestCondition = true;
           }
         }
