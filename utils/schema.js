@@ -47,7 +47,12 @@ export const PostSchema = {
         heading: Joi.string().min(3).max(50).required(),
         body: Joi.string().min(3).max(500),
         contentType: Joi.string().valid("announcement", "feed").required(),
-        classId: Joi.string().when(Joi.ref('contentType'), {
+        className: Joi.string().when(Joi.ref('contentType'), {
+            is: 'announcement',
+            then: Joi.required(),
+            otherwise: Joi.forbidden()
+        }),
+        gradeName: Joi.string().when(Joi.ref('contentType'), {
             is: 'announcement',
             then: Joi.required(),
             otherwise: Joi.forbidden()
@@ -55,7 +60,6 @@ export const PostSchema = {
         schoolId: Joi.string().when(Joi.ref('contentType'), {
             is: 'feed',
             then: Joi.required(),
-            otherwise: Joi.forbidden()
         }),
 
     }).unknown(true),
