@@ -126,6 +126,11 @@ export const generateClassCode = (length) => {
 
 //responsible for checking whether a user has permission to access class
 export const checkClassPermission = (userClasses, requestedClass ) => {
+
+    if(userClasses == []){
+        return false;
+    }
+
     let classVerify = false;
       //this block checks whether the teacher is responsible for the class
       while(classVerify == false){
@@ -141,5 +146,26 @@ export const checkClassPermission = (userClasses, requestedClass ) => {
         }
       }
 
+      return true;
+}
+
+export const checkArray = (array, item) => {
+    
+    if(array == []){
+        return false;
+    }
+    let duplicate = false;
+      //this block checks whether the teacher is responsible for the class
+      while(duplicate == false){
+        //change into for loop
+        array.forEach((eachItem) => {
+          if(eachItem.toString() === item.toString()){
+            duplicate = true;
+          }
+        })
+        if(duplicate != true){
+          return false;
+        }
+      }
       return true;
 }
