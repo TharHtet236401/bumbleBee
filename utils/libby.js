@@ -124,22 +124,23 @@ export const generateClassCode = (length) => {
     return result;
 };
 
-//responsible for checking whether a user has permission to access class
-export const checkClassPermission = (userClasses, requestedClass ) => {
-    let classVerify = false;
+export const checkArray = (array, item) => {
+    
+    if(array == []){
+        return false;
+    }
+    let duplicate = false;
       //this block checks whether the teacher is responsible for the class
-      while(classVerify == false){
+      while(duplicate == false){
         //change into for loop
-        userClasses.forEach((eachClass) => {
-          if(eachClass.toString() === requestedClass.toString()){
-            classVerify = true;
+        array.forEach((eachItem) => {
+          if(eachItem.toString() === item.toString()){
+            duplicate = true;
           }
-          
         })
-        if(classVerify != true){
+        if(duplicate != true){
           return false;
         }
       }
-
       return true;
 }

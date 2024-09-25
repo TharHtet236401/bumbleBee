@@ -151,10 +151,11 @@ export const readAllClasses = async (req, res, next) => {
 export const deleteClass = async (req, res, next) => {
   try {
     //might delete later if the front end can handle the error message
+
+    const { classId } = req.body;
     if (!classId) {
       return fError(res, "Please provide the class id", 400);
     }
-    const { classId } = req.body;
     const classObj = await Class.findById(classId);
     if (!classObj) {
       return fError(res, "There is no such class", 404);
@@ -164,7 +165,7 @@ export const deleteClass = async (req, res, next) => {
     const school = await School.findById(schoolId);
 
     school.classes.pop(classId);
-    const deletedClass = await Class.deleteOne(classObj);
+    const deletedClass = await Class.findByIdAndDelete(classId);;
     await school.save();
 
     fMsg(res, "Class Deleted Successfully", deletedClass, 200);

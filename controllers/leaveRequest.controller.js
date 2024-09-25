@@ -2,7 +2,7 @@ import User from "../models/user.model.js";
 import LeaveRequest from "../models/leaveRequest.model.js";
 import Class from "../models/class.model.js";
 import Student from "../models/student.model.js";
-import { checkClassPermission } from "../utils/libby.js";
+import {  checkArray } from "../utils/libby.js";
 import { fMsg, fError} from "../utils/libby.js";
 
 ///this function is dedicated for the guardian to create a leave request for the student
@@ -81,7 +81,7 @@ export const readLeaveRequestByClass = async(req, res, next) => {
     const classId = req.params.classId;
 
     //ensures that only teachers who are assigned to the class can view the requests 
-    let classPermission = checkClassPermission(reader.classes, classId);
+    let classPermission = checkArray(reader.classes, classId);
     if(!classPermission){
       return next(new Error("You don't have permission to view the leave requests from other class"))
     }
@@ -136,7 +136,7 @@ export const editLeaveRequest = async(req, res, next) => {
 
       //ensures that only teachers who are assigned to the class can view the requests 
 
-    let classPermission = checkClassPermission(editor.classes, classId);
+    let classPermission = checkArray(editor.classes, classId);
     if(!classPermission){
       return next(new Error("You don't have permission to edit the leave requests from other class"))
     }
