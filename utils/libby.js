@@ -124,31 +124,6 @@ export const generateClassCode = (length) => {
     return result;
 };
 
-//responsible for checking whether a user has permission to access class
-export const checkClassPermission = (userClasses, requestedClass ) => {
-
-    if(userClasses == []){
-        return false;
-    }
-
-    let classVerify = false;
-      //this block checks whether the teacher is responsible for the class
-      while(classVerify == false){
-        //change into for loop
-        userClasses.forEach((eachClass) => {
-          if(eachClass.toString() === requestedClass.toString()){
-            classVerify = true;
-          }
-          
-        })
-        if(classVerify != true){
-          return false;
-        }
-      }
-
-      return true;
-}
-
 export const checkArray = (array, item) => {
     
     if(array == []){

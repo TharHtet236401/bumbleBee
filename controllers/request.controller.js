@@ -2,7 +2,7 @@ import PendingRequest from "../models/pendingRequest.model.js";
 import Class from "../models/class.model.js";
 import Student from "../models/student.model.js";
 import User from "../models/user.model.js";
-import { fMsg, fError, checkClassPermission, checkArray } from "../utils/libby.js";
+import { fMsg, fError,  checkArray } from "../utils/libby.js";
 import mongoose from "mongoose";
 
 //this function is for the guardian to create a request to join the class with classCode, childName, studentDOB
@@ -135,269 +135,6 @@ export const readGuardianReq = async(req, res, next)=> {
 
 //this function is for the teacher to respond the requests for the guardian
 //this function is also for the admin to respond the requests for the teacher 
-export const respondRequest = async(req, res, next) => {
-  try{
-    const { classId, requestId, response } = req.body;
-
-    //might delete later if frontend can handle the error 
-    if(!classId || !requestId || response == null){
-      return next(new Error("Please provide all the required fields"))
-    }
-    
-    const classObj = await Class.findById(classId);
-
-    const readerId = req.user._id; 
-    const reader = await User.findById(readerId);
-    //currently, since there is only one role, "0" index array will be used. Considerations need to be done in the future. 
-    const readerRole = reader.roles[0];
-    const readerSchool = reader.schools[0];
-    
-    if(classObj == null){
-      return next(new Error("Invalid Class"))
-    }
-
-    const request= await PendingRequest.findById({_id: requestId, status: "pending"});
-    if(request == null){
-      return next(new Error("Invalid Request Id"))
-    }
-
-    const requester = await User.findById(request.sender);
-    let output = [];
-    let content;
-    let decision;
-
-  
-
-    if(readerRole == "admin"){
-      switch(response){
-        case true:
-          //add the sender into class
-          const newTeacher = classObj.teachers.push(request.sender);
-          await classObj.save();
-
-          //add the class into user profile
-          const newClass = requester.classes.push(classId);
-          await requester.save();
-
-          //add the school into user profile
-          const newSchool = requester.schools.push(readerSchool);
-          await requester.save();
-
-          // remove the request
-          // await PendingRequest.findOneAndDelete({_id: requestId});
-          await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"accepted"})
-
-          content = "teacher";
-          decision = "accepted";
-          output = null;
-          // output = [newTeacher, newClass]
-          break;
-
-        case false:
-          // await PendingRequest.findOneAndDelete({_id: requestId});
-          await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"rejected"})
-          content = "teacher";
-          decision = "rejected";
-
-          output = []
-          break;
-
-        default:
-          return next(new Error("Wrong response "))
-      }
-    }else if(readerRole == "teacher"){
-      switch(response){
-        case true:
-          let newGuardian;
-          let classGuardian;
-          let newChild;
-          let newSchool;
-          
-          // const classGuardian =  classObj.guardians.push(request.sender);
-
-          //add the guardian into the student's guardian list if it is not added
-
-          const studentName = request.studentName;
-          const studentDOB = request.studentDOB;
-
-          const student = await Student.findOne({name: studentName, dateofBirth: studentDOB});
-          
-          let guardianAlreadyAdded = false;
-         
-          while(guardianAlreadyAdded == false){
-            student.guardians.forEach((guardian) => {
-              if(guardian.toString() == request.sender.toString()){
-                guardianAlreadyAdded = true;
-              }
-            })
-
-            if(guardianAlreadyAdded == false){
-              // newGuardian = student.guardians.push(requester)
-              newGuardian = await Student.findOneAndUpdate(
-                {_id: student._id},
-                {"$push": {guardians: request.sender}}
-              );
-              guardianAlreadyAdded = true
-            }
-          }
-
-          //add child to the guardian
-          let childAlreadyAdded = false;
-
-          while(childAlreadyAdded == false){
-            requester.childern.forEach((child) => {
-              if(child.toString() == student._id.toString()){
-                childAlreadyAdded = true;
-              }
-            })
-
-            if(childAlreadyAdded == false){
-
-              // newChild = requester.childern.push(student)
-              newChild = await User.findOneAndUpdate(
-                {_id: request.sender},
-                {"$push": {childern: student._id}}
-              )
-              childAlreadyAdded = true;
-            }
-          }
-
-          //if the guardian is not already in class, push that again as well
-          let classAlreadyAdded = false;
-
-          while(classAlreadyAdded == false){
-            requester.classes.forEach((eachClass) => {
-              if(eachClass.toString()== classId.toString()){
-                classAlreadyAdded = true;
-              }
-            })
-
-            if(classAlreadyAdded == false){
-              newChild = await User.findOneAndUpdate(
-                {_id: request.sender},
-                {"$push": {classes: classId}}
-              )
-
-              classAlreadyAdded = true;
-            }
-          }
-
-          const classObj = await Class.findById(request.desireClass);
-
-          let classAddGuardian = false;
-          while(classAddGuardian == false){
-            classObj.guardians.forEach((eachGuardian) => {
-              if(eachGuardian.toString()== request.sender.toString()){
-                classAddGuardian = true;
-              }
-            })
-
-            if(classAddGuardian == false){
-              //‌add the sender into the class's guardians
-              classGuardian = await Class.findOneAndUpdate(
-                {_id: classId},
-                {"$push": {guardians: request.sender}}
-              );
-              // newGuardian = await User.findOneAndUpdate(
-              //   {_id: request.sender},
-              //   {"$push": {classes: classId}}
-              // )
-
-              classAddGuardian = true;
-            }
-          }
-          
-
-          let schoolAlreadyAdded = false;
-          while(schoolAlreadyAdded == false){
-            requester.schools.forEach((eachSchool) => {
-              if(eachSchool.toString() == classObj.school.toString()){
-                schoolAlreadyAdded = true
-              }
-            })
-
-            if(schoolAlreadyAdded == false){
-              newSchool = await User.findOneAndUpdate(
-                {_id: request.sender},
-                {"$push": {schools: classObj.school}}
-              )
-
-              schoolAlreadyAdded = true;
-            }
-          }
-
-          //school is added in the student
-          let studentAddSchool = false;
-          while(studentAddSchool == false){
-            student.schools.forEach((eachSchool) => {
-              if(eachSchool.toString() == classObj.school.toString()){
-                studentAddSchool = true
-              }
-            })
-
-            if(studentAddSchool == false){
-              newSchool = await Student.findOneAndUpdate(
-                {_id: student._id},
-                {"$push": {schools: classObj.school}}
-              )
-
-              studentAddSchool = true;
-            }
-          }
-
-          let studentAddClass = false;
-          while(studentAddClass == false){
-            student.classes.forEach((eachClass) => {
-              if(eachClass.toString() == classId.toString()){
-                studentAddClass = true
-              }
-            })
-
-            if(studentAddClass == false){
-              newSchool = await Student.findOneAndUpdate(
-                {_id: student._id},
-                {"$push": {classes: classId}}
-              )
-
-              studentAddClass = true;
-            }
-          }
-
-          //class is added in the student
-          
-          //delete the request
-          // await PendingRequest.findOneAndDelete({_id: requestId});
-          await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"accepted"})
-
-          content = "guardian";
-          decision = "accepted";
-          output = [classGuardian, newGuardian, newChild, newSchool]
-          break;
-
-          case false:
-            // await PendingRequest.findOneAndDelete({_id: requestId});
-            await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"rejected"})
-            content = "guardian";
-            decision = "rejected";
-  
-            output = []
-            break;
-  
-          default:
-            return next(new Error("Wrong response "))
-
-      }
-    }else{
-      return next(new Error("You don't have any permission"))
-    }
-
-    fMsg(res, `${content} got ${decision}`, output, 200)
-
-    
-  }catch(error){
-    next(error);
-  }
-}
 
 export const respondTeacherReq = async(req, res, next) => {
   try{
@@ -478,16 +215,65 @@ export const respondGuardianReq = async(req, res, next) => {
     }
 
     const guardian = await User.findById(request.sender);
+    console.log(guardian);
     let alreadyInClass = checkArray(guardian.classes, classId);
     if(alreadyInClass == true){
       return fError(res, "Guardian has already joined the class", 505)
     }
 
-    
-
     const studentName = request.studentName;
     const studentDOB = request.studentDOB;
     const student = await Student.findOne({name: studentName, dateofBirth: studentDOB});
+
+    if(response == true){
+
+      //push a class into guardian data
+      await User.findOneAndUpdate( {_id: request.sender}, {"$push": {classes: classId}} )
+
+      // add a guradian in student's data if there isn't any guardian yet.  
+      let studentAddGuardian = checkArray(student.guardians, request.sender);
+      if(!studentAddGuardian){
+        await Student.findOneAndUpdate( {_id: student._id}, {"$push": {guardians: request.sender}});
+      }
+
+      //add child to the guardian if there is not child yet
+      let guardianAddChild = checkArray(guardian.childern, student._id);
+      if(!guardianAddChild){
+        await User.findOneAndUpdate( {_id: request.sender}, {"$push": {childern: student._id}} )
+      }
+
+      // let guardian
+
+      let classAddGuardian = checkArray(classObj.guardians, request.sender);
+      if(!classAddGuardian){
+        await Class.findOneAndUpdate( {_id: classId}, {"$push": {guardians: request.sender}} );
+      }
+
+      let guardianAddSchool = checkArray(guardian.schools, classObj.school)
+      if(!guardianAddSchool){
+        await User.findOneAndUpdate( {_id: request.sender}, {"$push": {schools: classObj.school}} )
+      }
+
+      let studentAddSchool = checkArray(student.schools, classObj.school)
+      if(!studentAddSchool){
+        await Student.findOneAndUpdate( {_id: student._id}, {"$push": {schools: classObj.school}} )
+      }
+
+      let studentAddClass = checkArray(student.classes, classId)
+      if(!studentAddClass){
+        await Student.findOneAndUpdate( {_id: student._id}, {"$push": {classes: classId}} )
+      }
+
+      let requests = await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"accepted"})
+      return fMsg(res, "Guardian Requests got accepted ", requests, 200)
+
+    }else if(response == false){
+      let requests = await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"rejected"})
+      return fMsg(res, "Guardian Requests got rejected", requests, 200)
+
+    }else{
+      return fError(res, "Wrong response", 505)
+    }
   }catch(error){
     next(error)
   }
