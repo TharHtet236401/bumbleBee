@@ -3,6 +3,7 @@ import initializeSupabase from "../config/connectSupaBase.js";
 const supabase = initializeSupabase();
 
 //this is for uploading images to supabase which is used for creating posts
+
 export const uploadImageToSupabase = async (file, bucketName) => {
   if (!supabase) {
     throw new Error("Supabase client not initialized");
@@ -217,4 +218,120 @@ export const deleteDocumentFromSupabase = async (fileUrl, bucketName) => {
     );
     throw error;
   }
+};
+
+
+export const uploadImageToSupabaseWithProgress = async (file, bucketName, sendProgress) => {
+  if (!supabase) {
+    throw new Error("Supabase client not initialized");
+  }
+
+  if (!file) {
+    throw new Error("No file provided");
+  }
+
+  if (!bucketName) {
+    throw new Error("Bucket name is required");
+  }
+
+  const fileExt = file.originalname.split(".").pop();
+  const fileName = `${Date.now()}.${fileExt}`;
+
+  sendProgress(0); // Send initial progress
+
+  try {
+    let lastReportedProgress = 0;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false,
+        onUploadProgress: (progress) => {
+          const percentage = Math.round((progress.loaded / progress.total) * 100);
+          if (percentage > lastReportedProgress) {
+            sendProgress(percentage);
+            lastReportedProgress = percentage;
+          }
+        },
+      });
+
+    if (uploadError) {
+      throw new Error(`File upload failed: ${uploadError.message}`);
+    }
+
+    sendProgress(100); // Ensure 100% progress is sent
+
+    const { data: urlData, error: urlError } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(fileName);
+
+    if (urlError) {
+      throw new Error("Failed to get public URL for uploaded file");
+    }
+
+    return urlData.publicUrl;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Add this new function to the existing file
+
+export const uploadMultipleDocumentsToSupabase = async (files, bucketName, sendProgress) => {
+  if (!supabase) {
+    throw new Error("Supabase client not initialized");
+  }
+
+  if (!files || files.length === 0) {
+    throw new Error("No files provided");
+  }
+
+  if (!bucketName) {
+    throw new Error("Bucket name is required");
+  }
+
+  const uploadedUrls = [];
+  let totalProgress = 0;
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const fileExt = file.originalname.split(".").pop();
+    const fileName = `${Date.now()}_${i}.${fileExt}`;
+
+    console.log(`Preparing to upload file: ${fileName}`);
+
+    try {
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, file.buffer, {
+          contentType: file.mimetype,
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error("Supabase upload error:", JSON.stringify(uploadError, null, 2));
+        throw new Error(`File upload failed: ${uploadError.message}`);
+      }
+
+      const { data: urlData, error: urlError } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(fileName);
+
+      if (urlError) {
+        console.error("Error getting public URL:", JSON.stringify(urlError, null, 2));
+        throw new Error("Failed to get public URL for uploaded file");
+      }
+
+      uploadedUrls.push(urlData.publicUrl);
+
+      totalProgress = Math.round(((i + 1) / files.length) * 100);
+      sendProgress(totalProgress);
+      console.log(`Overall upload progress: ${totalProgress}%`);
+    } catch (error) {
+      console.error("Detailed Supabase upload error:", JSON.stringify(error, null, 2));
+      throw error;
+    }
+  }
+
+  return uploadedUrls;
 };
