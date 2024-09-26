@@ -3,6 +3,7 @@ import initializeSupabase from "../config/connectSupaBase.js";
 const supabase = initializeSupabase();
 
 //this is for uploading images to supabase which is used for creating posts
+
 export const uploadImageToSupabase = async (file, bucketName) => {
   if (!supabase) {
     throw new Error("Supabase client not initialized");
@@ -236,10 +237,10 @@ export const uploadImageToSupabaseWithProgress = async (file, bucketName, sendPr
   const fileExt = file.originalname.split(".").pop();
   const fileName = `${Date.now()}.${fileExt}`;
 
-  console.log(`Preparing to upload file: ${fileName}`);
   sendProgress(0); // Send initial progress
 
   try {
+    let lastReportedProgress = 0;
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(bucketName)
       .upload(fileName, file.buffer, {
@@ -247,17 +248,17 @@ export const uploadImageToSupabaseWithProgress = async (file, bucketName, sendPr
         upsert: false,
         onUploadProgress: (progress) => {
           const percentage = Math.round((progress.loaded / progress.total) * 100);
-          console.log(`Upload progress from Supabase: ${percentage}%`);
-          sendProgress(percentage);
+          if (percentage > lastReportedProgress) {
+            sendProgress(percentage);
+            lastReportedProgress = percentage;
+          }
         },
       });
 
     if (uploadError) {
-      console.error("Supabase upload error:", JSON.stringify(uploadError, null, 2));
       throw new Error(`File upload failed: ${uploadError.message}`);
     }
 
-    console.log("File uploaded successfully, getting public URL...");
     sendProgress(100); // Ensure 100% progress is sent
 
     const { data: urlData, error: urlError } = supabase.storage
@@ -265,15 +266,11 @@ export const uploadImageToSupabaseWithProgress = async (file, bucketName, sendPr
       .getPublicUrl(fileName);
 
     if (urlError) {
-      console.error("Error getting public URL:", JSON.stringify(urlError, null, 2));
       throw new Error("Failed to get public URL for uploaded file");
     }
 
-    console.log("Public URL retrieved:", urlData.publicUrl);
-
     return urlData.publicUrl;
   } catch (error) {
-    console.error("Detailed Supabase upload error:", JSON.stringify(error, null, 2));
     throw error;
   }
 };

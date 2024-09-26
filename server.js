@@ -20,7 +20,7 @@ import testRoute from "./routes/test.route.js";
 import leaveRequestRoute from "./routes/leaveRequest.route.js";
 import leaveRequestTypeRoute from "./routes/leaveRequestType.route.js";
 import imageRoute from "./routes/image.route.js";
-import documentRoute from "./routes/document.route.js";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -72,7 +72,7 @@ app.use("/api/leaveRequestType", leaveRequestTypeRoute);
 //image
 app.use("/api/image", imageRoute);
 
-app.use("/api/document", documentRoute);
+
 
 app.use("*", (req, res) => {
     res.status(404).json({ con: false, msg: "Invalid route" });
