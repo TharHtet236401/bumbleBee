@@ -27,7 +27,7 @@ export const register = async (req, res, next) => {
     const findEmail = await User.findOne({ email });
     const findPhone = await User.findOne({ phone });
     if (findEmail) {
-      return fError(res, "Email already exists", {}, 409);
+      return fError(res, "Email already exists",  409);
     }
     if (findPhone) {
       return next(new Error("Phone number already exists"));

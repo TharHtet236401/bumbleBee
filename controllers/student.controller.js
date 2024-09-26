@@ -127,6 +127,7 @@ export const checkStudentExists = async (req, res, next) => {
         }
         const currentUser = await User.findById(req.user._id);
         const currentUserSchool = currentUser.schools[0];
+        console.log(currentUserSchool);
         const studentList = await Student.find({ name, dateofBirth, schools: currentUserSchool })
             .populate('classes', 'grade className ');
         
