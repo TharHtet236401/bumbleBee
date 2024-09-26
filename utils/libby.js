@@ -144,3 +144,20 @@ export const checkArray = (array, item) => {
       }
       return true;
 }
+
+
+// for web user interface   
+// This function generates a JSON Web Token (JWT) for a given user_id and sets it as a cookie in the response.
+export const generateTokenAndSetCookie = (res, user_id) => {
+    // Sign a JWT with the user_id and a secret key, set to expire in 30 days.
+    const token = jwt.sign({ id: user_id }, process.env.JWT_SECRET, {
+        expiresIn: '30d',
+    });
+    // Set the JWT as a cookie in the response, with security features to prevent XSS and ensure it's sent over HTTPS in development.
+    res.cookie('jwt', token, {
+        httpOnly: true, // prevent XSS
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+        secure: process.env.NODE_ENV === 'development',
+    });
+};
