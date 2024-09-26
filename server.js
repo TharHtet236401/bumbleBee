@@ -18,6 +18,8 @@ import requestRoute from "./routes/request.route.js";
 import testRoute from "./routes/test.route.js";
 import leaveRequestRoute from "./routes/leaveRequest.route.js";
 import leaveRequestTypeRoute from "./routes/leaveRequestType.route.js";
+import imageRoute from "./routes/image.route.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -62,6 +64,9 @@ app.use("/api/leaveRequest", leaveRequestRoute);
 
 //this is to create the leave request type like sick leave, annual leave, etc 
 app.use("/api/leaveRequestType", leaveRequestTypeRoute);
+
+//image
+app.use("/api/image", imageRoute);
 
 app.use("*", (req, res) => {
     res.status(404).json({ con: false, msg: "Invalid route" });
