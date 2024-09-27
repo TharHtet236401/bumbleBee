@@ -21,13 +21,9 @@ const router = express.Router();
 
 // Middleware to fetch user email
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
 router.put(
   "/update",
   validateToken(),
-  upload.single("profilePicture"),
   updateUserInfo
 );
 

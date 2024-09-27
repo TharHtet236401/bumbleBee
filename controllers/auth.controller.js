@@ -1,16 +1,11 @@
 import path from "path";
-import { fileURLToPath } from "url";
+
 
 import User from "../models/user.model.js";
 
-import { deleteFile } from "../utils/libby.js";
-
 import { encode, genToken, fMsg, decode, fError } from "../utils/libby.js";
+import { UserSchema } from "../utils/schema.js";
 
-import { uploadImageToSupabase } from "../utils/supabaseUpload.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export const register = async (req, res, next) => {
   try {
@@ -27,34 +22,14 @@ export const register = async (req, res, next) => {
     const findEmail = await User.findOne({ email });
     const findPhone = await User.findOne({ phone });
     if (findEmail) {
-      return fError(res, "Email already exists",  409);
+      return fError(res, "Email already exists", 409);
     }
     if (findPhone) {
-      return next(new Error("Phone number already exists"));
-    }
-    const encodedUsername = encodeURIComponent(userName);
-
-    let profilePicture;
-
-    if (req.file) {
-      // if the user uploaded a profile picture, upload it to Supabase
-      try {
-        profilePicture = await uploadImageToSupabase(
-          req.file,
-          "profile-pictures"
-        );
-      } catch (uploadError) {
-        return next(
-          new Error(`Profile picture upload failed: ${uploadError.message}`)
-        );
-      }
-    } else {
-      // if the user did not upload a profile picture, generate a Dicebear avatar
-      profilePicture = `https://api.dicebear.com/9.x/initials/svg?seed=${encodedUsername}`;
+      return fError(res, "Phone number already exists", 409);
     }
 
     if (password !== confirmedPassword) {
-      return next(new Error("Passwords do not match"));
+      return fError(res, "Passwords do not match", 400);
     }
 
     const hashedPassword = encode(password);
@@ -63,13 +38,14 @@ export const register = async (req, res, next) => {
       userName,
       email,
       password: hashedPassword,
-      profilePicture,
       phone,
       roles,
       ...otherInfos,
     };
 
     const user = await User.create(newUser);
+    user.profilePicture = `https://ysffgebnlbingizxsbvx.supabase.co/storage/v1/object/public/profile-pictures/default%20%20jpg.jpg`;
+    await user.save();
 
     const userWithoutPassword = user.toObject();
     delete userWithoutPassword.password;
@@ -231,3 +207,6 @@ export const logout = async (req, res) => {
 //acutually we dont have to generate token for both login and register, it may depend on the workflow of UI but discuss later ..But i have created both but will delete one base on discussion
 
 //note
+
+
+
