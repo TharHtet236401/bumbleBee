@@ -24,7 +24,6 @@ router.get(
   validateToken(),
   readClassByTeacherAndGuardian
 );
-router.get('/admin', validateToken(),isAdmin(), readClassByAdmin);
 router.get('/gradeNames', validateToken(), readGradeNames);
 router.get('/classNames', validateToken(), readClassNames);
 router.get('/gradeNamesByTeacher', validateToken(), readGradeNamesByTeacher);

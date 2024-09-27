@@ -126,7 +126,7 @@ export const readGuardianReq = async(req, res, next)=> {
         return next(new Error("There are no requests for this student at the moment"))
       }
 
-  fMsg(res, `Teacher requests`, requests, 200);
+  fMsg(res, `Guardian requests`, requests, 200);
   }catch(error){
     next(error)
   }
