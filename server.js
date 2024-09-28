@@ -27,12 +27,25 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-//for allowing the frontend to access the backend
 app.use(cors({
     origin: "*",
     credentials: true
 }));
 
+// // Define allowed origins for testing
+// const allowedOrigins = ['http://localhost:3000']; // Add your testing frontend URL here
+
+// // CORS configuration
+// app.use(cors({
+//     origin: (origin, callback) => {
+//         if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+//             callback(null, true); // Allow the request
+//         } else {
+//             callback(new Error('Not allowed by CORS')); // Reject the request
+//         }
+//     },
+//     credentials: true
+// }));
 
 // middlewares
 app.use(express.urlencoded({ extended: true }));
