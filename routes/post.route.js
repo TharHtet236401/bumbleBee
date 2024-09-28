@@ -32,7 +32,7 @@ router.post(
   "/create",
   validateToken(),
   upload.fields([
-    { name: "contentPicture", maxCount: 1 },
+    { name: "contentPictures", maxCount: 5 }, // Allow up to 5 contentPictures
     { name: "documents", maxCount: 5 }, // Allow up to 5 documents
   ]),
   validateBody(PostSchema.create),

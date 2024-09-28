@@ -22,9 +22,9 @@ const postSchema = new mongoose.Schema(
     body: {
       type: String,
     },
-    contentPicture: {
+    contentPictures: [{
       type: String,
-    },
+    }],
     contentType: {
       type: String,
       enum: ["announcement", "feed"], //annoucment class, general feed for whole school

@@ -59,15 +59,15 @@ export const createPost = async (req, res, next) => {
     }
    
 
-    let contentPicture = null;
+    let contentPictures = []; // Changed from contentPicture to contentPictures
     let documents = [];
 
-    if (req.files && req.files.contentPicture && req.files.contentPicture[0]) {
+    if (req.files && req.files.contentPictures) { // Updated to handle multiple contentPictures
       try {
-        contentPicture = await uploadImageToSupabase(
-          req.files.contentPicture[0],
-          "posts"
-        );
+        for (const file of req.files.contentPictures) {
+          const contentPictureUrl = await uploadImageToSupabase(file, "posts");
+          contentPictures.push(contentPictureUrl);
+        }
       } catch (uploadError) {
         return next(new Error(`File upload failed: ${uploadError.message}`));
       }
@@ -90,7 +90,7 @@ export const createPost = async (req, res, next) => {
       posted_by,
       heading,
       body,
-      contentPicture,
+      contentPictures, // Ensure this is being populated correctly
       contentType,
       reactions,
       classId,
@@ -98,7 +98,15 @@ export const createPost = async (req, res, next) => {
       documents,
     });
 
-    await post.save();
+    // console.log("Post to be saved:", post); // Log the post object
+
+    try {
+      await post.save();
+    } catch (saveError) {
+      console.error("Error saving post:", saveError);
+      return next(new Error("Failed to save post"));
+    }
+
     await post.populate("posted_by", "userName profilePicture roles");
 
     if (contentType === "announcement" && classId) {
