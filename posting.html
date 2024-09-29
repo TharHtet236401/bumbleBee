@@ -71,7 +71,7 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Mjc2ODE5NjcsImRhdGEiOnsiX2lkIjoiNjZlMmM0ZTZjODEyZDcyZTMwYjZhNDIyIiwicm9sZXMiOlsiYWRtaW4iXSwiZW1haWwiOiJ1bmkxQWRtaW5AZ21haWwuY29tIn0sImlhdCI6MTcyNzU5NTU2N30.lfxtnn1roAo1mJlSjtL91JUtRpSUWoNJbcv6eCQ88-A' // Replace with actual token
+                        'Authorization': 'Bearer YOUR_AUTH_TOKEN_HERE' // Replace with actual token
                     }
                 });
 
@@ -110,8 +110,6 @@
                 case 'progress':
                     if (data.type === 'document') {
                         progressDiv.innerHTML += `<p>Uploading document ${data.current}/${data.total}: ${data.progress}%</p>`;
-                    } else {
-                        progressDiv.innerHTML += `<p>Uploading ${data.type} ${data.current}/${data.total}</p>`;
                     }
                     break;
                 case 'complete':

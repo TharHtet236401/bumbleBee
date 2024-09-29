@@ -381,24 +381,20 @@ export const createPostWithProgress = async (req, res, next) => {
     let contentPictures = [];
     let documents = [];
 
-    // Handle contentPictures upload
+    // Handle contentPictures upload (no progress tracking)
     if (req.files && req.files.contentPictures) {
-      sendProgress({ status: 'uploading', type: 'images', total: req.files.contentPictures.length });
-      for (let i = 0; i < req.files.contentPictures.length; i++) {
-        const file = req.files.contentPictures[i];
+      for (const file of req.files.contentPictures) {
         try {
           const contentPictureUrl = await uploadImageToSupabase(file, "posts");
           contentPictures.push(contentPictureUrl);
-          sendProgress({ status: 'progress', type: 'image', current: i + 1, total: req.files.contentPictures.length });
         } catch (uploadError) {
           sendProgress({ error: `Image upload failed: ${uploadError.message}` });
           return res.end();
         }
       }
-      sendProgress({ status: 'complete', type: 'images' });
     }
 
-    // Handle documents upload
+    // Handle documents upload with progress tracking
     if (req.files && req.files.documents) {
       sendProgress({ status: 'uploading', type: 'documents', total: req.files.documents.length });
       for (let i = 0; i < req.files.documents.length; i++) {
