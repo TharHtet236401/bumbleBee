@@ -16,9 +16,14 @@ import {
   deleteImageFromSupabase,
   uploadDocumentToSupabase,
   deleteDocumentFromSupabase,
+  uploadMultipleDocumentsToSupabase,
 } from "../utils/supabaseUpload.js";
 
 dotenv.config();
+
+
+
+
 
 export const createPost = async (req, res, next) => {
   try {
@@ -29,50 +34,48 @@ export const createPost = async (req, res, next) => {
       reactions,
       gradeName, // Changed from grade to gradeName
       className,
-      schoolId,
     } = req.body;
 
     const posted_by = req.user._id;
     const userObject = await User.findById(posted_by);
 
     let classId = null;
-    if(contentType === "announcement"){
-
+    if (contentType === "announcement") {
       const classExists = await Class.findOne({
         grade: gradeName,
         className: className,
         school: schoolId,
       });
 
-
-  
-      if(!classExists){
+      if (!classExists) {
         return next(new Error("Class not found"));
       }
 
-      if(!userObject.classes.includes(classExists._id)){
+      if (!userObject.classes.includes(classExists._id) && !userObject.roles.includes("admin")) {
         return next(new Error("You are not registered in this class"));
       }
       classId = classExists._id;
-      console.log(classId);
-
     }
-   
 
-    let contentPicture = null;
+    let contentPictures = []; // Ensure this is initialized
     let documents = [];
 
-    if (req.files && req.files.contentPicture && req.files.contentPicture[0]) {
+    // Handle contentPictures upload
+    if (req.files && req.files.contentPictures) { // Check if contentPictures are present
       try {
-        contentPicture = await uploadImageToSupabase(
-          req.files.contentPicture[0],
-          "posts"
-        );
+        for (const file of req.files.contentPictures) {
+          const contentPictureUrl = await uploadImageToSupabase(file, "posts");
+          console.log(contentPictureUrl);
+          contentPictures.push(contentPictureUrl); // Save the URL to the array
+        }
       } catch (uploadError) {
         return next(new Error(`File upload failed: ${uploadError.message}`));
       }
+    } else {
+      console.warn("No content pictures uploaded."); // Log if no images are uploaded
     }
 
+    // Handle documents upload
     if (req.files && req.files.documents) {
       try {
         for (const file of req.files.documents) {
@@ -80,9 +83,7 @@ export const createPost = async (req, res, next) => {
           documents.push(documentUrl);
         }
       } catch (uploadError) {
-        return next(
-          new Error(`Document upload failed: ${uploadError.message}`)
-        );
+        return next(new Error(`Document upload failed: ${uploadError.message}`));
       }
     }
 
@@ -90,15 +91,21 @@ export const createPost = async (req, res, next) => {
       posted_by,
       heading,
       body,
-      contentPicture,
+      contentPictures, // Ensure this is being populated correctly
       contentType,
       reactions,
       classId,
-      schoolId,
+      schoolId:userObject.schools[0],
       documents,
     });
 
-    await post.save();
+    try {
+      await post.save(); // Save the post to the database
+    } catch (saveError) {
+      console.error("Error saving post:", saveError);
+      return next(new Error("Failed to save post"));
+    }
+
     await post.populate("posted_by", "userName profilePicture roles");
 
     if (contentType === "announcement" && classId) {
@@ -230,69 +237,6 @@ export const filterFeeds = async (req, res, next) => {
   }
 };
 
-export const editPost = async (req, res, next) => {
-  try {
-    const post = await Post.findById(req.params.post_id);
-    if (!post) {
-      return next(new Error("Post not found"));
-    }
-
-    // Handle contentPicture update
-    if (req.files && req.files.contentPicture && req.files.contentPicture[0]) {
-      try {
-        // Delete old file if it exists
-        if (post.contentPicture) {
-          await deleteImageFromSupabase(post.contentPicture, "posts");
-        }
-
-        // Upload new file
-        const newContentPicture = await uploadImageToSupabase(
-          req.files.contentPicture[0],
-          "posts"
-        );
-        req.body.contentPicture = newContentPicture;
-      } catch (uploadError) {
-        return next(
-          new Error(`Content picture operation failed: ${uploadError.message}`)
-        );
-      }
-    }
-
-    // Handle documents update
-    if (req.files && req.files.documents) {
-      try {
-        // Delete old documents
-        for (const docUrl of post.documents) {
-          await deleteDocumentFromSupabase(docUrl, "documents");
-        }
-
-        // Upload new documents
-        const newDocuments = [];
-        for (const file of req.files.documents) {
-          const documentUrl = await uploadDocumentToSupabase(file, "documents");
-          newDocuments.push(documentUrl);
-        }
-        req.body.documents = newDocuments;
-      } catch (uploadError) {
-        return next(
-          new Error(`Documents operation failed: ${uploadError.message}`)
-        );
-      }
-    }
-
-    const updatedPost = await Post.findByIdAndUpdate(
-      req.params.post_id,
-      {
-        ...req.body,
-      },
-      { new: true }
-    );
-    fMsg(res, "Post updated successfully", updatedPost, 200);
-  } catch (error) {
-    console.error("Error in editPost:", error);
-    next(error);
-  }
-};
 
 export const deletePost = async (req, res, next) => {
   try {
@@ -321,6 +265,211 @@ export const deletePost = async (req, res, next) => {
 
     fMsg(res, "Post deleted successfully", post, 200);
   } catch (error) {
+    next(error);
+  }
+};
+
+export const createPostWithProgress = async (req, res, next) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive'
+  });
+
+  const sendProgress = (data) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  try {
+    const {
+      heading,
+      body,
+      contentType,
+      reactions,
+      gradeName,
+      className,
+      schoolId,
+    } = req.body;
+
+    const posted_by = req.user._id;
+    const userObject = await User.findById(posted_by);
+
+    let classId = null;
+    if (contentType === "announcement") {
+      const classExists = await Class.findOne({
+        grade: gradeName,
+        className: className,
+        school: schoolId,
+      });
+
+      if (!classExists) {
+        sendProgress({ error: "Class not found" });
+        return res.end();
+      }
+
+      if (!userObject.classes.includes(classExists._id)) {
+        sendProgress({ error: "You are not registered in this class" });
+        return res.end();
+      }
+      classId = classExists._id;
+    }
+
+    let contentPictures = [];
+    let documents = [];
+
+    // Handle contentPictures upload (no progress tracking)
+    if (req.files && req.files.contentPictures) {
+      for (const file of req.files.contentPictures) {
+        try {
+          const contentPictureUrl = await uploadImageToSupabase(file, "posts");
+          contentPictures.push(contentPictureUrl);
+        } catch (uploadError) {
+          sendProgress({ error: `Image upload failed: ${uploadError.message}` });
+          return res.end();
+        }
+      }
+    }
+
+    // Handle documents upload with progress tracking
+    if (req.files && req.files.documents) {
+      sendProgress({ status: 'uploading', type: 'documents', total: req.files.documents.length });
+      for (let i = 0; i < req.files.documents.length; i++) {
+        const file = req.files.documents[i];
+        try {
+          const documentUrl = await uploadDocumentToSupabase(file, "documents", (progress) => {
+            sendProgress({ status: 'progress', type: 'document', current: i + 1, total: req.files.documents.length, progress });
+          });
+          documents.push(documentUrl);
+          sendProgress({ status: 'complete', type: 'document', current: i + 1, total: req.files.documents.length });
+        } catch (uploadError) {
+          sendProgress({ error: `Document upload failed: ${uploadError.message}` });
+          return res.end();
+        }
+      }
+      sendProgress({ status: 'complete', type: 'documents' });
+    }
+
+    const post = new Post({
+      posted_by,
+      heading,
+      body,
+      contentPictures,
+      contentType,
+      reactions,
+      classId,
+      schoolId,
+      documents,
+    });
+
+    try {
+      await post.save();
+      await post.populate("posted_by", "userName profilePicture roles");
+
+      if (contentType === "announcement" && classId) {
+        await Class.findByIdAndUpdate(
+          classId,
+          { $push: { announcements: post._id } },
+          { new: true }
+        );
+      }
+
+      sendProgress({ status: 'complete', type: 'post', data: post });
+    } catch (saveError) {
+      sendProgress({ error: `Failed to save post: ${saveError.message}` });
+    }
+
+    res.end();
+  } catch (error) {
+    console.error("Detailed error in createPostWithProgress:", error);
+    sendProgress({ error: error.message });
+    res.end();
+  }
+};
+
+export const editPost = async (req, res, next) => {
+  try {
+    const post = await Post.findById(req.params.post_id);
+    if (!post) {
+      return next(new Error("Post not found"));
+    }
+
+    // Handle contentPictures update
+    if (req.files && req.files.contentPictures && req.files.contentPictures.length > 0) {
+      try {
+        // Delete old files if they exist
+        if (post.contentPictures && post.contentPictures.length > 0) {
+          for (const pictureUrl of post.contentPictures) {
+            await deleteImageFromSupabase(pictureUrl, "posts");
+          }
+        }
+
+        if(req.files.contentPictures.length == 0){
+          for (const pictureUrl of post.contentPictures) {
+            await deleteImageFromSupabase(pictureUrl, "posts");
+          }
+          req.body.contentPictures = [];
+        }
+
+        // Upload new files
+        const newContentPictures = [];
+        for (const file of req.files.contentPictures) {
+          const contentPictureUrl = await uploadImageToSupabase(file, "posts");
+          newContentPictures.push(contentPictureUrl);
+        }
+        req.body.contentPictures = newContentPictures;
+      } catch (uploadError) {
+        return next(new Error(`Content pictures operation failed: ${uploadError.message}`));
+      }
+    } else if (!req.body.contentPictures || req.body.contentPictures.length === 0) {
+      // If no contentPictures are provided in the request, delete existing ones
+      if (post.contentPictures && post.contentPictures.length > 0) {
+        for (const pictureUrl of post.contentPictures) {
+          await deleteImageFromSupabase(pictureUrl, "posts");
+        }
+        req.body.contentPictures = [];
+      }
+    }
+
+    // Handle documents update
+    if (req.files && req.files.documents && req.files.documents.length > 0) {
+      try {
+        // Delete old documents
+        if (post.documents && post.documents.length > 0) {
+          for (const docUrl of post.documents) {
+            await deleteDocumentFromSupabase(docUrl, "documents");
+          }
+        }
+
+        // Upload new documents
+        const newDocuments = [];
+        for (const file of req.files.documents) {
+          const documentUrl = await uploadDocumentToSupabase(file, "documents");
+          newDocuments.push(documentUrl);
+        }
+        req.body.documents = newDocuments;
+      } catch (uploadError) {
+        return next(new Error(`Documents operation failed: ${uploadError.message}`));
+      }
+    } else if (!req.body.documents || req.body.documents.length === 0) {
+      // If no documents are provided in the request, delete existing ones
+      if (post.documents && post.documents.length > 0) {
+        for (const docUrl of post.documents) {
+          await deleteDocumentFromSupabase(docUrl, "documents");
+        }
+        req.body.documents = [];
+      }
+    }
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.post_id,
+      {
+        ...req.body,
+      },
+      { new: true }
+    );
+    fMsg(res, "Post updated successfully", updatedPost, 200);
+  } catch (error) {
+    console.error("Error in editPost:", error);
     next(error);
   }
 };

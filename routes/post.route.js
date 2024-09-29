@@ -9,6 +9,7 @@ import {
   editPost,
   deletePost,
   filterFeeds,
+  createPostWithProgress, // Add this line
 } from "../controllers/post.controller.js";
 
 import {
@@ -32,12 +33,34 @@ router.post(
   "/create",
   validateToken(),
   upload.fields([
-    { name: "contentPicture", maxCount: 1 },
+    { name: "contentPictures", maxCount: 5 }, // Allow up to 5 contentPictures
     { name: "documents", maxCount: 5 }, // Allow up to 5 documents
   ]),
   validateBody(PostSchema.create),
   isNotParents(),
   createPost
+);
+
+router.post(
+  "/createWithProgress",
+  validateToken(),
+  upload.fields([
+    { name: "contentPictures", maxCount: 5 },
+    { name: "documents", maxCount: 5 },
+  ]),
+  validateBody(PostSchema.create),
+  isNotParents(),
+  createPostWithProgress // Use the new function
+);
+
+router.post(
+  "/create-with-progress",
+  validateToken,
+  upload.fields([
+    { name: "contentPictures", maxCount: 5 },
+    { name: "documents", maxCount: 5 },
+  ]),
+  createPostWithProgress
 );
 
 router.get("/getFeeds", validateToken(), getFeeds);
@@ -50,7 +73,7 @@ router.put(
   isEditorStranger(),
   isNotParents(),
   upload.fields([
-    { name: "contentPicture", maxCount: 1 },
+    { name: "contentPictures", maxCount: 5 },
     { name: "documents", maxCount: 5 }, // Allow up to 5 documents
   ]),
   editPost
