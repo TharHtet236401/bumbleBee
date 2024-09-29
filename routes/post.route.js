@@ -9,6 +9,7 @@ import {
   editPost,
   deletePost,
   filterFeeds,
+  createPostWithProgress, // Add this line
 } from "../controllers/post.controller.js";
 
 import {
@@ -40,6 +41,28 @@ router.post(
   createPost
 );
 
+router.post(
+  "/createWithProgress",
+  validateToken(),
+  upload.fields([
+    { name: "contentPictures", maxCount: 5 },
+    { name: "documents", maxCount: 5 },
+  ]),
+  validateBody(PostSchema.create),
+  isNotParents(),
+  createPostWithProgress // Use the new function
+);
+
+router.post(
+  "/create-with-progress",
+  validateToken,
+  upload.fields([
+    { name: "contentPictures", maxCount: 5 },
+    { name: "documents", maxCount: 5 },
+  ]),
+  createPostWithProgress
+);
+
 router.get("/getFeeds", validateToken(), getFeeds);
 router.get("/getAnnouncements", validateToken(), getAnnouncements);
 
@@ -64,5 +87,6 @@ router.delete(
 );
 
 router.get("/filterFeeds", validateToken(), isAdmin(), filterFeeds);
+
 
 export default router;
