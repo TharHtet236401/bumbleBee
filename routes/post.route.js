@@ -73,7 +73,7 @@ router.put(
   isEditorStranger(),
   isNotParents(),
   upload.fields([
-    { name: "contentPicture", maxCount: 1 },
+    { name: "contentPictures", maxCount: 5 },
     { name: "documents", maxCount: 5 }, // Allow up to 5 documents
   ]),
   editPost
@@ -87,6 +87,5 @@ router.delete(
 );
 
 router.get("/filterFeeds", validateToken(), isAdmin(), filterFeeds);
-
 
 export default router;

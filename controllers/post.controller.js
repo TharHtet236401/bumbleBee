@@ -23,7 +23,7 @@ dotenv.config();
 
 
 
-import { eventEmitter } from "../server.js"; // Adjust the path as necessary
+
 
 export const createPost = async (req, res, next) => {
   try {
@@ -34,7 +34,6 @@ export const createPost = async (req, res, next) => {
       reactions,
       gradeName, // Changed from grade to gradeName
       className,
-      schoolId,
     } = req.body;
 
     const posted_by = req.user._id;
@@ -52,7 +51,7 @@ export const createPost = async (req, res, next) => {
         return next(new Error("Class not found"));
       }
 
-      if (!userObject.classes.includes(classExists._id)) {
+      if (!userObject.classes.includes(classExists._id) && !userObject.roles.includes("admin")) {
         return next(new Error("You are not registered in this class"));
       }
       classId = classExists._id;
@@ -96,7 +95,7 @@ export const createPost = async (req, res, next) => {
       contentType,
       reactions,
       classId,
-      schoolId,
+      schoolId:userObject.schools[0],
       documents,
     });
 
@@ -238,69 +237,6 @@ export const filterFeeds = async (req, res, next) => {
   }
 };
 
-export const editPost = async (req, res, next) => {
-  try {
-    const post = await Post.findById(req.params.post_id);
-    if (!post) {
-      return next(new Error("Post not found"));
-    }
-
-    // Handle contentPicture update
-    if (req.files && req.files.contentPicture && req.files.contentPicture[0]) {
-      try {
-        // Delete old file if it exists
-        if (post.contentPicture) {
-          await deleteImageFromSupabase(post.contentPicture, "posts");
-        }
-
-        // Upload new file
-        const newContentPicture = await uploadImageToSupabase(
-          req.files.contentPicture[0],
-          "posts"
-        );
-        req.body.contentPicture = newContentPicture;
-      } catch (uploadError) {
-        return next(
-          new Error(`Content picture operation failed: ${uploadError.message}`)
-        );
-      }
-    }
-
-    // Handle documents update
-    if (req.files && req.files.documents) {
-      try {
-        // Delete old documents
-        for (const docUrl of post.documents) {
-          await deleteDocumentFromSupabase(docUrl, "documents");
-        }
-
-        // Upload new documents
-        const newDocuments = [];
-        for (const file of req.files.documents) {
-          const documentUrl = await uploadDocumentToSupabase(file, "documents");
-          newDocuments.push(documentUrl);
-        }
-        req.body.documents = newDocuments;
-      } catch (uploadError) {
-        return next(
-          new Error(`Documents operation failed: ${uploadError.message}`)
-        );
-      }
-    }
-
-    const updatedPost = await Post.findByIdAndUpdate(
-      req.params.post_id,
-      {
-        ...req.body,
-      },
-      { new: true }
-    );
-    fMsg(res, "Post updated successfully", updatedPost, 200);
-  } catch (error) {
-    console.error("Error in editPost:", error);
-    next(error);
-  }
-};
 
 export const deletePost = async (req, res, next) => {
   try {
@@ -447,5 +383,93 @@ export const createPostWithProgress = async (req, res, next) => {
     console.error("Detailed error in createPostWithProgress:", error);
     sendProgress({ error: error.message });
     res.end();
+  }
+};
+
+export const editPost = async (req, res, next) => {
+  try {
+    const post = await Post.findById(req.params.post_id);
+    if (!post) {
+      return next(new Error("Post not found"));
+    }
+
+    // Handle contentPictures update
+    if (req.files && req.files.contentPictures && req.files.contentPictures.length > 0) {
+      try {
+        // Delete old files if they exist
+        if (post.contentPictures && post.contentPictures.length > 0) {
+          for (const pictureUrl of post.contentPictures) {
+            await deleteImageFromSupabase(pictureUrl, "posts");
+          }
+        }
+
+        if(req.files.contentPictures.length == 0){
+          for (const pictureUrl of post.contentPictures) {
+            await deleteImageFromSupabase(pictureUrl, "posts");
+          }
+          req.body.contentPictures = [];
+        }
+
+        // Upload new files
+        const newContentPictures = [];
+        for (const file of req.files.contentPictures) {
+          const contentPictureUrl = await uploadImageToSupabase(file, "posts");
+          newContentPictures.push(contentPictureUrl);
+        }
+        req.body.contentPictures = newContentPictures;
+      } catch (uploadError) {
+        return next(new Error(`Content pictures operation failed: ${uploadError.message}`));
+      }
+    } else if (!req.body.contentPictures || req.body.contentPictures.length === 0) {
+      // If no contentPictures are provided in the request, delete existing ones
+      if (post.contentPictures && post.contentPictures.length > 0) {
+        for (const pictureUrl of post.contentPictures) {
+          await deleteImageFromSupabase(pictureUrl, "posts");
+        }
+        req.body.contentPictures = [];
+      }
+    }
+
+    // Handle documents update
+    if (req.files && req.files.documents && req.files.documents.length > 0) {
+      try {
+        // Delete old documents
+        if (post.documents && post.documents.length > 0) {
+          for (const docUrl of post.documents) {
+            await deleteDocumentFromSupabase(docUrl, "documents");
+          }
+        }
+
+        // Upload new documents
+        const newDocuments = [];
+        for (const file of req.files.documents) {
+          const documentUrl = await uploadDocumentToSupabase(file, "documents");
+          newDocuments.push(documentUrl);
+        }
+        req.body.documents = newDocuments;
+      } catch (uploadError) {
+        return next(new Error(`Documents operation failed: ${uploadError.message}`));
+      }
+    } else if (!req.body.documents || req.body.documents.length === 0) {
+      // If no documents are provided in the request, delete existing ones
+      if (post.documents && post.documents.length > 0) {
+        for (const docUrl of post.documents) {
+          await deleteDocumentFromSupabase(docUrl, "documents");
+        }
+        req.body.documents = [];
+      }
+    }
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.post_id,
+      {
+        ...req.body,
+      },
+      { new: true }
+    );
+    fMsg(res, "Post updated successfully", updatedPost, 200);
+  } catch (error) {
+    console.error("Error in editPost:", error);
+    next(error);
   }
 };

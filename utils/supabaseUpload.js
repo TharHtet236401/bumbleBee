@@ -215,7 +215,7 @@ export const deleteDocumentFromSupabase = async (fileUrl, bucketName) => {
       throw new Error(`Document deletion failed: ${error.message}`);
     }
 
-    console.log(`Document ${fileName} deleted successfully from ${bucketName}`);
+  
     return true;
   } catch (error) {
     console.error(
