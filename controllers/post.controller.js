@@ -114,6 +114,8 @@ export const createPost = async (req, res, next) => {
         { $push: { announcements: post._id } },
         { new: true }
       );
+
+      
     }
 
     fMsg(res, "Post created successfully", post, 200);
@@ -393,11 +395,66 @@ export const createPostWithProgress = async (req, res, next) => {
 };
 
 export const editPost = async (req, res, next) => {
+ 
   try {
+    const {heading, body, contentType, reactions, gradeName, className} = req.body;
     const post = await Post.findById(req.params.post_id);
+    const userObject = await User.findById(req.user._id);
     if (!post) {
       return next(new Error("Post not found"));
     }
+
+
+    if(!heading && !body ){
+      return fError(res, "Heading, body and contentType are required", 400);
+    }
+
+    if(contentType ==="feed" && userObject.roles.includes("teacher")){
+      return fError(res, "You are not authorized to create feeds", 401);
+    }
+    //if its a feed and gradeName or className is provided, then return an error
+    if(contentType ==="feed" && (gradeName || className)){
+      return fError(res, "Feeds cannot be associated with a class", 400);
+    }
+
+    if(contentType ==="announcement"){
+
+      if(!gradeName || !className){
+        return fError(res, "Grade and class are required while creating an announcement", 400);
+      }
+
+      const classExists = await Class.findOne({
+        grade: gradeName,
+        className: className,
+        school: userObject.schools[0],
+      });
+
+      if (!classExists) {
+        return next(new Error("Class not found"));
+      }
+
+      await Class.findByIdAndUpdate(
+        classExists._id,
+        { $push: { announcements: post._id } },
+
+      );
+    }
+
+    if(contentType ==="feed"){
+
+      const classExists = await Class.findOne({
+        grade: post.grade,
+        className: className,
+        school: userObject.schools[0],
+      });
+      await Class.findByIdAndUpdate(
+        post.classId,
+        { $pull: { announcements: post._id } },
+      );
+
+      
+    }
+
 
     // Handle contentPictures update
     if (req.files && req.files.contentPictures && req.files.contentPictures.length > 0) {
@@ -466,13 +523,24 @@ export const editPost = async (req, res, next) => {
       }
     }
 
+   
+    if(post.contentType ==="announcement"){
+      post.classId = null;
+    }
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.post_id,
       {
-        ...req.body,
+        heading,
+        body,
+        contentType,
+        reactions,
+        classId:post.classId,
       },
       { new: true }
     );
+
+     
+
     fMsg(res, "Post updated successfully", updatedPost, 200);
   } catch (error) {
     console.error("Error in editPost:", error);
