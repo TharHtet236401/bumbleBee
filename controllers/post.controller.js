@@ -44,7 +44,7 @@ export const createPost = async (req, res, next) => {
       const classExists = await Class.findOne({
         grade: gradeName,
         className: className,
-        school: schoolId,
+        school: userObject.schools[0],
       });
 
       if (!classExists) {
