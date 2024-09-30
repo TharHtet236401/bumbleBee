@@ -57,10 +57,6 @@ export const PostSchema = {
             then: Joi.required(),
             otherwise: Joi.forbidden()
         }),
-        schoolId: Joi.string().when(Joi.ref('contentType'), {
-            is: 'feed',
-            then: Joi.required(),
-        }),
 
     }).unknown(true),
     edit: Joi.object({

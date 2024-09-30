@@ -4,9 +4,12 @@ import path from "path";
 import cors from "cors";
 import cookieParser from 'cookie-parser';
 import { fileURLToPath } from "url";
-
+import http from 'http';
+import { Server } from 'socket.io';
+import { EventEmitter } from 'events';
 import connectToMongoDB from "./config/connectMongoDb.js";
-// import { createProfilePicturesBucketIfNotExists } from './utils/supabaseUpload.js';
+
+const eventEmitter = new EventEmitter();
 
 dotenv.config();
 
@@ -99,9 +102,42 @@ app.use((err, req, res, next) => {
     res.status(err.status).json({ con: false, msg: err.message });
 });
 
-// createProfilePicturesBucketIfNotExists();
+// SSE endpoint
+app.get('/api/progress', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
-app.listen(process.env.PORT, () => {
-    connectToMongoDB();
-    console.log(`Server is running on port ${process.env.PORT}`);
+    // Send progress updates
+    const sendProgress = (data) => {
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    // Listen for progress events
+    eventEmitter.on('progress', sendProgress);
+
+    // Clean up when the connection is closed
+    req.on('close', () => {
+        eventEmitter.removeListener('progress', sendProgress);
+        res.end();
+    });
 });
+
+// Start the server
+server.listen(3000, () => {
+    connectToMongoDB();
+    console.log('Server is running on port 3000');
+});
+
+// Serve the HTML file for testing
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html')); // Adjust the path if necessary
+});
+
+// Serve the HTML file for posting
+app.get('/posting', (req, res) => {
+    res.sendFile(path.join(__dirname, 'posting.html')); // Adjust the path if necessary
+});
+
+// Add this line at the end of your server.js file
+export { eventEmitter };

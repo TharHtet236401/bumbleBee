@@ -128,7 +128,7 @@ export const createProfilePicturesBucketIfNotExists = async () => {
 };
 
 //this is for uploading documents to supabase which is used for creating posts
-export const uploadDocumentToSupabase = async (file, bucketName) => {
+export const uploadDocumentToSupabase = async (file, bucketName, progressCallback) => {
   if (!supabase) {
     throw new Error("Supabase client not initialized");
   }
@@ -152,6 +152,12 @@ export const uploadDocumentToSupabase = async (file, bucketName) => {
       .upload(fileName, file.buffer, {
         contentType: file.mimetype,
         upsert: false,
+        onUploadProgress: (progress) => {
+          if (progressCallback) {
+            const percentage = Math.round((progress.loaded / progress.total) * 100);
+            progressCallback(percentage);
+          }
+        },
       });
 
     if (uploadError) {
@@ -209,7 +215,7 @@ export const deleteDocumentFromSupabase = async (fileUrl, bucketName) => {
       throw new Error(`Document deletion failed: ${error.message}`);
     }
 
-    console.log(`Document ${fileName} deleted successfully from ${bucketName}`);
+  
     return true;
   } catch (error) {
     console.error(
