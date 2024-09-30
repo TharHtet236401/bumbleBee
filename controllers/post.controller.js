@@ -1,10 +1,10 @@
 import Post from "../models/post.model.js";
 import mongoose from "mongoose";
 import {
-  fMsg,
-  paginate,
-  paginateAnnouncements,
-  fError,
+    fMsg,
+    paginate,
+    paginateAnnouncements,
+    fError,
 } from "../utils/libby.js";
 
 import Class from "../models/class.model.js";
@@ -36,8 +36,8 @@ export const createPost = async (req, res, next) => {
       className,
     } = req.body;
 
-    const posted_by = req.user._id;
-    const userObject = await User.findById(posted_by);
+        const posted_by = req.user._id;
+        const userObject = await User.findById(posted_by);
 
     let classId = null;
     if (contentType === "announcement") {
@@ -124,149 +124,156 @@ export const createPost = async (req, res, next) => {
 };
 
 export const getFeeds = async (req, res, next) => {
-  try {
-    const userId = req.user._id;
-    const userInfo = await User.findById(userId, "schools").lean();
+    try {
+        const userId = req.user._id;
+        const userInfo = await User.findById(userId, "schools").lean();
 
-    const schoolIds = userInfo.schools;
-    const type = "feed";
+        const schoolIds = userInfo.schools;
+        const type = "feed";
 
-    const query = {
-      schoolId: { $in: schoolIds },
-      contentType: type,
-    };
+        const query = {
+            schoolId: { $in: schoolIds },
+            contentType: type,
+        };
 
-    const page = parseInt(req.query.page) || 1;
+        const page = parseInt(req.query.page) || 1;
 
-    const sortField = "createdAt";
+        const sortField = "createdAt";
 
-    const populate = { posted_by: "userName profilePicture roles" };
+        const populate = { posted_by: "userName profilePicture roles" };
 
-    const populateString = Object.entries(populate).map(([path, select]) => ({
-      path,
-      select,
-    }));
+        const populateString = Object.entries(populate).map(
+            ([path, select]) => ({
+                path,
+                select,
+            })
+        );
 
-    const paginatedFeeds = await paginate(
-      Post,
-      query,
-      page,
-      10,
-      sortField,
-      populateString
-    );
+        const paginatedFeeds = await paginate(
+            Post,
+            query,
+            page,
+            10,
+            sortField,
+            populateString
+        );
 
-    fMsg(res, "Posts fetched successfully", paginatedFeeds, 200);
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
+        fMsg(res, "Posts fetched successfully", paginatedFeeds, 200);
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
 };
 
 export const getAnnouncements = async (req, res, next) => {
-  try {
-    const userId = req.user._id;
-    const userInfo = await User.findById(userId, "classes").lean();
+    try {
+        const userId = req.user._id;
+        const userInfo = await User.findById(userId, "classes").lean();
 
-    const classes = userInfo.classes;
+        const classes = userInfo.classes;
 
-    if (classes.length == 0) {
-      return next(new Error("No classes registered for you"));
+        if (classes.length == 0) {
+            return next(new Error("No classes registered for you"));
+        }
+
+        const query = {
+            _id: { $in: classes },
+        };
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+
+        const totalClasses = await Class.countDocuments(query);
+
+        const announcements = await Class.find(query, "announcements")
+            .sort({ createdAt: -1 })
+            .populate({
+                path: "announcements",
+                select: "-_id", // Exclude the _id field
+                populate: {
+                    path: "posted_by",
+                    select: "userName profilePicture roles",
+                },
+            })
+            .lean();
+
+        // Flatten the announcements array
+        const allAnnouncements = announcements.flatMap(
+            (classDoc) => classDoc.announcements
+        );
+
+        const paginatedAnnouncements = allAnnouncements.slice(
+            startIndex,
+            endIndex
+        );
+
+        const result = {
+            announcements: paginatedAnnouncements,
+            currentPage: page,
+            totalPages: Math.ceil(allAnnouncements.length / limit),
+            totalAnnouncements: allAnnouncements.length,
+        };
+
+        fMsg(res, "Announcements fetched successfully", result, 200);
+    } catch (error) {
+        console.log(error);
+        next(error);
     }
-
-    const query = {
-      _id: { $in: classes },
-    };
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-
-    const totalClasses = await Class.countDocuments(query);
-
-    const announcements = await Class.find(query, "announcements")
-      .sort({ createdAt: -1 })
-      .populate({
-        path: "announcements",
-        select: "-_id",  // Exclude the _id field
-        populate: {
-          path: "posted_by",
-          select: "userName profilePicture roles",
-        },
-      })
-      .lean();
-
-    // Flatten the announcements array
-    const allAnnouncements = announcements.flatMap(classDoc => classDoc.announcements);
-
-    const paginatedAnnouncements = allAnnouncements.slice(startIndex, endIndex);
-
-    const result = {
-      announcements: paginatedAnnouncements,
-      currentPage: page,
-      totalPages: Math.ceil(allAnnouncements.length / limit),
-      totalAnnouncements: allAnnouncements.length,
-    };
-
-    fMsg(res, "Announcements fetched successfully", result, 200);
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
 };
 
 export const filterFeeds = async (req, res, next) => {
-  try {
-    const { grade, contentType, classId, schoolId } = req.query;
+    try {
+        const { grade, contentType, classId, schoolId } = req.query;
 
-    let query = {};
-    if (schoolId) query.schoolId = schoolId;
-    if (grade) query.grade = grade;
-    if (classId) query.classId = classId;
-    if (contentType) query.contentType = contentType;
+        let query = {};
+        if (schoolId) query.schoolId = schoolId;
+        if (grade) query.grade = grade;
+        if (classId) query.classId = classId;
+        if (contentType) query.contentType = contentType;
 
-    const posts = await Post.find(query)
-      .sort({ createdAt: -1 })
-      .populate("posted_by", "userName profilePicture roles");
+        const posts = await Post.find(query)
+            .sort({ createdAt: -1 })
+            .populate("posted_by", "userName profilePicture roles");
 
-    fMsg(res, "Posts fetched successfully", posts, 200);
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
+        fMsg(res, "Posts fetched successfully", posts, 200);
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
 };
 
 
 export const deletePost = async (req, res, next) => {
-  try {
-    const post = await Post.findById(req.params.post_id);
-    if (!post) {
-      return next(new Error("Post not found"));
+    try {
+        const post = await Post.findById(req.params.post_id);
+        if (!post) {
+            return next(new Error("Post not found"));
+        }
+
+        // Delete associated file from Supabase if it exists
+        if (post.contentPicture) {
+            await deleteImageFromSupabase(post.contentPicture, "posts");
+        }
+
+        // Delete associated documents
+        for (const docUrl of post.documents) {
+            await deleteDocumentFromSupabase(docUrl, "documents");
+        }
+
+        await Post.findByIdAndDelete(req.params.post_id);
+
+        if (post.contentType === "announcement" && post.classId) {
+            await Class.findByIdAndUpdate(post.classId, {
+                $pull: { announcements: post._id },
+            });
+        }
+
+        fMsg(res, "Post deleted successfully", post, 200);
+    } catch (error) {
+        next(error);
     }
-
-    // Delete associated file from Supabase if it exists
-    if (post.contentPicture) {
-      await deleteImageFromSupabase(post.contentPicture, "posts");
-    }
-
-    // Delete associated documents
-    for (const docUrl of post.documents) {
-      await deleteDocumentFromSupabase(docUrl, "documents");
-    }
-
-    await Post.findByIdAndDelete(req.params.post_id);
-
-    if (post.contentType === "announcement" && post.classId) {
-      await Class.findByIdAndUpdate(post.classId, {
-        $pull: { announcements: post._id },
-      });
-    }
-
-    fMsg(res, "Post deleted successfully", post, 200);
-  } catch (error) {
-    next(error);
-  }
 };
 
 export const createPostWithProgress = async (req, res, next) => {

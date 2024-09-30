@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
+import cookieParser from 'cookie-parser';
 import { fileURLToPath } from "url";
 import http from 'http';
 import { Server } from 'socket.io';
@@ -23,6 +24,7 @@ import testRoute from "./routes/test.route.js";
 import leaveRequestRoute from "./routes/leaveRequest.route.js";
 import leaveRequestTypeRoute from "./routes/leaveRequestType.route.js";
 import imageRoute from "./routes/image.route.js";
+import cookieRoute from "./routes/cookie.route.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,33 +33,18 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Middleware to attach Socket.IO instance to request
-// app.use((req, res, next) => {
-//     req.io = io; // Attach the Socket.IO instance to the request
-//     next();
-// });
 
-// CORS configuration
 app.use(cors({
-    origin: "*", // Adjust this to your frontend URL for production
-    credentials: true,
-    
+    origin: ['http://127.0.0.1:5501', 'http://localhost:5501'],  // Frontend URL
+    credentials: true,  // Allow credentials (cookies)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allowed methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+    exposedHeaders: ['Set-Cookie'],
+    path: '/' // Expose Set-Cookie header
 }));
 
-// // Define allowed origins for testing
-// const allowedOrigins = ['http://localhost:3000']; // Add your testing frontend URL here
-
-// // CORS configuration
-// app.use(cors({
-//     origin: (origin, callback) => {
-//         if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-//             callback(null, true); // Allow the request
-//         } else {
-//             callback(new Error('Not allowed by CORS')); // Reject the request
-//         }
-//     },
-//     credentials: true
-// }));
+//for parsing the cookie
+app.use(cookieParser());
 
 // middlewares
 app.use(express.urlencoded({ extended: true }));
@@ -101,6 +88,10 @@ app.use("/api/leaveRequestType", leaveRequestTypeRoute);
 
 //image
 app.use("/api/image", imageRoute);
+
+// cookie
+app.use("/api/cookie", cookieRoute);
+
 
 app.use("*", (req, res) => {
     res.status(404).json({ con: false, msg: "Invalid route" });
