@@ -54,6 +54,7 @@ router.post(
 );
 
 
+
 router.get("/getFeeds", validateToken(), getFeeds);
 router.get("/getAnnouncements", validateToken(), getAnnouncements);
 

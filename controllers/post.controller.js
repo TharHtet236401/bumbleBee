@@ -47,6 +47,10 @@ export const createPost = async (req, res, next) => {
         school: userObject.schools[0],
       });
 
+      if(contentType === "feed" && userObject.roles.includes("teacher")){
+        return fError(res, "You are not authorized to create feeds", 401);
+      }
+
       if (!classExists) {
         return next(new Error("Class not found"));
       }
@@ -406,7 +410,7 @@ export const editPost = async (req, res, next) => {
 
 
     if(!heading && !body ){
-      return fError(res, "Heading, body and contentType are required", 400);
+      return fError(res, "Heading, body are required", 400);
     }
 
     if(contentType ==="feed" && userObject.roles.includes("teacher")){
