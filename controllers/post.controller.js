@@ -295,7 +295,6 @@ export const createPostWithProgress = async (req, res, next) => {
       reactions,
       gradeName,
       className,
-      schoolId,
     } = req.body;
 
     const posted_by = req.user._id;
@@ -306,7 +305,7 @@ export const createPostWithProgress = async (req, res, next) => {
       const classExists = await Class.findOne({
         grade: gradeName,
         className: className,
-        school: schoolId,
+        school: userObject.schools[0],
       });
 
       if (!classExists) {
@@ -364,7 +363,7 @@ export const createPostWithProgress = async (req, res, next) => {
       contentType,
       reactions,
       classId,
-      schoolId,
+      schoolId:userObject.schools[0],
       documents,
     });
 

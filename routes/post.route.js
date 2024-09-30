@@ -53,15 +53,6 @@ router.post(
   createPostWithProgress // Use the new function
 );
 
-router.post(
-  "/create-with-progress",
-  validateToken,
-  upload.fields([
-    { name: "contentPictures", maxCount: 5 },
-    { name: "documents", maxCount: 5 },
-  ]),
-  createPostWithProgress
-);
 
 router.get("/getFeeds", validateToken(), getFeeds);
 router.get("/getAnnouncements", validateToken(), getAnnouncements);
