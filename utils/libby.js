@@ -9,11 +9,11 @@ dotenv.config();
 
 // you can format the response
 export const fMsg = (res, msg, result = {}, statusCode = 200) => {
-    res.status(statusCode).json({ con: true, msg, result });
+    return res.status(statusCode).json({ con: true, msg, result });
 };
 
 export const fError = (res, msg, statusCode = 500) => {
-    res.status(statusCode).json({ con: false, msg});
+    return res.status(statusCode).json({ con: false, msg});
 };
 
 //you can encode the password

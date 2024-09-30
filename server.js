@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
+import cookieParser from 'cookie-parser';
 import { fileURLToPath } from "url";
 
 import connectToMongoDB from "./config/connectMongoDb.js";
@@ -20,15 +21,27 @@ import testRoute from "./routes/test.route.js";
 import leaveRequestRoute from "./routes/leaveRequest.route.js";
 import leaveRequestTypeRoute from "./routes/leaveRequestType.route.js";
 import imageRoute from "./routes/image.route.js";
-
+import cookieRoute from "./routes/cookie.route.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-//for allowing the frontend to access the backend
-app.use(cors());
+
+
+app.use(cors({
+    origin: ['http://127.0.0.1:5501', 'http://localhost:5501'],  // Frontend URL
+    credentials: true,  // Allow credentials (cookies)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allowed methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+    exposedHeaders: ['Set-Cookie'],
+    path: '/' // Expose Set-Cookie header
+}));
+
+//for parsing the cookie
+app.use(cookieParser());
+
 // middlewares
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -72,6 +85,8 @@ app.use("/api/leaveRequestType", leaveRequestTypeRoute);
 //image
 app.use("/api/image", imageRoute);
 
+// cookie
+app.use("/api/cookie", cookieRoute);
 
 
 app.use("*", (req, res) => {
