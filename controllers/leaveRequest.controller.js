@@ -15,6 +15,10 @@ export const createLeaveRequest = async (req, res, next) => {
     const { studentId, classId, startDate, endDate, reason, description } =
       req.body;
 
+    if(!studentId || !classId || !startDate || !endDate || !reason){
+      return fError(res, "Please enter all the field")
+    }
+
     // Check if end date is earlier than start date
     if (new Date(endDate) < new Date(startDate)) {
       return fError(res, "End date cannot be earlier than start date")
@@ -135,6 +139,9 @@ export const editLeaveRequest = async(req, res, next) => {
     const { leaveReqId, studentId, classId, startDate, endDate, reason, description } = req.body;
 
       //ensures that only teachers who are assigned to the class can view the requests 
+      if(!leaveReqId || !studentId || !classId || !startDate || !endDate || !reason ){
+        return fError(res, "Please enter all the field")
+      }
 
     let classPermission = checkArray(editor.classes, classId);
     if(!classPermission){
@@ -194,22 +201,9 @@ export const deleteLeaveRequest = async(req, res,  next) => {
     //?? add here that u don't have permission to delete the leave request
     const { leaveReqId } = req.body;
 
-       //ensures that only teachers who are assigned to the class can view the requests 
-       let classPermission = false;
-       while(classPermission == false){
-         for(let i = 0; i < deleter.classes.length; i++){
-           
-           if(deleter.classes[i] == classId){
-             classPermission = true;
-             break;
-           }
-         }
-         if(classPermission == false){
-           classPermission = true;
-           return next(new Error("You don't have permission to view the leave requests from other class"))
-         }
-       }
-
+    if(!leaveReqId){
+      return fError(res, "Please enter the leave request Id")
+    }
 
     //check if the leaveReqId is in the storage
     const leaveReq = await LeaveRequest.findById(leaveReqId)
@@ -227,6 +221,10 @@ export const respondLeaveRequest = async(req, res, next) => {
   const user = await User.findById(senderId);
 
   const { leaveReqId, response } = req.body
+  
+  if(!leaveReqId || !response){
+    return fError(res, "Please enter all the field")
+  }
 
   //check if the leaveReqId is in the storage
   const leaveReq = await LeaveRequest.findById(leaveReqId)
@@ -234,22 +232,30 @@ export const respondLeaveRequest = async(req, res, next) => {
     return next(new Error("Leave Request is not found"))
   }  
 
-  console.log("class Id " + typeof leaveReq.classId)
   //ensures that only teachers who are assigned to the class can respond the requests 
-  let classPermission = false;
-  while(classPermission == false){
-    for(let i = 0; i < user.classes.length; i++){
+  // let classPermission = false;
+  // while(classPermission == false){
+  //   for(let i = 0; i < user.classes.length; i++){
       
-      if(user.classes[i] == leaveReq.classId.toString()){
-        classPermission = true;
-        break;
-      }
+  //     if(user.classes[i] == leaveReq.classId.toString()){
+  //       classPermission = true;
+  //       break;
+  //     }
+  //   }
+  //   if(classPermission == false){
+  //     classPermission = true;
+  //     return fMsg(res, "You don't have permission to view the leave requests from other class", 403)
+  //   }
+  // }
+
+  let classPermission = checkArray(user.classes, leaveReq.classId);
+    if(!classPermission){
+      return next(new Error("You don't have permission to view the leave requests from other class"))
     }
-    if(classPermission == false){
-      classPermission = true;
-      return fMsg(res, "You don't have permission to view the leave requests from other class", 403)
+
+    if(response.toString() != "read" && response.toString() != "unread"){
+      return fError(res, "Please enter the valid response: read or unread")
     }
-  }
 
   const editedLeaveReq = await LeaveRequest.findByIdAndUpdate(
     leaveReqId, 
