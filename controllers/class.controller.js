@@ -165,6 +165,10 @@ export const deleteClass = async (req, res, next) => {
     const school = await School.findById(schoolId);
 
     school.classes.pop(classId);
+    await User.updateMany(        
+      { $pull: { classes: classId } }  // Pull the specific classId from the classes array
+    );
+    // console.log("userclasses " + usersClasses)
     const deletedClass = await Class.findByIdAndDelete(classId);;
     await school.save();
 

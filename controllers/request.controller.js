@@ -214,12 +214,12 @@ export const respondGuardianReq = async(req, res, next) => {
       return fError(res, "You don't have permission to response this request", 505)
     }
 
-    const guardian = await User.findById(request.sender);
-    console.log(guardian);
-    let alreadyInClass = checkArray(guardian.classes, classId);
-    if(alreadyInClass == true){
-      return fError(res, "Guardian has already joined the class", 505)
-    }
+    // const guardian = await User.findById(request.sender);
+    // console.log(guardian);
+    // let alreadyInClass = checkArray(guardian.classes, classId);
+    // if(alreadyInClass == true){
+    //   return fError(res, "Guardian has already joined the class", 505)
+    // }
 
     const studentName = request.studentName;
     const studentDOB = request.studentDOB;
