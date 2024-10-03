@@ -52,7 +52,6 @@ export let validateToken = () => {
       next();
     } catch (error) {
       await Token.findOneAndDelete({token})
-      console.error("Token verification error:", error.message);
       return next(new Error("Invalid token"));
     }
   };
