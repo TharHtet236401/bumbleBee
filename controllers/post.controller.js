@@ -202,6 +202,10 @@ export const getAnnouncements = async (req, res, next) => {
                     path: "posted_by",
                     select: "userName profilePicture roles",
                 },
+                populate: {
+                  path: "schoolId",
+                  select: "schoolName"
+                }
             })
             .lean();
 
