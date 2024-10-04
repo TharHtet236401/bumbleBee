@@ -146,7 +146,7 @@ export const getFeeds = async (req, res, next) => {
 
         const sortField = "createdAt";
 
-        const populate = { posted_by: "userName profilePicture roles" };
+        const populate = { posted_by: "userName profilePicture roles", schoolId: "schoolName"};
 
         const populateString = Object.entries(populate).map(
             ([path, select]) => ({
