@@ -130,7 +130,7 @@ export const login = async (req, res, next) => {
             userId: user._id,
             name: user.userName,
             token,
-            attempt: numberOfLogins
+            // attempt: numberOfLogins
         };
 
         await Token.create(newTokenRegisteration)
