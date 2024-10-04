@@ -174,10 +174,10 @@ export const respondTeacherReq = async(req, res, next) => {
       teacher.schools.push(adminSchool);
       await teacher.save();
 
-      let acceptedTeacher = await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"accepted"})
+      let acceptedTeacher = await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"accepted"}, { new: true })
       return fMsg(res, "Teacher is accepted", acceptedTeacher, 200)
     }else if(response == false){
-      let rejectedTeacher = await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"rejected"})
+      let rejectedTeacher = await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"rejected"}, { new: true })
       return fMsg(res, "Teacher is rejected", rejectedTeacher, 200)
     }else{
       return fError(res, "Wrong response",505)
@@ -214,7 +214,7 @@ export const respondGuardianReq = async(req, res, next) => {
       return fError(res, "You don't have permission to response this request", 505)
     }
 
-    // const guardian = await User.findById(request.sender);
+    const guardian = await User.findById(request.sender);
     // console.log(guardian);
     // let alreadyInClass = checkArray(guardian.classes, classId);
     // if(alreadyInClass == true){
@@ -264,11 +264,11 @@ export const respondGuardianReq = async(req, res, next) => {
         await Student.findOneAndUpdate( {_id: student._id}, {"$push": {classes: classId}} )
       }
 
-      let requests = await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"accepted"})
+      let requests = await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"accepted"}, { new: true })
       return fMsg(res, "Guardian Requests got accepted ", requests, 200)
 
     }else if(response == false){
-      let requests = await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"rejected"})
+      let requests = await PendingRequest.findOneAndUpdate({_id: requestId}, {status:"rejected"}, { new: true })
       return fMsg(res, "Guardian Requests got rejected", requests, 200)
 
     }else{
