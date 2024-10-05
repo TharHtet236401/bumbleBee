@@ -81,7 +81,9 @@ export const login = async (req, res, next) => {
         }
 
         //search the user in the database by email
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email })
+                .populate("childern", "name")
+                .populate("classes", "className grade");
         if (!user) {
             return next(new Error("Invalid username or password"));
         }
