@@ -81,7 +81,9 @@ export const login = async (req, res, next) => {
         }
 
         //search the user in the database by email
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email })
+                .populate("childern", "name")
+                .populate("classes", "className grade");
         if (!user) {
             return next(new Error("Invalid username or password"));
         }
@@ -117,19 +119,20 @@ export const login = async (req, res, next) => {
             userId: user._id
         });
 
-        let numberOfLogins;
-        if(logins.length < 3){
-            numberOfLogins = logins.length +1;
-        }else{
-            return fError(res, "You can't login with more than three devices")
-        }
+        //this will be uncommented once the user session problem has bbeen  
+        // let numberOfLogins;
+        // if(logins.length < 3){
+        //     numberOfLogins = logins.length +1;
+        // }else{
+        //     return fError(res, "You can't login with more than three devices")
+        // }
             
 
         const newTokenRegisteration = {
             userId: user._id,
             name: user.userName,
             token,
-            attempt: numberOfLogins
+            // attempt: numberOfLogins
         };
 
         await Token.create(newTokenRegisteration)
