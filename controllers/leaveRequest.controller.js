@@ -96,7 +96,9 @@ export const readLeaveRequestByClass = async(req, res, next) => {
       return next(new Error("Class not found"));
     }
 
-    let leaveRequests = await LeaveRequest.find({classId: classId});
+    let leaveRequests = await LeaveRequest.find({classId: classId})
+          .populate("studentId", "name")
+          .populate("senderId", "userName");
     fMsg(res, "Leave requests", leaveRequests, 200);
 
 

@@ -82,8 +82,16 @@ export const login = async (req, res, next) => {
 
         //search the user in the database by email
         const user = await User.findOne({ email })
-                .populate("childern", "name")
-                .populate("classes", "className grade");
+                .populate("classes", "className grade")
+                .populate({
+                    path: "childern", 
+                    select: "name",
+                    populate: {
+                        path: "classes",
+                        select: "className grade"
+                    }
+                });
+                
         if (!user) {
             return next(new Error("Invalid username or password"));
         }
@@ -140,6 +148,7 @@ export const login = async (req, res, next) => {
         //this is to send the response and token to the client-frontend and save in local storage
         fMsg(res, "Login Successfully", { userInfo, token }, 200);
     } catch (error) {
+        console.log(error)
         next(error);
     }
 };
