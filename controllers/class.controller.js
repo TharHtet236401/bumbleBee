@@ -191,7 +191,7 @@ export const readClassByAdmin = async (req, res, next) => {
 
     const skip = (page - 1) * limit;
 
-    const classes = await Class.find({ school: schoolId })
+    const classes = await Class.find({ school: schoolId }).populate("students")
 
       .skip(skip)
       .limit(limit)
