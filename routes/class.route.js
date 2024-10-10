@@ -7,6 +7,7 @@ import {
   readClassByTeacherAndGuardian,
   readGradeNames,
   readClassNames,
+  readClassNamesByTeacherNew,
   readClassNamesByTeacher,
   readGradeNamesByTeacher, // Ensure this is correctly imported
 } from "../controllers/class.controller.js";
@@ -26,6 +27,7 @@ router.get(
 );
 router.get('/gradeNames', validateToken(), readGradeNames);
 router.get('/classNames', validateToken(), readClassNames);
+router.get('/classNamesByTeacherNew/:gradeName', validateToken(), readClassNamesByTeacherNew);
 router.get('/gradeNamesByTeacher', validateToken(), readGradeNamesByTeacher);
 router.get('/classNamesByTeacher', validateToken(), readClassNamesByTeacher);
 export default router;

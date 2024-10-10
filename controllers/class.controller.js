@@ -348,3 +348,34 @@ export const readGradeNamesByTeacher = async (req, res, next) => {
     next(err);
   }
 };
+
+export const readClassNamesByTeacherNew = async(req, res, next) => {
+  try {
+    const gradeName = req.params.gradeName;
+    if(!gradeName){
+      return fError(res, "Grade name is not found", 505)
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return fError(res, "User is not found", 404);
+    }
+    const schoolId = user.schools[0];
+    const school = await School.findById(schoolId);
+    if (!school) {
+      return fError(res, "School is not found", 404);
+    }
+    const classObj = await Class.find({grade: gradeName, teachers:{ $in: [user._id] }, school: schoolId }).select(["-_id", "-grade", "-classCode", "-school", "-students", "-teachers", "-guardians", "-announcements", "-__v"]);
+    let classNames = []; 
+    classObj.forEach(eachClass => {
+      classNames.push(eachClass.className)
+    });
+    
+    if (classNames.length === 0) {
+      return fMsg(res, "No class names found", {}, 200);
+    }
+    fMsg(res, "Class names found", classNames, 200);
+  } catch (err) {
+    next(err);
+  }
+}
