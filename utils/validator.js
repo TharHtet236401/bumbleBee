@@ -3,10 +3,11 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { fMsg } from "./libby.js";
+import { fError } from "./libby.js";
 import { deleteFile } from "./libby.js";
 
 import Post from "../models/post.model.js";
+import Token from "../models/token.model.js";
 
 dotenv.config();
 
@@ -32,7 +33,7 @@ export const validateBody = (schema) => {
 
 //validate the token with jwt and attach the user info to the request body
 export let validateToken = () => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     if (!req.headers.authorization) {
       return next(new Error("Unauthorized"));
     }
@@ -42,10 +43,15 @@ export let validateToken = () => {
     try {
       const tokenUser = jwt.verify(token, process.env.SECRET_KEY);
       req.user = tokenUser.data;
+      
+      let findToken = await Token.findOne({token});
+      if(!findToken){
+        return next(new Error("Your session is already expired"))
+      }
 
       next();
     } catch (error) {
-      console.error("Token verification error:", error.message);
+      await Token.findOneAndDelete({token})
       return next(new Error("Invalid token"));
     }
   };

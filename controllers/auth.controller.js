@@ -4,6 +4,7 @@ import User from "../models/user.model.js";
 
 import { encode, genToken, fMsg, decode, fError } from "../utils/libby.js";
 import { UserSchema } from "../utils/schema.js";
+import Token from "../models/token.model.js";
 
 export const register = async (req, res, next) => {
     try {
@@ -80,7 +81,17 @@ export const login = async (req, res, next) => {
         }
 
         //search the user in the database by email
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email })
+                .populate("classes", "className grade")
+                .populate({
+                    path: "childern", 
+                    select: "name",
+                    populate: {
+                        path: "classes",
+                        select: "className grade"
+                    }
+                });
+                
         if (!user) {
             return next(new Error("Invalid username or password"));
         }
@@ -111,10 +122,33 @@ export const login = async (req, res, next) => {
 
         // destructure the user object to remove the password field
         const { password: _, ...userInfo } = user.toObject();
+        
+        let logins = await Token.find({
+            userId: user._id
+        });
+
+        //this will be uncommented once the user session problem has bbeen  
+        // let numberOfLogins;
+        // if(logins.length < 3){
+        //     numberOfLogins = logins.length +1;
+        // }else{
+        //     return fError(res, "You can't login with more than three devices")
+        // }
+            
+
+        const newTokenRegisteration = {
+            userId: user._id,
+            name: user.userName,
+            token,
+            // attempt: numberOfLogins
+        };
+
+        await Token.create(newTokenRegisteration)
 
         //this is to send the response and token to the client-frontend and save in local storage
         fMsg(res, "Login Successfully", { userInfo, token }, 200);
     } catch (error) {
+        console.log(error)
         next(error);
     }
 };
@@ -213,6 +247,14 @@ export const logout = async (req, res) => {
         // Since JWT is stateless, we don't need to invalidate the token on the server
         // The actual "logout" happens on the client-side by removing the token
         // For now, we'll just send a success message
+        const user = await User.findById(req.user._id)
+        let token = req.headers.authorization.split(" ")[1];
+        let deletedToken = await Token.findOneAndDelete({token})
+        console.log("deleted token: " + deletedToken)
+
+        if(!deletedToken)
+            return fError(res, "User has already signed out or their session got expired ", 505)
+
         fMsg(res, "Logout successful", "User has been logged out", 200);
     } catch (error) {
         next(error);
