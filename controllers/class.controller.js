@@ -154,22 +154,24 @@ export const deleteClass = async (req, res, next) => {
 
     const { classId } = req.body;
     if (!classId) {
-      return fError(res, "Please provide the class id", 400);
+        return fError(res, "Please provide the class id", 400);
     }
     const classObj = await Class.findById(classId);
     if (!classObj) {
-      return fError(res, "There is no such class", 404);
+        return fError(res, "There is no such class", 404);
     }
 
     const schoolId = classObj.school;
     const school = await School.findById(schoolId);
 
     school.classes.pop(classId);
+
     await User.updateMany(        
       { $pull: { classes: classId } }  // Pull the specific classId from the classes array
     );
     // console.log("userclasses " + usersClasses)
     const deletedClass = await Class.findByIdAndDelete(classId);;
+
     await school.save();
 
     fMsg(res, "Class Deleted Successfully", deletedClass, 200);
@@ -191,8 +193,8 @@ export const readClassByAdmin = async (req, res, next) => {
 
     const skip = (page - 1) * limit;
 
-    const classes = await Class.find({ school: schoolId }).populate("students")
 
+    const classes = await Class.find({ school: schoolId }).populate("students")
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 }); // Sort by creation date, newest first

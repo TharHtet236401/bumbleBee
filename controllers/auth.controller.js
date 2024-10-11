@@ -305,6 +305,7 @@ export const webRegister = async (req, res, next) => {
             ...otherInfos,
         };
 
+
         const user = await User.create(newUser);
         user.profilePicture = `https://ysffgebnlbingizxsbvx.supabase.co/storage/v1/object/public/profile-pictures/default%20%20jpg.jpg`;
         await user.save();
@@ -312,10 +313,20 @@ export const webRegister = async (req, res, next) => {
         const userWithoutPassword = user.toObject();
         delete userWithoutPassword.password;
 
+        // this is to encrypt the user id and create a token
+        const toEncrypt = {
+            _id: user._id,
+            roles: user.roles,
+            email: user.email,
+        };
+
+        //this is to create a token
+        const token = genToken(toEncrypt);
+
         fMsg(
             res,
             "Registered Successfully",
-            { user: userWithoutPassword },
+            { user: userWithoutPassword, token },
             200
         );
     } catch (error) {
