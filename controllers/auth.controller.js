@@ -128,12 +128,12 @@ export const login = async (req, res, next) => {
         });
 
         //this will be uncommented once the user session problem has bbeen  
-        // let numberOfLogins;
-        // if(logins.length < 3){
-        //     numberOfLogins = logins.length +1;
-        // }else{
-        //     return fError(res, "You can't login with more than three devices")
-        // }
+        let numberOfLogins;
+        if(logins.length < 3){
+            numberOfLogins = logins.length +1;
+        }else{
+            return fError(res, "You can't login with more than three devices")
+        }
             
 
         const newTokenRegisteration = {
@@ -250,7 +250,6 @@ export const logout = async (req, res) => {
         const user = await User.findById(req.user._id)
         let token = req.headers.authorization.split(" ")[1];
         let deletedToken = await Token.findOneAndDelete({token})
-        console.log("deleted token: " + deletedToken)
 
         if(!deletedToken)
             return fError(res, "User has already signed out or their session got expired ", 505)
