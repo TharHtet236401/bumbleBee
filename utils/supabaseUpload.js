@@ -141,10 +141,11 @@ export const uploadDocumentToSupabase = async (file, bucketName, progressCallbac
     throw new Error("Bucket name is required");
   }
 
+
   const fileExt = file.originalname.split(".").pop();
-  const fileName = `${Date.now()}_${Math.random()
-    .toString(36)
-    .substring(7)}.${fileExt}`;
+
+  let fileName = `${Date.now()}_${file.originalname}`;
+  fileName = fileName.replace(/\s+/g, '');
 
   try {
     const { data: uploadData, error: uploadError } = await supabase.storage
