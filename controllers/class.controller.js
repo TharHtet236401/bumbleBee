@@ -194,7 +194,7 @@ export const readClassByAdmin = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
 
-    const classes = await Class.find({ school: schoolId }).populate("students")
+    const classes = await Class.find({ school: schoolId }).populate("students").populate("school")
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 }); // Sort by creation date, newest first
