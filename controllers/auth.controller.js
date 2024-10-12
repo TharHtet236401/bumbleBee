@@ -128,12 +128,12 @@ export const login = async (req, res, next) => {
         });
 
         //this will be uncommented once the user session problem has bbeen  
-        let numberOfLogins;
-        if(logins.length < 3){
-            numberOfLogins = logins.length +1;
-        }else{
-            return fError(res, "You can't login with more than three devices")
-        }
+        // let numberOfLogins;
+        // if(logins.length < 3){
+        //     numberOfLogins = logins.length +1;
+        // }else{
+        //     return fError(res, "You can't login with more than three devices")
+        // }
             
 
         const newTokenRegisteration = {
