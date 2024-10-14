@@ -25,10 +25,10 @@ export const createSchool = async (req, res, next) => {
     }
 
     // Find the user in the database
-    const userDb = await User.findById(currentUser._id);
-    if (!userDb) {
-      return next(new Error("User not found"))
-    }
+      const userDb = await User.findById(currentUser._id);
+    // if (!userDb) {
+    //   return next(new Error("User not found"))
+    // }
 
     const defaultGradeNames = ["HND","HNC","Grade","Batch","Year"]
   
@@ -61,9 +61,9 @@ export const editSchool = async (req, res, next) => {
     const currentUser = req.user;
     // Find the user in the database
     const userDb = await User.findById(currentUser._id);
-    if (!userDb) {
-      return next(new Error("User not found"))
-    }
+    // if (!userDb) {
+    //   return next(new Error("User not found"))
+    // }
 
     // Get the school ID from the user's schools array
     const schoolId = userDb.schools[0];
@@ -71,7 +71,7 @@ export const editSchool = async (req, res, next) => {
     // Find the school by ID
     const school = await School.findById(schoolId);
     if (!school) {
-      return next(new Error("School not found"))
+      return fError(res, "School not found", 404);
     }
 
     // Update the school details
