@@ -10,6 +10,7 @@ import {
   readClassNamesByTeacherNew,
   readClassNamesByTeacher,
   readGradeNamesByTeacher, // Ensure this is correctly imported
+  getClassById
 } from "../controllers/class.controller.js";
 import { validateToken, isAdmin } from "../utils/validator.js";
 import express from "express";
@@ -30,4 +31,5 @@ router.get('/classNames', validateToken(), readClassNames);
 router.get('/classNamesByTeacherNew/:gradeName', validateToken(), readClassNamesByTeacherNew);
 router.get('/gradeNamesByTeacher', validateToken(), readGradeNamesByTeacher);
 router.get('/classNamesByTeacher', validateToken(), readClassNamesByTeacher);
+router.get('/classById/:classId', validateToken(), getClassById);
 export default router;
