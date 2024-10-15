@@ -98,7 +98,9 @@ app.use((err, req, res, next) => {
     res.status(err.status).json({ con: false, msg: err.message });
 });
 
-
+app.get("/", (req, res) => {
+    res.send("Hello World");
+});
 
 // Start the server
 app.listen(3000, () => { 
