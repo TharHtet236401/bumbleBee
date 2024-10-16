@@ -83,7 +83,8 @@ export const readTeacherReq = async(req, res, next)=> {
 
     const classCode = classObj.classCode;
 
-    let requests = await PendingRequest.find({roles: ['teacher'], classCode: classCode, status: "pending"});
+    let requests = await PendingRequest.find({roles: ['teacher'], classCode: classCode, status: "pending"})
+    .populate("sender", "userName");
     if(requests.length === 0){
       return next(new Error("There are no requests at the moment"))
     }
