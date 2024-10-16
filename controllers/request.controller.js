@@ -152,7 +152,7 @@ export const respondTeacherReq = async(req, res, next) => {
       return next(new Error("Invalid Class"))
     }
 
-    const request= await PendingRequest.findById({_id: requestId, status: "pending"});
+    const request= await PendingRequest.findById({_id: requestId, status: "pending"}).populate("sender", "userName");;
     if(!request){
       return next(new Error("Invalid Request Id"))
     }
