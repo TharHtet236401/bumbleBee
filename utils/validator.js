@@ -39,12 +39,13 @@ export let validateToken = () => {
     }
 
     let token = req.headers.authorization.split(" ")[1];
-
+    console.log(token);
     try {
       const tokenUser = jwt.verify(token, process.env.SECRET_KEY);
       req.user = tokenUser.data;
       
-      let findToken = await Token.findOne({token});
+    let findToken = await Token.findOne({ token });
+    console.log(findToken)
       if(!findToken){
         return next(new Error("Your session is already expired"))
       }
