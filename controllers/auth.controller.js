@@ -108,6 +108,8 @@ export const login = async (req, res, next) => {
             _id: user._id,
             roles: user.roles,
             email: user.email,
+            schools: user.schools,
+            classes: user.classes
         };
 
         //this is to create a token
