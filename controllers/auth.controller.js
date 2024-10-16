@@ -124,7 +124,7 @@ export const login = async (req, res, next) => {
 
         // destructure the user object to remove the password field
         const { password: _, ...userInfo } = user.toObject();
-        
+        console.log(userInfo)
         let logins = await Token.find({
             userId: user._id
         });
@@ -313,12 +313,14 @@ export const webRegister = async (req, res, next) => {
 
         const userWithoutPassword = user.toObject();
         delete userWithoutPassword.password;
-
+        
         // this is to encrypt the user id and create a token
         const toEncrypt = {
             _id: user._id,
             roles: user.roles,
             email: user.email,
+            schools: user.schools,  
+            classes: user.classes,
         };
 
         //this is to create a token
