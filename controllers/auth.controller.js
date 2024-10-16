@@ -321,7 +321,15 @@ export const webRegister = async (req, res, next) => {
 
         //this is to create a token
         const token = genToken(toEncrypt);
+        
+        const newTokenRegisteration = {
+            userId: user._id,
+            name: user.userName,
+            token,
+            // attempt: numberOfLogins
+        };
 
+        await Token.create(newTokenRegisteration)
         fMsg(
             res,
             "Registered Successfully",
