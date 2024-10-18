@@ -1,4 +1,5 @@
 import express from "express";
+import { Server } from "socket.io";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
@@ -6,7 +7,6 @@ import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
 import connectToMongoDB from "./config/connectMongoDb.js";
 import http from "http";
-import setupSocket from "./utils/socket.js"; // Import the socket setup function
 
 dotenv.config();
 
@@ -28,7 +28,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
-setupSocket(server); // Set up Socket.IO
+const io = new Server(server);
 
 app.use(
   cors({
@@ -74,6 +74,26 @@ app.use("*", (req, res) => {
 app.use((err, req, res, next) => {
   err.status = err.status || 505;
   res.status(err.status).json({ con: false, msg: err.message });
+});
+
+//initialize socket
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  socket.emit("greet", "hello your id is" + socket.id);
+
+  socket.on("message", (message) => {
+    console.log(message);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+    io.emit("userDisconnected", "A user has disconnected");
+  });
+});
+
+io.on("connect_error", (err) => {
+  console.error("Connection Error:", err);
 });
 
 // Start the server
