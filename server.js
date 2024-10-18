@@ -1,13 +1,12 @@
 import express from "express";
-import { Server } from "socket.io";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
 import connectToMongoDB from "./config/connectMongoDb.js";
 import http from "http";
-
+import setupSocket from "./utils/socket.js"; // Import the socket setup function
 
 dotenv.config();
 
@@ -28,84 +27,57 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-// Removed socket.io server creation
 const server = http.createServer(app);
-const io = new Server(server);
+setupSocket(server); // Set up Socket.IO
 
+app.use(
+  cors({
+    origin: ["http://127.0.0.1:5501", "http://localhost:5501"], // Frontend URL
+    credentials: true, // Allow credentials (cookies)
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+    exposedHeaders: ["Set-Cookie"],
+    path: "/", // Expose Set-Cookie header
+  })
+);
 
-app.use(cors({
-    origin: ['http://127.0.0.1:5501', 'http://localhost:5501'],  // Frontend URL
-    credentials: true,  // Allow credentials (cookies)
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allowed methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
-    exposedHeaders: ['Set-Cookie'],
-    path: '/' // Expose Set-Cookie header
-}));
-
-//for parsing the cookie
+// For parsing the cookie
 app.use(cookieParser());
 
-// middlewares
+// Middlewares
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-
-// auth api
+// Auth API
 app.use("/api/auth", authRoute);
-
-// auth school
 app.use("/api/school", schoolRoute);
 app.use("/api/class", classRoute);
-
-// auth user
 app.use("/api/user", userRoute);
-
-// auth posts
 app.use("/api/posts", postRoute);
-
-//student
 app.use("/api/student", studentRoute);
-
-// request
 app.use("/api/request", requestRoute);
-
 app.use("/api/test/", testRoute);
-
-//this is for the leave request for the guardians to make for their children
 app.use("/api/leaveRequest", leaveRequestRoute);
-
-//this is to create the leave request type like sick leave, annual leave, etc 
 app.use("/api/leaveRequestType", leaveRequestTypeRoute);
-
-//image
 app.use("/api/image", imageRoute);
-
-// cookie
 app.use("/api/cookie", cookieRoute);
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "views/index.html"));
+  res.sendFile(path.join(__dirname, "views/index.html"));
 });
-
 
 app.use("*", (req, res) => {
-    res.status(404).json({ con: false, msg: "Invalid route" });
-});
-
-io.on("connection", (socket) => {
-    console.log("A user connected");
+  res.status(404).json({ con: false, msg: "Invalid route" });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    err.status = err.status || 505;
-    res.status(err.status).json({ con: false, msg: err.message });
+  err.status = err.status || 505;
+  res.status(err.status).json({ con: false, msg: err.message });
 });
-
 
 // Start the server
-server.listen(3000, () => { 
-    connectToMongoDB();
-    console.log('Server is running on port 3000');
+server.listen(3000, () => {
+  connectToMongoDB();
+  console.log("Server is running on port 3000");
 });
-
