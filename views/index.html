@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Page</title>
+    <script src="/socket.io/socket.io.js"></script> <!-- Include Socket.IO client -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #status {
+            font-size: 24px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>BumbleBee Backend Server is working</h1>
+    <div id="status">Connecting...</div>
+
+    <script>
+        const socket = io(); // Connect to the server
+
+        socket.on("connect", () => {
+            document.getElementById("status").innerText = "Connected to the server!";
+        });
+
+        socket.on("disconnect", () => {
+            document.getElementById("status").innerText = "Disconnected from the server.";
+        });
+    </script>
+</body>
+</html>
+
