@@ -28,6 +28,10 @@
             document.getElementById("status").innerText = "Connected to the server!";
         });
 
+        socket.on("greet", (message) => {
+            console.log(message);
+        });
+
         socket.on("disconnect", () => {
             document.getElementById("status").innerText = "Disconnected from the server.";
         });
