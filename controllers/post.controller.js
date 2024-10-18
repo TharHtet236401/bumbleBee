@@ -69,7 +69,6 @@ export const createPost = async (req, res, next) => {
       try {
         for (const file of req.files.contentPictures) {
           const contentPictureUrl = await uploadImageToSupabase(file, "posts");
-          console.log(contentPictureUrl);
           contentPictures.push(contentPictureUrl); // Save the URL to the array
         }
       } catch (uploadError) {
@@ -263,8 +262,10 @@ export const deletePost = async (req, res, next) => {
         }
 
         // Delete associated file from Supabase if it exists
-        if (post.contentPicture) {
-            await deleteImageFromSupabase(post.contentPicture, "posts");
+        if (post.contentPictures) {
+            for (const pictureUrl of post.contentPictures) {
+                await deleteImageFromSupabase(pictureUrl, "posts");
+            }
         }
 
         // Delete associated documents
