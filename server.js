@@ -1,10 +1,12 @@
 import express from "express";
+import { Server } from "socket.io";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
 import cookieParser from 'cookie-parser';
 import { fileURLToPath } from "url";
 import connectToMongoDB from "./config/connectMongoDb.js";
+import http from "http";
 
 
 dotenv.config();
@@ -27,8 +29,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 // Removed socket.io server creation
-// const server = http.createServer(app);
-// const io = new Server(server);
+const server = http.createServer(app);
+const io = new Server(server);
+
 
 app.use(cors({
     origin: ['http://127.0.0.1:5501', 'http://localhost:5501'],  // Frontend URL
@@ -46,14 +49,6 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use(
-    "/uploads/post_images",
-    express.static(path.join(__dirname, "uploads/post_images"))
-);
-app.use(
-    "/uploads/profile_pictures",
-    express.static(path.join(__dirname, "uploads/profile_pictures"))
-);
 
 // auth api
 app.use("/api/auth", authRoute);
@@ -89,12 +84,16 @@ app.use("/api/image", imageRoute);
 app.use("/api/cookie", cookieRoute);
 
 app.get("/", (req, res) => {
-    res.send("<html> <h1>Server is running</h1> </html>");
+    res.sendFile(path.join(__dirname, "views/index.html"));
 });
 
 
 app.use("*", (req, res) => {
     res.status(404).json({ con: false, msg: "Invalid route" });
+});
+
+io.on("connection", (socket) => {
+    console.log("A user connected");
 });
 
 // Error handling middleware
@@ -105,7 +104,7 @@ app.use((err, req, res, next) => {
 
 
 // Start the server
-app.listen(3000, () => { 
+server.listen(3000, () => { 
     connectToMongoDB();
     console.log('Server is running on port 3000');
 });
