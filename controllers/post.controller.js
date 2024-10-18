@@ -543,6 +543,8 @@ export const editPost = async (req, res, next) => {
         contentType,
         reactions,
         classId:post.classId,
+        documents:req.body.documents,
+        contentPictures:req.body.contentPictures,
       },
       { new: true }
     );
