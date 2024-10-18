@@ -89,7 +89,7 @@ app.use("/api/image", imageRoute);
 app.use("/api/cookie", cookieRoute);
 
 app.get("/", (req, res) => {
-    return res.json({ con: true, msg: "Server is running" });
+    res.send("<html> <h1>Server is running</h1> </html>");
 });
 
 
