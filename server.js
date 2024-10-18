@@ -66,10 +66,6 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views/index.html"));
 });
 
-app.get("/test-socket", (req, res) => {
-  res.sendFile(path.join(__dirname, "views/test-socket.html"));
-});
-
 app.use("*", (req, res) => {
   res.status(404).json({ con: false, msg: "Invalid route" });
 });
