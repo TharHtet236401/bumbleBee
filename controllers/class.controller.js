@@ -294,7 +294,7 @@ export const readClassByTeacherAndGuardian = async (req, res, next) => {
     const totalClasses = await User.findById(req.user._id)
       .populate("classes")
       .then((user) => user.classes.length);
-
+    console.log(currentUser.classes)
     fMsg(
       res,
       "Classes found",

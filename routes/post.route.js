@@ -6,6 +6,7 @@ import {
   createPost,
   getFeeds,
   getAnnouncements,
+  getPosts,
   editPost,
   deletePost,
   filterFeeds,
@@ -54,7 +55,7 @@ router.post(
 );
 
 
-
+router.get("/getPosts", validateToken(), getPosts);
 router.get("/getFeeds", validateToken(), getFeeds);
 router.get("/getAnnouncements", validateToken(), getAnnouncements);
 

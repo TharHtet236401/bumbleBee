@@ -128,6 +128,47 @@ export const createPost = async (req, res, next) => {
   }
 };
 
+export const getPosts = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const userInfo = await User.findById(userId, "schools").lean();
+
+        const schoolIds = userInfo.schools;
+
+        const query = {
+            schoolId: { $in: schoolIds },
+        };
+
+        const page = parseInt(req.query.page) || 1;
+
+        const sortField = "createdAt";
+
+        const populate = { posted_by: "userName profilePicture roles", schoolId: "schoolName"};
+
+        const populateString = Object.entries(populate).map(
+            ([path, select]) => ({
+                path,
+                select,
+            })
+        );
+
+        const paginatedFeeds = await paginate(
+            Post,
+            query,
+            page,
+            10,
+            sortField,
+            populateString
+        );
+        console.log(paginatedFeeds)
+        fMsg(res, "Posts fetched successfully", paginatedFeeds, 200);
+    }
+    catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
 export const getFeeds = async (req, res, next) => {
     try {
         const userId = req.user._id;
