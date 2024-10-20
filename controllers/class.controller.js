@@ -276,7 +276,16 @@ export const readClassByTeacherAndGuardian = async (req, res, next) => {
         limit: limit,
         sort: { createdAt: -1 }, // Sort by creation date, newest first
       },
-    });
+      populate: [{
+        path: "teachers",
+        select: "userName"
+      },
+      {
+        path: "school",
+        select: "schoolName"
+      }]
+    })
+    console.log("Current User is ", currentUser)
 
     if (currentUser.classes.length === 0) {
       return fError(res, "No classes registered for you", 404);
