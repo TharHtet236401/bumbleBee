@@ -283,7 +283,11 @@ export const readClassByTeacherAndGuardian = async (req, res, next) => {
       {
         path: "school",
         select: "schoolName"
-      }]
+      },
+      {
+        path: "students"
+      }
+      ]
     })
     console.log("Current User is ", currentUser)
 
