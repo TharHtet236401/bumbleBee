@@ -283,9 +283,12 @@ export const readClassByTeacherAndGuardian = async (req, res, next) => {
       {
         path: "school",
         select: "schoolName"
-      }]
+      },
+      {
+        path: "students"
+      }
+      ]
     })
-    console.log("Current User is ", currentUser)
 
     if (currentUser.classes.length === 0) {
       return fError(res, "No classes registered for you", 404);
@@ -294,7 +297,6 @@ export const readClassByTeacherAndGuardian = async (req, res, next) => {
     const totalClasses = await User.findById(req.user._id)
       .populate("classes")
       .then((user) => user.classes.length);
-    console.log(currentUser.classes)
     fMsg(
       res,
       "Classes found",
