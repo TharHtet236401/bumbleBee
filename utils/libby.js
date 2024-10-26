@@ -100,15 +100,7 @@ export const paginateAnnouncements = ( announcementDoc, page = 1, limit = 10) =>
 };
 
 
-export const deleteFile = (filePath) => {
-    fs.unlink(filePath, (err) => {
-        if (err) {
-            console.error(`Error deleting file: ${filePath}`, err);
-        } else {
-            // console.log(`File deleted: ${filePath}`);
-        }
-    });
-};
+
 // generate random class code with 4 digits
 export const generateClassCode = (length) => {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

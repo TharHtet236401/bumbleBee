@@ -4,7 +4,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { fError } from "./libby.js";
-import { deleteFile } from "./libby.js";
 
 import Post from "../models/post.model.js";
 import Token from "../models/token.model.js";
@@ -43,19 +42,35 @@ export let validateToken = () => {
     try {
       const tokenUser = jwt.verify(token, process.env.SECRET_KEY);
       req.user = tokenUser.data;
-      
-    let findToken = await Token.findOne({ token });
-    // console.log(findToken)
-      if(!findToken){
-        return next(new Error("Your session is already expired"))
+
+      let findToken = await Token.findOne({ token });
+      // console.log(findToken)
+      if (!findToken) {
+        return next(new Error("Your session is already expired"));
       }
 
       next();
     } catch (error) {
-      await Token.findOneAndDelete({token})
+      await Token.findOneAndDelete({ token });
       return next(new Error("Invalid token"));
     }
   };
+};
+
+export const tokenFromSocket = async (socket, next) => {
+  try {
+    const token = socket.handshake.query.token;
+    if (!token) {
+      return next(new Error("Authentication error"));
+    }
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    // console.log("Decoded token:", decoded);
+    socket.user = decoded;
+    next();
+  } catch (error) {
+    console.error("Error in tokenFromSocket:", error);
+    next(new Error("Authentication error"));
+  }
 };
 
 export const isAdmin = () => {

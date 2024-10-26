@@ -160,7 +160,6 @@ export const getPosts = async (req, res, next) => {
             sortField,
             populateString
         );
-        
         fMsg(res, "Posts fetched successfully", paginatedFeeds, 200);
     }
     catch (error) {
