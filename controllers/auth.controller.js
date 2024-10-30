@@ -241,7 +241,7 @@ export const changePassword = async (req, res, next) => {
     }
 };
 
-export const logout = async (req, res) => {
+export const logout = async (req, res, next) => {
     try {
         // Since JWT is stateless, we don't need to invalidate the token on the server
         // The actual "logout" happens on the client-side by removing the token
@@ -249,7 +249,7 @@ export const logout = async (req, res) => {
         const user = await User.findById(req.user._id)
         let token = req.headers.authorization.split(" ")[1];
         let deletedToken = await Token.findOneAndDelete({token})
-
+        res.clearCookie('token', { path: '/' })
         if(!deletedToken)
             return fError(res, "User has already signed out or their session got expired ", 505)
 
