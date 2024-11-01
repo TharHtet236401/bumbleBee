@@ -43,7 +43,8 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
     exposedHeaders: ["Set-Cookie"],
     path: "/",
-    sameSite: "None", // Expose Set-Cookie header
+    sameSite: "None",
+    secure: true, // Expose Set-Cookie header
   })
 );
 
