@@ -107,7 +107,8 @@ export const login = async (req, res, next) => {
         const toEncrypt = {
             _id: user._id,
             roles: user.roles,
-            email: user.email
+            email: user.email,
+            childern: user.childern
         };
 
         //this is to create a token

@@ -107,24 +107,49 @@ export const readLeaveRequestByClass = async(req, res, next) => {
   }
 }
 
+export const readAllClassLeaveRequests = async(req, res, next) => {
+  try{
+    let leaveRequests = [];
+    const readerId = req.user._id;
+    const reader = await User.findById(readerId);
+      for(let j = 0; j < reader.classes.length; j++){
+        let requests = await LeaveRequest.find({classId: reader.classes[j]})
+        .populate('studentId', "name")
+        .populate("classId", "grade className")
+        if(requests.length>0){
+          // console.log("This condition work and requests is " + requests)
+          leaveRequests = leaveRequests.concat(requests)
+        }
+      }
+
+    // console.log("These are leave requests " + JSON.stringify(leaveRequests[0]))
+    fMsg(res, "Leave requests", leaveRequests, 200);
+  }catch(error){
+    next(error)
+  }
+}
+
 export const readAllLeaveRequests = async(req, res, next) => {
   try{
-    console.log("it is working")
+    // console.log("it is working")
     const readerId = req.user._id;
     const reader = await User.findById(readerId);
 
     let leaveRequests = [];
-    for(let i = 0; i < reader.classes.length; i++){
-      for(let j = 0; j < reader.childern.length; j++){
-        let requests = await LeaveRequest.find({classId: reader.classes[i], studentId: reader.childern[j]});
+    for(let i = 0; i < reader.childern.length; i++){
+      for(let j = 0; j < reader.classes.length; j++){
+        let requests = await LeaveRequest.find({classId: reader.classes[i], studentId: reader.childern[j]})
+        .populate('studentId', "name")
+        .populate("classId", "grade className")
         if(requests.length>0){
-          console.log("This condition work and requests is " + requests)
-          leaveRequests.push(requests)
+          // console.log("This condition work and requests is " + requests)
+          leaveRequests = leaveRequests.concat(requests)
         }
       }
  
       
     }
+    // console.log("These are leave requests " + JSON.stringify(leaveRequests[0]))
     fMsg(res, "Leave requests", leaveRequests, 200);
 
 
@@ -223,6 +248,7 @@ export const respondLeaveRequest = async(req, res, next) => {
   const user = await User.findById(senderId);
 
   const { leaveReqId, response } = req.body
+  console.log("Thiis function works" + leaveReqId + response)
   
   if(!leaveReqId || !response){
     return fError(res, "Please enter all the field")
