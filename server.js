@@ -42,7 +42,8 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
     exposedHeaders: ["Set-Cookie"],
-    path: "/", // Expose Set-Cookie header
+    path: "/",
+    sameSite: "None", // Expose Set-Cookie header
   })
 );
 
