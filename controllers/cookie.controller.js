@@ -11,15 +11,3 @@ export const cookieCheckController = (req, res, next) => {
     const tokenUser = jwt.verify(token, process.env.SECRET_KEY);
     return res.status(200).json({ message: "Authorized", userData: tokenUser.data, token });
 }
-
-export const setCookie = (res, name, value, options = {}) => {
-    const defaultOptions = {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'None',
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        path: '/'
-    };
-
-    res.cookie(name, value, { ...defaultOptions, ...options });
-};
