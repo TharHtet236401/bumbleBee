@@ -114,7 +114,7 @@ export const login = async (req, res, next) => {
         const token = genToken(toEncrypt);
 
         res.cookie("token", token, {
-            httpOnly: true,
+            httpOnly: false,
             secure: true,  // Secure should be true in production (HTTPS)
             sameSite: 'none',  // Required for cross-site requests when using credentials
             maxAge: 24 * 60 * 60 * 1000, // 1 day
