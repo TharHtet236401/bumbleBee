@@ -115,9 +115,9 @@ export const login = async (req, res, next) => {
 
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false,  // Secure should be true in production (HTTPS)
-            sameSite: 'lax',  // Required for cross-site requests when using credentials
-            maxAge: 24 * 60 * 60 * 1000, // 1 day
+            secure: true,  // Required for SameSite=None
+            sameSite: 'None',  // Allow cross-site cookie usage
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
         });
 
         // destructure the user object to remove the password field
