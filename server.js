@@ -33,7 +33,11 @@ const io = new Server(server);
 
 app.use(
   cors({
-    origin: ["http://127.0.0.1:5501", "http://localhost:5501"], // Frontend URL
+    origin: [
+      "http://127.0.0.1:5501", // Localhost
+      "http://localhost:5501",
+      "http://159.223.127.127",
+    ], // Frontend URL
     credentials: true, // Allow credentials (cookies)
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
