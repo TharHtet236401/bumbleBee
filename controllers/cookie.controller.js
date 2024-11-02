@@ -5,6 +5,7 @@ dotenv.config();
 
 export const cookieCheckController = (req, res, next) => {
     const { token } = req.cookies;
+    console.log("token is ", token);
     if (!token) {
         return res.status(401).json({ message: "Unauthorized" });
     }
