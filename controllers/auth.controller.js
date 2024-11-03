@@ -249,7 +249,11 @@ export const logout = async (req, res, next) => {
         const user = await User.findById(req.user._id)
         let token = req.headers.authorization.split(" ")[1];
         let deletedToken = await Token.findOneAndDelete({token})
-        res.cookie("token", "", { maxAge: 0 });
+        res.clearCookie('token', {
+            httpOnly: false,
+            secure: true,       // Set to true if using HTTPS
+            sameSite: 'none' // Match the sameSite option if it was set
+        });
         // res.clearCookie('token', { path: '/' })
         if(!deletedToken)
             return fError(res, "User has already signed out or their session got expired ", 505)
