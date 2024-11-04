@@ -10,10 +10,12 @@ import { setObj, getObj, delObj } from "../utils/redis.js";
 app.use(
   cors({
     origin: [
-      "http://127.0.0.1:5501", // Localhost
+      "http://127.0.0.1:5501", // Localhost development URLs
       "http://localhost:5501",
-      "https://159.223.127.127", //bumblebee frontend IP
-    ], // Frontend URL
+      "http://localhost:3000",
+      "https://159.223.127.127", // Frontend production URL
+      "https://68.183.135.203"   // Backend production URL
+    ],
     credentials: true, // Allow credentials (cookies)
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
@@ -27,10 +29,11 @@ app.use(
 const io = new Server(server, {
   cors: {
     origin: [
-      "http://localhost:3000",
-      "http://127.0.0.1:5501", // Localhost
+      "http://127.0.0.1:5501", // Localhost development URLs
       "http://localhost:5501",
-      "https://68.183.135.203", //bumblebee backend IP
+      "http://localhost:3000",
+      "https://159.223.127.127", // Frontend production URL
+      "https://68.183.135.203"   // Backend production URL
     ],
     methods: ["GET", "POST"],
   },
