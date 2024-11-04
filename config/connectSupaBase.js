@@ -38,7 +38,7 @@ const initializeSupabase = () => {
             console.log(`${bucketName} bucket created successfully`);
           }
         } else {
-          console.log(`${bucketName} bucket already exists`);
+          // console.log(`${bucketName} bucket already exists`);
         }
       }
     } catch (error) {
