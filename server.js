@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 import connectToMongoDB from "./config/connectMongoDb.js";
 import http from "http";
 import { initialize } from "./utils/chat.js";
-
+import { connectToRedis } from "./utils/redis.js";
 dotenv.config();
 
 import authRoute from "./routes/auth.route.js";
@@ -121,5 +121,6 @@ io.on("connect_error", (err) => {
 // Start the server
 server.listen(3000, () => {
   connectToMongoDB();
+  connectToRedis();
   console.log("Server is running on port 3000");
 });
