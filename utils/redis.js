@@ -1,12 +1,18 @@
 import AsyncRedis from "async-redis";
 
-const RedisDB = AsyncRedis.createClient();
+const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
+
+const RedisDB = AsyncRedis.createClient({
+    port: REDIS_PORT,
+    host: REDIS_HOST
+});
 
 // Add this connection success handler
 export const connectToRedis = () => {
   try {
     RedisDB.on("connect", () => {
-      console.log("Connected to Redis");
+      console.log("Connected to Redis on host:", REDIS_HOST, "and port:", REDIS_PORT);
     });
   } catch (error) {
     console.error("Error connecting to Redis:", error);
