@@ -14,7 +14,7 @@ app.use(
       "http://localhost:5501",
       "http://localhost:3000",
       "https://159.223.127.127", // Frontend production URL
-      "https://68.183.135.203"   // Backend production URL
+      "https://68.183.135.203", // Backend production URL
     ],
     credentials: true, // Allow credentials (cookies)
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
@@ -33,7 +33,7 @@ const io = new Server(server, {
       "http://localhost:5501",
       "http://localhost:3000",
       "https://159.223.127.127", // Frontend production URL
-      "https://68.183.135.203"   // Backend production URL
+      "https://68.183.135.203", // Backend production URL
     ],
     methods: ["GET", "POST"],
   },
@@ -41,7 +41,7 @@ const io = new Server(server, {
 
 io.of("/chat")
   .use(async (socket, next) => {
-    console.log("Middleware running for socket:", socket.id);
+    // console.log("Middleware running for socket:", socket.id);
     try {
       await tokenFromSocket(socket, next);
     } catch (error) {
@@ -50,8 +50,8 @@ io.of("/chat")
   })
   .on("connection", async (socket) => {
     try {
-      console.log("New connection on /chat namespace:", socket.id);
-      console.log("User:", socket.currentUser);
+      //   console.log("New connection on /chat namespace:", socket.id);
+      //   console.log("User:", socket.currentUser);
 
       const userId = socket.currentUser._id.toString();
 
@@ -73,14 +73,13 @@ io.of("/chat")
 
       // Handle new messages from this socket
       socket.on("sendMessage", async (data) => {
-        console.log("Received message from user:", userId);
-        // Process the message (you might want to call your sendMessage controller here)
-        // This is just a placeholder for demonstration
+        // console.log("Received message from user:", userId);
+
         io.of("/chat").to(data.receiverId).emit("newMessage", data.message);
       });
 
       socket.on("disconnect", async () => {
-        console.log("User disconnected:", userId);
+        // console.log("User disconnected:", userId);
         await delObj(`user_socket:${userId}`);
       });
     } catch (error) {
