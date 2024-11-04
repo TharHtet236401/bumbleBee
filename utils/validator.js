@@ -57,19 +57,19 @@ export let validateToken = () => {
   };
 };
 
-export const tokenFromSocket = async (socket, next) => {
-  try {
-    const token = socket.handshake.query.token;
-    if (!token) {
-      return next(new Error("Authentication error"));
-    }
-    const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    // console.log("Decoded token:", decoded);
-    socket.user = decoded;
-    next();
-  } catch (error) {
-    console.error("Error in tokenFromSocket:", error);
-    next(new Error("Authentication error"));
+export const tokenFromSocket = async (socket,next)=>{
+  let user = "blank"
+  let token = socket.handshake.query.token
+  if(token){
+      try{
+          user = jwt.verify(token,process.env.SECRET_KEY)
+          socket.currentUser = user.data
+      }catch(err){
+          next(new Error("Handshake Error"))
+      }
+      next()
+  }else{
+      next(new Error("Token is required"))
   }
 };
 
