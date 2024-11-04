@@ -34,13 +34,13 @@ export const sendMessage = async (req, res) => {
         const receiverSocketId = await getObj(`user_socket:${receiverId}`);
 
         if (receiverSocketId) {
-            console.log("Emitting to socket:", receiverSocketId);
+            // console.log("Emitting to socket:", receiverSocketId);
             io.of("/chat").to(receiverSocketId).emit("newMessage", {
                 message: newMessage,
                 conversation: conversation._id
             });
         } else {
-            console.log("Receiver not online, storing offline message");
+            // console.log("Receiver not online, storing offline message");
             const offlineMessages = await getObj(`offline_messages:${receiverId}`) || [];
             offlineMessages.push({
                 message: newMessage,

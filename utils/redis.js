@@ -1,18 +1,23 @@
 import AsyncRedis from "async-redis";
 
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
-const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
+const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
 
 const RedisDB = AsyncRedis.createClient({
-    port: REDIS_PORT,
-    host: REDIS_HOST
+  port: REDIS_PORT,
+  host: REDIS_HOST,
 });
 
 // Add this connection success handler
 export const connectToRedis = () => {
   try {
     RedisDB.on("connect", () => {
-      console.log("Connected to Redis on host:", REDIS_HOST, "and port:", REDIS_PORT);
+      console.log(
+        "Connected to Redis on host:",
+        REDIS_HOST,
+        "and port:",
+        REDIS_PORT
+      );
     });
   } catch (error) {
     console.error("Error connecting to Redis:", error);
@@ -42,7 +47,7 @@ export const getObj = async (id) => {
 export const delObj = async (id) => {
   try {
     await RedisDB.del(id.toString());
-    console.log("Object deleted from Redis:", id);
+    // console.log("Object deleted from Redis:", id);
   } catch (error) {
     console.error("Error deleting object from Redis:", error);
   }
@@ -60,7 +65,7 @@ export const storeOfflineMessage = async (userId, message) => {
 export const getOfflineMessages = async (userId) => {
   try {
     const messages = await RedisDB.lrange(`offline_messages:${userId}`, 0, -1);
-    await RedisDB.del(`offline_messages:${userId}`);
+    // await RedisDB.del(`offline_messages:${userId}`);
     return messages.map((msg) => JSON.parse(msg));
   } catch (error) {
     console.error("Error getting offline messages:", error);

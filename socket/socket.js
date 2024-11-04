@@ -57,7 +57,7 @@ io.of("/chat")
 
       // Store user's socket ID in Redis
       await setObj(`user_socket:${userId}`, socket.id);
-      console.log("Updated user-socket mapping for:", userId);
+      //   console.log("Updated user-socket mapping for:", userId);
 
       // Send welcome message and socket ID to the client
       socket.emit("welcome", socket.currentUser);
@@ -68,7 +68,7 @@ io.of("/chat")
       if (offlineMessages && offlineMessages.length > 0) {
         socket.emit("offlineMessages", offlineMessages);
         await delObj(`offline_messages:${userId}`);
-        console.log("Sent offline messages to user:", userId);
+        // console.log("Sent offline messages to user:", userId);
       }
 
       // Handle new messages from this socket

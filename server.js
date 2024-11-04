@@ -1,13 +1,9 @@
 import express from "express";
-import { Server } from "socket.io";
 import dotenv from "dotenv";
 import path from "path";
-import cors from "cors";
 import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
 import connectToMongoDB from "./config/connectMongoDb.js";
-import http from "http";
-import { initialize } from "./utils/chat.js";
 import { connectToRedis } from "./utils/redis.js";
 dotenv.config();
 
@@ -27,28 +23,7 @@ import messageRoute from "./routes/message.route.js";
 import { tokenFromSocket } from "./utils/validator.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-import { io, app, server } from "./socket/socket.js";
-
-// const app = express();
-// const server = http.createServer(app);
-// const io = new Server(server);
-
-// app.use(
-//   cors({
-//     origin: [
-//       "http://127.0.0.1:5501", // Localhost
-//       "http://localhost:5501",
-//       "https://159.223.127.127",
-//     ], // Frontend URL
-//     credentials: true, // Allow credentials (cookies)
-//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
-//     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
-//     exposedHeaders: ["Set-Cookie"],
-//     path: "/",
-//     sameSite: "None",
-//     secure: true, // Expose Set-Cookie header
-//   })
-// );
+import { app, server } from "./socket/socket.js";
 
 // For parsing the cookie
 app.use(cookieParser());
@@ -85,39 +60,6 @@ app.use((err, req, res, next) => {
   err.status = err.status || 505;
   res.status(err.status).json({ con: false, msg: err.message });
 });
-
-//initialize socket with simple connection
-// io.on("connection", (socket) => {
-//   console.log("A user connected");
-
-//   socket.emit("greet", "hello your id is" + socket.id);
-
-//   socket.on("message", (message) => {
-//     console.log(message);
-//   });
-
-//   socket.on("disconnect", () => {
-//     console.log("A user disconnected");
-//     io.emit("userDisconnected", "A user has disconnected");
-//   });
-// });
-
-// io.of("/socket")
-//   .use(async (socket, next) => {
-//     socket.emit("greet", "hello your id is" + socket.id);
-//     await tokenFromSocket(socket, next);
-//   })
-//   .on("connection", (socket) => {
-//     // console.log(
-//     //   "A user connected. Socket data:",
-//     //   JSON.stringify(socket.user.data, null, 2)
-//     // );
-//     initialize(io, socket);
-//   });
-
-// io.on("connect_error", (err) => {
-//   console.error("Connection Error:", err);
-// });
 
 // Start the server
 server.listen(3000, () => {

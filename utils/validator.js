@@ -60,7 +60,7 @@ export let validateToken = () => {
 export const tokenFromSocket = async (socket,next)=>{
   let user = "blank"
   let token = socket.handshake.headers.authorization.split(" ")[1]
-  console.log("this is the token",token)
+  // console.log("this is the token",token)
   if(token){
       try{
           user = jwt.verify(token,process.env.SECRET_KEY)
