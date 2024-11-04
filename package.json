@@ -12,6 +12,7 @@
     "type": "module",
     "dependencies": {
         "@supabase/supabase-js": "^2.45.4",
+        "async-redis": "^2.0.0",
         "bcrypt": "^5.1.1",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",

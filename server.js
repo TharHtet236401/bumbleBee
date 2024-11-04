@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 import connectToMongoDB from "./config/connectMongoDb.js";
 import http from "http";
 import { initialize } from "./utils/chat.js";
-
+import { connectToRedis } from "./utils/redis.js";
 dotenv.config();
 
 import authRoute from "./routes/auth.route.js";
@@ -23,30 +23,32 @@ import leaveRequestRoute from "./routes/leaveRequest.route.js";
 import leaveRequestTypeRoute from "./routes/leaveRequestType.route.js";
 import imageRoute from "./routes/image.route.js";
 import cookieRoute from "./routes/cookie.route.js";
+import messageRoute from "./routes/message.route.js";
 import { tokenFromSocket } from "./utils/validator.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+import { io, app, server } from "./socket/socket.js";
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+// const app = express();
+// const server = http.createServer(app);
+// const io = new Server(server);
 
-app.use(
-  cors({
-    origin: [
-      "http://127.0.0.1:5501", // Localhost
-      "http://localhost:5501",
-      "https://159.223.127.127",
-    ], // Frontend URL
-    credentials: true, // Allow credentials (cookies)
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
-    exposedHeaders: ["Set-Cookie"],
-    path: "/",
-    sameSite: "None",
-    secure: true, // Expose Set-Cookie header
-  })
-);
+// app.use(
+//   cors({
+//     origin: [
+//       "http://127.0.0.1:5501", // Localhost
+//       "http://localhost:5501",
+//       "https://159.223.127.127",
+//     ], // Frontend URL
+//     credentials: true, // Allow credentials (cookies)
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
+//     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+//     exposedHeaders: ["Set-Cookie"],
+//     path: "/",
+//     sameSite: "None",
+//     secure: true, // Expose Set-Cookie header
+//   })
+// );
 
 // For parsing the cookie
 app.use(cookieParser());
@@ -68,6 +70,7 @@ app.use("/api/leaveRequest", leaveRequestRoute);
 app.use("/api/leaveRequestType", leaveRequestTypeRoute);
 app.use("/api/image", imageRoute);
 app.use("/api/cookie", cookieRoute);
+app.use("/api/message", messageRoute);
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views/index.html"));
@@ -99,24 +102,26 @@ app.use((err, req, res, next) => {
 //   });
 // });
 
-io.of("/socket")
-  .use(async (socket, next) => {
-    await tokenFromSocket(socket, next);
-  })
-  .on("connection", (socket) => {
-    // console.log(
-    //   "A user connected. Socket data:",
-    //   JSON.stringify(socket.user.data, null, 2)
-    // );
-    initialize(io, socket);
-  });
+// io.of("/socket")
+//   .use(async (socket, next) => {
+//     socket.emit("greet", "hello your id is" + socket.id);
+//     await tokenFromSocket(socket, next);
+//   })
+//   .on("connection", (socket) => {
+//     // console.log(
+//     //   "A user connected. Socket data:",
+//     //   JSON.stringify(socket.user.data, null, 2)
+//     // );
+//     initialize(io, socket);
+//   });
 
-io.on("connect_error", (err) => {
-  console.error("Connection Error:", err);
-});
+// io.on("connect_error", (err) => {
+//   console.error("Connection Error:", err);
+// });
 
 // Start the server
 server.listen(3000, () => {
   connectToMongoDB();
+  connectToRedis();
   console.log("Server is running on port 3000");
 });

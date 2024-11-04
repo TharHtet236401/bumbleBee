@@ -26,11 +26,12 @@
 
         socket.on("connect", () => {
             document.getElementById("status").innerText = "Connected to the server!";
+            console.log(socket.id);
         });
 
-        socket.on("greet", (message) => {
-            console.log(message);
-        });
+
+        
+      
 
         socket.on("disconnect", () => {
             document.getElementById("status").innerText = "Disconnected from the server.";
