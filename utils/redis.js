@@ -42,7 +42,7 @@ export const getObj = async (id) => {
 export const delObj = async (id) => {
   try {
     await RedisDB.del(id.toString());
-    console.log("Object deleted from Redis:", id);
+    // console.log("Object deleted from Redis:", id);
   } catch (error) {
     console.error("Error deleting object from Redis:", error);
   }
