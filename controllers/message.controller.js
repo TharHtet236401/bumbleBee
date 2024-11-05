@@ -2,6 +2,7 @@ import Conversation from '../models/conversation.model.js';
 import Message from '../models/message.model.js';
 import { io } from '../socket/socket.js';
 import { setObj, getObj, delObj } from '../utils/redis.js';
+import { fMsg, fError } from '../utils/libby.js';
 
 export const sendMessage = async (req, res) => {
     try {
@@ -49,10 +50,11 @@ export const sendMessage = async (req, res) => {
             await setObj(`offline_messages:${receiverId}`, offlineMessages);
         }
 
-        res.status(201).json(newMessage);
+        fMsg(res, "Message sent successfully", newMessage, 201);
+
     } catch (error) {
         console.error("Error in sendMessage:", error);
-        res.status(500).json({ message: "Internal server error" });
+        fError(res, "Internal server error", 500);
     }
 };
 
@@ -66,7 +68,7 @@ export const getMessages = async (req, res) => {
         }).populate("messages");
 
         if (!conversation) {
-            return res.status(200).json([]);
+            return fMsg(res, "No conversation found", [], 200);
         }
 
         // Check for any offline messages
@@ -85,10 +87,10 @@ export const getMessages = async (req, res) => {
         // Sort messages by timestamp
         conversation.messages.sort((a, b) => a.createdAt - b.createdAt);
 
-        res.status(200).json(conversation.messages);
+        fMsg(res, "Messages fetched successfully", conversation.messages, 200);
     } catch (error) {
         console.error("Error in getMessages:", error);
-        res.status(500).json({ message: "Internal server error" });
+        fError(res, "Internal server error", 500);
     }
 };
 
