@@ -54,7 +54,7 @@ export const sendMessage = async (req, res) => {
 
     } catch (error) {
         console.error("Error in sendMessage:", error);
-        fError(res, "Internal server error", 500);
+        fError(res, "Internal server error", 505);
     }
 };
 
@@ -90,7 +90,7 @@ export const getMessages = async (req, res) => {
         fMsg(res, "Messages fetched successfully", conversation.messages, 200);
     } catch (error) {
         console.error("Error in getMessages:", error);
-        fError(res, "Internal server error", 500);
+        fError(res, "Internal server error", 505);
     }
 };
 
@@ -120,7 +120,7 @@ export const deleteMessage = async (req, res) => {
         res.status(200).json({ message: "Message deleted successfully" });
     } catch (error) {
         console.error("Error in deleteMessage:", error);
-        res.status(500).json({ message: "Internal server error" });
+        fError(res, "Internal server error", 505);
     }
 };
 
