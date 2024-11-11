@@ -24,6 +24,7 @@ import leaveRequestTypeRoute from "./routes/leaveRequestType.route.js";
 import imageRoute from "./routes/image.route.js";
 import cookieRoute from "./routes/cookie.route.js";
 import messageRoute from "./routes/message.route.js";
+import conversationRoute from "./routes/conversation.route.js";
 import { tokenFromSocket } from "./utils/validator.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,7 +72,7 @@ app.use("/api/leaveRequestType", leaveRequestTypeRoute);
 app.use("/api/image", imageRoute);
 app.use("/api/cookie", cookieRoute);
 app.use("/api/message", messageRoute);
-
+app.use("/api/conversation", conversationRoute);
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views/index.html"));
 });
