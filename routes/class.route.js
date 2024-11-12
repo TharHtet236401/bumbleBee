@@ -12,6 +12,7 @@ import {
   readGradeNamesByTeacher, // Ensure this is correctly imported
   getClassById
 } from "../controllers/class.controller.js";
+import{sendGroupMessage} from "../controllers/message.controller.js"
 import { validateToken, isAdmin } from "../utils/validator.js";
 import express from "express";
 const router = express.Router();
@@ -32,4 +33,5 @@ router.get('/classNamesByTeacherNew/:gradeName', validateToken(), readClassNames
 router.get('/gradeNamesByTeacher', validateToken(), readGradeNamesByTeacher);
 router.get('/classNamesByTeacher', validateToken(), readClassNamesByTeacher);
 router.get('/classById/:classId', validateToken(), getClassById);
+router.post("/send/:classId", validateToken(), sendGroupMessage)
 export default router;

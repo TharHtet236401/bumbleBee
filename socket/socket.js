@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 const app = express();
 const server = http.createServer(app);
 import { tokenFromSocket } from "../utils/validator.js";
+import ClassModel from "../models/class.model.js";
 import { setObj, getObj, delObj } from "../utils/redis.js";
 
 app.use(
@@ -59,6 +60,23 @@ io.of("/chat")
       await setObj(`user_socket:${userId}`, socket.id);
     //   console.log("Updated user-socket mapping for:", userId);
 
+    let classArrays = [];
+    const classObj = await ClassModel.find({
+      $or: [
+        {teachers: userId},
+        {guardians: userId}
+      ]
+    })
+
+
+    for(let i = 0; i < classObj.length; i++){
+      let classId = classObj[i]._id
+      let socket_room = `class_socket:${classId}`
+      socket.join(socket_room)
+      await setObj(`class_chat_room:${classId}`, socket_room)
+    }
+
+
       // Send welcome message and socket ID to the client
       socket.emit("welcome", socket.currentUser);
       socket.emit("socketId", socket.id);
@@ -70,13 +88,6 @@ io.of("/chat")
         await delObj(`offline_messages:${userId}`);
         // console.log("Sent offline messages to user:", userId);
       }
-
-      // Handle new messages from this socket
-      socket.on("sendMessage", async (data) => {
-        // console.log("Received message from user:", userId);
-
-        io.of("/chat").to(data.receiverId).emit("newMessage", data.message);
-      });
 
       socket.on("disconnect", async () => {
         // console.log("User disconnected:", userId);
