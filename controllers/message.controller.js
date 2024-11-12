@@ -207,3 +207,50 @@ export const editMessage = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const sendGroupMessage = async(req, res) => {
+  try{
+    const { message } = req.body;
+    if(!message){
+      return fError(res, "Message is required", 505)
+    }
+
+    const senderId = req.user._id;
+
+    const { classId } = req.params;
+    if(!classId){
+      return fError(res, "Class Id is required", 505)
+    }
+
+    const newMessage = new Message({
+      senderId: senderId,
+      classId: classId,
+      message: message
+    });
+
+    let conversation = await Conversation.findOne({
+      participants: { $all: [senderId, classId] },
+    });
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        participants: [senderId, classId],
+      });
+    }
+
+    const groupSocketId = await getObj(`class_chat_room:${classId}`);
+    if (groupSocketId) {
+      // console.log("Emitting to socket:", receiverSocketId);
+      io.of("/chat").to(groupSocketId).emit("newMessage", {
+        message: newMessage,
+        conversation: conversation._id,
+      });
+    }
+    
+    fMsg(res, "Message sent successfully", newMessage, 201);
+
+  }catch(error){
+    console.error("Error in sendMessage:", error);
+    fError(res, "Internal server error", 505);
+  }
+}
