@@ -1,9 +1,10 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
+import Class from "../models/class.model.js"
 import { io } from "../socket/socket.js";
 import { setObj, getObj, delObj } from "../utils/redis.js";
-import { fMsg, fError } from "../utils/libby.js";
+import { fMsg, fError, checkArray } from "../utils/libby.js";
 import {
   uploadImageToSupabase,
   uploadDocumentToSupabase,
@@ -211,8 +212,8 @@ export const editMessage = async (req, res) => {
 export const sendGroupMessage = async(req, res) => {
   try{
     const { message } = req.body;
-    if(!message){
-      return fError(res, "Message is required", 505)
+    if (!message && !req.files.images && !req.files.documents) {
+      return fError(res, "Message or files are required", 505);
     }
 
     const senderId = req.user._id;
@@ -222,28 +223,64 @@ export const sendGroupMessage = async(req, res) => {
       return fError(res, "Class Id is required", 505)
     }
 
+    let images = [];
+    let documents = [];
+
+    if (req.files && req.files.images) {
+      // Check if contentPictures are present
+      try {
+        for (const file of req.files.images) {
+          const imageUrl = await uploadImageToSupabase(file, "chat-images");
+          images.push(imageUrl); // Save the URL to the array
+        }
+      } catch (uploadError) {
+        return fError(res, `File upload failed: ${uploadError.message}`, 505);
+      }
+    } else {
+      // console.warn("No images uploaded."); // Log if no images are uploaded
+    }
+
+    if (req.files && req.files.documents) {
+      // Check if contentPictures are present
+      try {
+        for (const file of req.files.documents) {
+          const documentUrl = await uploadDocumentToSupabase(
+            file,
+            "chat-documents"
+          );
+          documents.push(documentUrl); // Save the URL to the array
+        }
+      } catch (uploadError) {
+        return fError(res, `File upload failed: ${uploadError.message}`, 505);
+      }
+    } else {
+      // console.warn("No documents uploaded."); // Log if no documents are uploaded
+    }
+
     const newMessage = new Message({
       senderId: senderId,
       classId: classId,
-      message: message
+      message: message,
+      image: images,
+      document: documents,
+      isGroupMessage: true
     });
 
-    let conversation = await Conversation.findOne({
-      participants: { $all: [senderId, classId] },
-    });
-
-    if (!conversation) {
-      conversation = await Conversation.create({
-        participants: [senderId, classId],
-      });
+    let classObj = await Class.findById(classId);
+    if(!classObj){
+      return fError(res, "There is no class of the user", 505)
     }
+
+   classObj.messages.push(newMessage);
+   
+   await Promise.all([classObj.save(), newMessage.save()])
+    
 
     const groupSocketId = await getObj(`class_chat_room:${classId}`);
     if (groupSocketId) {
       // console.log("Emitting to socket:", receiverSocketId);
       io.of("/chat").to(groupSocketId).emit("newMessage", {
-        message: newMessage,
-        conversation: conversation._id,
+        message: newMessage
       });
     }
     
@@ -252,5 +289,30 @@ export const sendGroupMessage = async(req, res) => {
   }catch(error){
     console.error("Error in sendMessage:", error);
     fError(res, "Internal server error", 505);
+  }
+}
+
+export const getGroupMessage = async(req, res) => {
+  try{
+    const {classId} = req.params
+    const readerId = req.user._id;
+    const reader = await User.findById(readerId);
+
+    let readerHasClass = checkArray(reader.classes, classId);
+    if(!readerHasClass){
+      return fError(res, "You do not have permission to view this class", 403)
+    }
+
+    let classMessages = []
+    const classObj = await Class.findById(classId)
+      .populate("messages", "message")
+    classMessages = classObj.messages;
+    console.log("this is the message " + JSON.stringify(classObj))
+
+    fMsg(res, "Group messages", classMessages, 200)
+
+
+  }catch(error){
+    fError(res, "Failed to get group messages", 500)
   }
 }

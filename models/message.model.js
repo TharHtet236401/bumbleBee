@@ -6,12 +6,14 @@ const messageSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    receiverId: [
-      {
+    receiverId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
-    ],
+    classId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class"
+    },
     message: {
       type: String,
     },
@@ -23,6 +25,10 @@ const messageSchema = new mongoose.Schema(
       type: [String],
       default: null,
     },
+    isGroupMessage: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );

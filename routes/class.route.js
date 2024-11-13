@@ -12,9 +12,13 @@ import {
   readGradeNamesByTeacher, // Ensure this is correctly imported
   getClassById
 } from "../controllers/class.controller.js";
-import{sendGroupMessage} from "../controllers/message.controller.js"
+import{sendGroupMessage, getGroupMessage} from "../controllers/message.controller.js"
 import { validateToken, isAdmin } from "../utils/validator.js";
 import express from "express";
+import multer from "multer";
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 const router = express.Router();
 
 router.post("/create", validateToken(),isAdmin(), createClass);
@@ -33,5 +37,6 @@ router.get('/classNamesByTeacherNew/:gradeName', validateToken(), readClassNames
 router.get('/gradeNamesByTeacher', validateToken(), readGradeNamesByTeacher);
 router.get('/classNamesByTeacher', validateToken(), readClassNamesByTeacher);
 router.get('/classById/:classId', validateToken(), getClassById);
-router.post("/send/:classId", validateToken(), sendGroupMessage)
+router.post("/chat/send/:classId", validateToken(), upload.fields([{name:"images",maxCount:5},{name:"documents",maxCount:5}]), sendGroupMessage)
+router.get("/chat/get/:classId", validateToken(), getGroupMessage)
 export default router;
