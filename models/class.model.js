@@ -37,6 +37,10 @@ const classSchema = new mongoose.Schema({
         type: [mongoose.Schema.Types.ObjectId], // Updated to reference ObjectId
         ref: "Post",
     },
+    messages: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "Message"
+    }
 });
 
 const Class = mongoose.model("Class", classSchema);
