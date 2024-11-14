@@ -22,6 +22,36 @@ export const getMyProfile = async (req, res, next) => {
   }
 };
 
+//this function is to fetch the related users to chat .. like other users within the same class.
+export const getUsersForChat = async (req, res, next) => {
+  try {
+    // Get current user with populated classes
+    const currentUser = await User.findById(req.user._id)
+      .populate({
+        path: "classes",
+        select: "-messages -school -grade -className -announcements",
+        populate: [
+          {
+            path: "teachers",
+            select: "userName",
+          },
+          {
+            path: "guardians",
+            select: "userName",
+          },
+        ],
+      })
+      .select("classes");
+
+    const classes = currentUser.classes;
+
+    // Return populated class data
+    fMsg(res, "Classes fetched successfully", classes, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateUserInfo = async (req, res, next) => {
   try {
     const userId = req.user._id;
