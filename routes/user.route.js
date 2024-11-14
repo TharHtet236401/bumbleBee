@@ -14,7 +14,8 @@ import {
   getAllUsers,
   getUserById,
   getMyProfile,
-  getUsersForChat
+  getUsersForChat,
+  searchUser
 } from "../controllers/user.controller.js";
 
 import User from "../models/user.model.js";
@@ -26,6 +27,8 @@ const router = express.Router();
 router.get("/profile", validateToken(), getMyProfile);
 
 router.get("/getUsersForChat", validateToken(), getUsersForChat);
+
+router.get("/search", validateToken(), searchUser);
 
 router.put(
   "/update",

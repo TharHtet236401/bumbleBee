@@ -52,6 +52,69 @@ export const getUsersForChat = async (req, res, next) => {
   }
 };
 
+export const searchUser = async (req, res, next) => {
+  try {
+    const searchingName = req.query.userName;
+    console.log("Searching for:", searchingName);
+
+    // Get current user with populated classes, including teachers and guardians
+    const currentUser = await User.findById(req.user._id)
+      .populate({
+        path: 'classes',
+        populate: [
+          {
+            path: 'teachers',
+            select: 'userName _id profilePicture'
+          },
+          {
+            path: 'guardians',
+            select: 'userName _id profilePicture'
+          }
+        ]
+      });
+
+    if (!currentUser || !currentUser.classes) {
+      return fMsg(res, "No classes found", [], 200);
+    }
+
+    // Create a case-insensitive regex pattern that matches the search term
+    const searchRegex = new RegExp(searchingName.replace(/\s+/g, ''), 'i');
+
+    let matchingUsers = [];
+
+    // Loop through each class
+    for (const classObj of currentUser.classes) {
+      // Search through teachers if they exist
+      if (classObj.teachers && Array.isArray(classObj.teachers)) {
+        const matchingTeachers = classObj.teachers.filter(teacher => 
+          teacher._id.toString() !== currentUser._id.toString() && // Exclude current user
+          searchRegex.test(teacher.userName.replace(/\s+/g, ''))
+        );
+        matchingUsers = [...matchingUsers, ...matchingTeachers];
+      }
+
+      // Search through guardians if they exist
+      if (classObj.guardians && Array.isArray(classObj.guardians)) {
+        const matchingGuardians = classObj.guardians.filter(guardian =>
+          guardian._id.toString() !== currentUser._id.toString() && // Exclude current user
+          searchRegex.test(guardian.userName.replace(/\s+/g, ''))
+        );
+        matchingUsers = [...matchingUsers, ...matchingGuardians];
+      }
+    }
+
+    // Remove duplicates by user ID
+    matchingUsers = Array.from(new Set(matchingUsers.map(user => user._id.toString())))
+      .map(id => matchingUsers.find(user => user._id.toString() === id));
+
+    return fMsg(res, "Users found successfully", matchingUsers, 200);
+
+  } catch (error) {
+    console.error("Search error:", error);
+    next(error);
+  }
+};
+
 export const updateUserInfo = async (req, res, next) => {
   try {
     const userId = req.user._id;
