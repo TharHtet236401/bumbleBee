@@ -6,15 +6,19 @@ import {
 } from "../utils/supabaseUpload.js";
 import { paginate } from "../utils/libby.js";
 
-export const getMyProfile = async(req, res, next) => {
-  try{
+export const getMyProfile = async (req, res, next) => {
+  try {
     const currentUser = req.user;
-    const user = await User.findById(currentUser._id).select('-password');
-    fMsg(res, "User fetched successfully", user, 200)
-  }catch(error){
-    next(error)
+    const user = await User.findById(currentUser._id)
+      .select("-password")
+      .populate({ path: "schools", select: "schoolName" })
+      .populate({ path: "classes", select: "className grade" })
+      .populate({ path: "childern", select: "name dateOfBirth" });
+    fMsg(res, "User fetched successfully", user, 200);
+  } catch (error) {
+    next(error);  
   }
-}
+};  
 
 export const updateUserInfo = async (req, res, next) => {
   try {
@@ -48,7 +52,6 @@ export const updateUserInfo = async (req, res, next) => {
         );
       }
     } else if (
-        
       newUsername &&
       newUsername !== userInfo.userName &&
       userInfo.profilePicture.startsWith("https://api.dicebear.com")
@@ -85,11 +88,17 @@ export const deleteUser = async (req, res, next) => {
     }
 
     // Delete profile picture from Supabase if it exists and is not a Dicebear avatar
-    if (user.profilePicture && !user.profilePicture.startsWith('https://api.dicebear.com')) {
+    if (
+      user.profilePicture &&
+      !user.profilePicture.startsWith("https://api.dicebear.com")
+    ) {
       try {
-        await deleteImageFromSupabase(user.profilePicture, 'profile-pictures');
+        await deleteImageFromSupabase(user.profilePicture, "profile-pictures");
       } catch (deleteError) {
-        console.error("Error deleting profile picture from Supabase:", deleteError);
+        console.error(
+          "Error deleting profile picture from Supabase:",
+          deleteError
+        );
       }
     }
 
@@ -110,7 +119,7 @@ export const getAllUsers = async (req, res, next) => {
     const admin = await User.findById(currentUser._id);
 
     if (!admin) {
-      return next(new Error("Admin not found"))
+      return next(new Error("Admin not found"));
     }
 
     const usersSchoolId = admin.schools[0]; // Fetching usersSchoolId here
@@ -131,11 +140,10 @@ export const getAllUsers = async (req, res, next) => {
   }
 };
 
-
 export const getUserById = async (req, res, next) => {
   try {
     const userId = req.params.userId;
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId).select("-password");
     if (!user) {
       return next(new Error("User not found"));
     }
@@ -143,4 +151,4 @@ export const getUserById = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
+};
