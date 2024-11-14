@@ -1,5 +1,5 @@
 import User from "../models/user.model.js";
-import { fMsg } from "../utils/libby.js";
+import { fMsg ,fError} from "../utils/libby.js";
 import {
   uploadImageToSupabase,
   deleteImageFromSupabase,
@@ -111,7 +111,7 @@ export const searchUser = async (req, res, next) => {
 
   } catch (error) {
     console.error("Search error:", error);
-    next(error);
+    return fError(res, error.message, 500);
   }
 };
 
