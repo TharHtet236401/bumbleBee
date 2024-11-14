@@ -6,6 +6,8 @@ import {
 } from "../utils/supabaseUpload.js";
 import { paginate } from "../utils/libby.js";
 
+// Fetches the current user's profile with their schools, classes, and children information to show in profile page page
+
 export const getMyProfile = async (req, res, next) => {
   try {
     const currentUser = req.user;
@@ -16,9 +18,9 @@ export const getMyProfile = async (req, res, next) => {
       .populate({ path: "childern", select: "name dateOfBirth" });
     fMsg(res, "User fetched successfully", user, 200);
   } catch (error) {
-    next(error);  
+    next(error);
   }
-};  
+};
 
 export const updateUserInfo = async (req, res, next) => {
   try {
