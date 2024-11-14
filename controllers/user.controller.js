@@ -133,3 +133,29 @@ export const getUserById = async (req, res, next) => {
     next(error);
   }
 }
+
+
+//to get the current user's profile
+export const getMyProfile = async(req, res, next) => {
+  try{
+    const currentUser = req.user;
+    const user = await User.findById(currentUser._id).select('-password');
+    fMsg(res, "User fetched successfully", user, 200)
+  }catch(error){
+    next(error)
+  }
+}
+
+
+export const getRelatedUsers = async(req, res, next) => {
+  try{
+    const currentUser = req.user;
+    const classes = currentUser.classes;
+
+    const relatedUsers = await User.find({classes: {$in: classes}})
+    fMsg(res, "Related users fetched successfully", relatedUsers, 200)
+
+  }catch(error){
+    next(error)
+  }
+}
