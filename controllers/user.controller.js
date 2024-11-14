@@ -56,7 +56,7 @@ export const getUsersForChat = async (req, res, next) => {
 export const searchUser = async (req, res, next) => {
   try {
     const searchingName = req.query.userName;
-    console.log("Searching for:", searchingName);
+    // console.log("Searching for:", searchingName);
 
     // Get current user with populated classes, including teachers and guardians
     const currentUser = await User.findById(req.user._id).populate({
