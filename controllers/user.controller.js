@@ -4,6 +4,17 @@ import {
   uploadImageToSupabase,
   deleteImageFromSupabase,
 } from "../utils/supabaseUpload.js";
+import { paginate } from "../utils/libby.js";
+
+export const getMyProfile = async(req, res, next) => {
+  try{
+    const currentUser = req.user;
+    const user = await User.findById(currentUser._id).select('-password');
+    fMsg(res, "User fetched successfully", user, 200)
+  }catch(error){
+    next(error)
+  }
+}
 
 export const updateUserInfo = async (req, res, next) => {
   try {
@@ -92,7 +103,7 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
-export const getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res, next) => {
   //admin function
   try {
     const currentUser = req.user;

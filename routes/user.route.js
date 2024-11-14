@@ -13,6 +13,7 @@ import {
   deleteUser,
   getAllUsers,
   getUserById,
+  getMyProfile
 } from "../controllers/user.controller.js";
 
 import User from "../models/user.model.js";
@@ -20,6 +21,8 @@ import User from "../models/user.model.js";
 const router = express.Router();
 
 // Middleware to fetch user email
+
+router.get("/profile", validateToken(), getMyProfile);
 
 router.put(
   "/update",
