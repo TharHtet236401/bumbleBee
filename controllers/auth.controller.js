@@ -310,7 +310,7 @@ export const webRegister = async (req, res, next) => {
 
 
         const user = await User.create(newUser);
-        user.profilePicture = `https://ysffgebnlbingizxsbvx.supabase.co/storage/v1/object/public/profile-pictures/default%20%20jpg.jpg`;
+        user.profilePicture = `https://ysffgebnlbingizxsbvx.supabase.co/storage/v1/object/public/profile-pictures/default.jpg`;
         await user.save();
 
         const userWithoutPassword = user.toObject();
