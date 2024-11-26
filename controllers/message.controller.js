@@ -79,9 +79,16 @@ export const sendMessage = async (req, res) => {
       document: documents,
     });
 
+
     conversation.messages.push(newMessage._id);
 
     await Promise.all([conversation.save(), newMessage.save()]);
+
+    
+    newMessage = await newMessage.populate([
+      { path: "senderId", select: "userName profilePicture" },
+      { path: "receiverId", select: "userName profilePicture" }
+    ]);
 
     // Get receiver's socket ID from Redis
     const receiverSocketId = await getObj(`user_socket:${receiverId}`);
