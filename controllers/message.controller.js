@@ -117,7 +117,15 @@ export const getMessages = async (req, res) => {
 
     let conversation = await Conversation.findOne({
       participants: { $all: [userToChatId, senderId] },
-    }).populate("messages");
+    })
+    .populate('messages')
+    .populate({
+      path: 'messages',
+      populate: [
+        { path: 'senderId' ,select: 'userName profilePicture'},
+        { path: 'receiverId' ,select: 'userName profilePicture'}
+      ]
+    });
 
     if (!conversation) {
       return fMsg(res, "No conversation found", [], 200);
@@ -307,8 +315,6 @@ export const getGroupMessage = async(req, res) => {
     const classObj = await Class.findById(classId)
       .populate("messages", "message")
     classMessages = classObj.messages;
-    console.log("this is the message " + JSON.stringify(classObj))
-
     fMsg(res, "Group messages", classMessages, 200)
 
 
