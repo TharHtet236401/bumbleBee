@@ -71,7 +71,7 @@ export const sendMessage = async (req, res) => {
       // console.warn("No documents uploaded."); // Log if no documents are uploaded
     }
 
-    const newMessage = new Message({
+    let newMessage = new Message({
       senderId: senderId,
       receiverId: receiverId,
       message: message,
